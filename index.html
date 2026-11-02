@@ -563,7 +563,7 @@ function updateHarvester(e,dt){if(!e.harvestTarget){const n=findNearestOreNode(e
 
 function updateEnemyAI(dt){
     game.enemyAI.timer+=dt;const ds=game.diffSettings;
-    if(ds.aiBuild){game.enemyAI.buildTimer+=dt;if(game.enemyAI.buildTimer>15){game.enemyAI.buildTimer=0;const eb=game.entities.filter(e=>e.isEnemy&&e.def.isBuilding&&!e.dead);const hasRef=eb.some(e=>e.type==='enemy_refinery');const hasWar=eb.some(e=>e.type==='enemy_warfactory');const tc=eb.filter(e=>e.type==='enemy_mgtower').length;const ex=2100,ey=400;if(!hasRef&&game.enemyAI.ore>=500){spawnEntity('enemy_refinery',ex+130,ey+80,true).buildProgress=1;game.enemyAI.ore-=500;spawnEntity('enemy_harvester',ex-20,ey+20,true);}else if(!hasWar&&game.enemyAI.ore>=800){spawnEntity('enemy_warfactory',ex-130,ey-60,true).buildProgress=1;game.enemyAI.ore-=800;}else if(tc<6&&game.enemyAI.ore>=350){spawnEntity('enemy_mgtower',ex+Math.random()*200-100,ey+Math.random()*100-50,true).buildProgress=1;game.enemyAI.ore-=350;}}}
+    if(ds.aiBuild){game.enemyAI.buildTimer+=dt;if(game.enemyAI.buildTimer>15){game.enemyAI.buildTimer=0;const eb=game.entities.filter(e=>e.isEnemy&&e.def.isBuilding&&!e.dead);const hasRef=eb.some(e=>e.type==='enemy_refinery');const hasWar=eb.some(e=>e.type==='enemy_warfactory');const tc=eb.filter(e=>e.type==='enemy_mgtower').length;const ex=2100,ey=400;if(!hasRef&&game.enemyAI.ore>=500){spawnEntity('enemy_refinery',ex+130,ey+80,true).buildProgress=1;game.enemyAI.ore-=500;spawnEntity('enemy_harvester',ex-20,ey+20,true);}else if(!hasWar&&game.enemyAI.ore>=800){spawnEntity('enemy_warfactory',ex-130,ey-60,true).buildProgress=1;game.enemyAI.ore-=800;}else if(tc<6&&game.enemyAI.ore>=350){spawnEntity('enemy_mgtower',ex+Math.random()*200-100,ey+Math.random()*100-50,true).buildProgress=1;game.enemyAI.ore-=350;}}
     if(game.enemyAI.timer>ds.aiInterval&&game.enemyAI.phase===0){const c=Math.round(4*ds.aiScale);for(let i=0;i<c;i++){const u=spawnEntity('enemy_rifleman',2080+Math.random()*40,380+i*25,true);u.targetX=250;u.targetY=1200;}game.enemyAI.phase=1;showAlert('敌方步兵来袭！');AudioEngine.play('alert');}
     if(game.enemyAI.timer>ds.aiInterval*2&&game.enemyAI.phase===1){const c=Math.round(2*ds.aiScale);for(let i=0;i<c;i++){const u=spawnEntity('enemy_bazooka',2080+Math.random()*30,400+i*30,true);u.targetX=250;u.targetY=1180;}game.enemyAI.phase=2;showAlert('敌方反装甲部队来袭！');AudioEngine.play('alert');}
     if(game.enemyAI.timer>ds.aiInterval*3&&game.enemyAI.phase===2){const c=Math.round(2*ds.aiScale);for(let i=0;i<c;i++){const u=spawnEntity('enemy_tank',2080+Math.random()*30,380+i*40,true);u.targetX=250;u.targetY=1200;}game.enemyAI.phase=3;showAlert('敌方装甲部队来袭！');AudioEngine.play('alert');}
@@ -594,7 +594,6 @@ function renderFog(){
     for(let i=0;i<game.exploredGrid.length;i++){if(game.exploredGrid[i]===2)game.exploredGrid[i]=1;}
 }
 
-let lastTime=0;
 function gameLoop(ts){const dt=Math.min((ts-lastTime)/1000,0.05);lastTime=ts;game.time+=dt;update(dt);render();updateUI();requestAnimationFrame(gameLoop);}
 
 function update(dt){
