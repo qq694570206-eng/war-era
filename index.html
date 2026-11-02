@@ -717,194 +717,399 @@ function drawIsoObstacle(o){
 
 function drawIsoEntity(e){
     const d=e.def;
-    const spriteName=e.baseType||e.type.replace('enemy_','');
-    const sprite=SPRITES[spriteName];
     const x=e.x, y=e.y;
+    const isEnemy=e.isEnemy;
+    const isMoving=(e.targetX!==null||e.target)&&!e.holdPosition&&!e.dead;
+    const isFiring=e.recoil>0;
+    const fl=e.flashTime>0;
 
-    // 死亡溶解 + 倒地旋转
+    // 死亡：倒地旋转+溶解
     if(e.dead){
         const t=e.deathTimer/0.8;
-        ctx.save();
-        ctx.globalAlpha=Math.max(0,1-t);
-        ctx.translate(x,y);
-        ctx.rotate(t*Math.PI*0.3); // 死亡时轻微旋转倒地
-        if(sprite){
-            const sz=d.isBuilding?d.w*1.5:d.r*3;
-            ctx.drawImage(sprite,-sz/2,-sz/2,sz,sz);
-        }else{
-            ctx.fillStyle=e.isEnemy?'#E74C3C':'#3FA7D6';
-            ctx.beginPath();ctx.arc(0,0,d.r,0,Math.PI*2);ctx.fill();
-        }
-        // 溶解粒子
-        if(t<0.5&&Math.random()<0.15){const a=Math.random()*Math.PI*2;spawnParticles(x+Math.cos(a)*d.r,y+Math.sin(a)*d.r,1,'#666');}
+        ctx.save();ctx.globalAlpha=Math.max(0,1-t);ctx.translate(x,y);ctx.rotate(t*Math.PI*0.35);
+        drawUnitBody(d,isEnemy,fl,t);
+        if(t<0.4&&Math.random()<0.2)spawnParticles(x,y,1,'#666');
         ctx.restore();return;
     }
 
-    // 阴影（移动时影子稍微偏移）
-    const shadowOffset=e.targetX!==null||e.target?3:2;
+    // 阴影
     ctx.fillStyle='rgba(0,0,0,0.35)';
-    ctx.beginPath();ctx.ellipse(x+shadowOffset,y+shadowOffset,d.r||d.w/2,(d.r||d.w/2)*0.4,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(x+2,y+3,d.r||d.w/2,(d.r||d.w/2)*0.5,0,0,Math.PI*2);ctx.fill();
 
-    // 选中底环
+    // 选中环
     if(game.selected.includes(e)){
         ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.setLineDash([5,3]);
-        ctx.beginPath();ctx.arc(x,y+2,(d.r||d.w/2)+5,0,Math.PI*2);ctx.stroke();
-        ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(x,y+2,(d.r||d.w/2)+5,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     }
-
-    // 阵营色底环
-    ctx.strokeStyle=e.isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.arc(x,y,(d.r||d.w/2)+3,0,Math.PI*2);ctx.stroke();
+    // 阵营底环
+    ctx.strokeStyle=isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(x,y,(d.r||d.w/2)+2,0,Math.PI*2);ctx.stroke();
 
     // 建造进度
-    if(e.def.isBuilding&&e.constructing){
+    if(d.isBuilding&&e.constructing){
         const p=e.buildProgress;
-        if(sprite){
-            const sz=d.w*1.8;
-            const clipH=sz*p;
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(x-sz/2,y-sz/2+sz-clipH,sz,clipH);
-            ctx.clip();
-            ctx.globalAlpha=0.6;
-            ctx.drawImage(sprite,x-sz/2,y-sz/2,sz,sz);
-            ctx.restore();ctx.globalAlpha=1;
-        }
-        ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(x-d.w/2,y-d.h/2-12,d.w,4);
-        ctx.fillStyle='#F2C14E';ctx.fillRect(x-d.w/2,y-d.h/2-12,d.w*p,4);
+        ctx.save();ctx.globalAlpha=0.5+p*0.5;
+        ctx.translate(x,y);
+        // 裁剪：只画下半部分随进度增长
+        ctx.beginPath();ctx.rect(-d.w,-d.h, d.w*2, d.h*2*p);ctx.clip();
+        drawBuildingDetailed(d,isEnemy,e.animTime,isFiring);
+        ctx.restore();
+        // 进度条
+        ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(x-d.w/2,y-d.h/2-10,d.w,4);
+        ctx.fillStyle='#F2C14E';ctx.fillRect(x-d.w/2,y-d.h/2-10,d.w*p,4);
         return;
     }
 
-    // === 动态绘制（核心动画） ===
-    const isMoving=(e.targetX!==null||e.target)&&!e.holdPosition;
-    const isFiring=e.recoil>0;
+    // === 主体绘制 ===
+    ctx.save();
+    ctx.translate(x,y);
+    if(fl)ctx.globalAlpha=0.6;
 
-    if(sprite){
-        const sz=d.isBuilding?d.w*1.8:d.r*4;
+    if(d.isBuilding){
+        drawBuildingDetailed(d,isEnemy,e.animTime,isFiring);
+    }else if(d.isVehicle){
+        drawVehicleDetailed(e,d,isEnemy,isMoving,isFiring);
+    }else if(d.isInfantry){
+        drawInfantryDetailed(e,d,isEnemy,isMoving,isFiring);
+    }else if(d.isHarvester){
+        drawHarvesterDetailed(e,d,isEnemy,isMoving);
+    }
+    ctx.globalAlpha=1;
+    ctx.restore();
 
-        if(d.isBuilding){
-            // 建筑：不旋转，但防御建筑整体微摇（开火时）
-            let shakeX=0,shakeY=0;
-            if(isFiring){shakeX=(Math.random()-0.5)*2;shakeY=(Math.random()-0.5)*2;}
-            ctx.save();
-            if(e.isEnemy){ctx.filter='hue-rotate(180deg) saturate(1.3)';}
-            ctx.drawImage(sprite,x-sz/2+shakeX,y-sz/2+shakeY,sz,sz);
-            if(e.isEnemy){ctx.filter='none';}
-            ctx.restore();
-            // 防御建筑画炮管指示线
-            if(d.dmg&&d.range&&e.target){
-                ctx.strokeStyle='rgba(255,200,50,0.3)';ctx.lineWidth=1;
-                ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(e.target.x,e.target.y);ctx.stroke();
-            }
-        }else{
-            // 单位：旋转朝向 + 行走弹跳 + 后坐偏移
-            ctx.save();
-            ctx.translate(x,y);
+    // HP 条
+    if(e.hp<e.maxHp){
+        const w=d.isBuilding?d.w:d.r*2.5;
+        const bx=x-w/2, by=y-(d.isBuilding?d.h/2+8:d.r+8);
+        ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(bx-1,by-1,w+2,6);
+        ctx.fillStyle='#21262d';ctx.fillRect(bx,by,w,4);
+        const r=Math.max(0,e.hp/e.maxHp);
+        ctx.fillStyle=isEnemy?'#E74C3C':(r>0.5?'#3FA7D6':r>0.25?'#F2C14E':'#C0392B');
+        ctx.fillRect(bx,by,w*r,4);
+    }
+    // 集结点
+    if(d.isBuilding&&e.rallyX!==null){
+        ctx.strokeStyle='#F2C14E';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(e.rallyX,e.rallyY);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='#F2C14E';ctx.beginPath();ctx.arc(e.rallyX,e.rallyY,5,0,Math.PI*2);ctx.fill();
+    }
+}
 
-            // 行走弹跳（上下浮动）
-            let bobY=0;
-            if(isMoving){
-                bobY=Math.sin(e.animTime*(d.isInfantry?12:8))*1.5;
-                // 载具行走时轻微左右摇摆
-                if(d.isVehicle){ctx.rotate(Math.sin(e.animTime*6)*0.03);}
-            }
+// === 精细载具绘制（车身+履带+炮塔+炮管，各部件独立动画） ===
+function drawVehicleDetailed(e,d,isEnemy,isMoving,isFiring){
+    const r=d.r;
+    const bodyColor=isEnemy?'#8B2C2C':'#2C4C7E';
+    const bodyHi=isEnemy?'#A53838':'#4469A8';
+    const bodyDark=isEnemy?'#5C1C1C':'#1A3358';
+    const trackColor='#1a1a1a';
+    const trackHi='#333';
 
-            // 后坐偏移（沿朝向反方向偏移）
-            let recoilX=0,recoilY=0;
-            if(isFiring){
-                const r=e.recoil*6;
-                recoilX=-Math.cos(e.facing)*r;
-                recoilY=-Math.sin(e.facing)*r;
-            }
+    // 朝向
+    const ang=e.facing||0;
+    const recoil=e.recoil>0?e.recoil*4:0;
 
-            // 旋转图片朝向（载具旋转整体，步兵只旋转不翻转）
-            if(d.isVehicle){
-                // 载具：整体旋转到朝向（+90度偏移因为图片默认朝上）
-                ctx.rotate(e.facing+Math.PI/2);
-            }else if(d.isInfantry){
-                // 步兵：8方向量化，水平翻转处理
-                const angle=e.facing;
-                if(angle>Math.PI/2||angle<-Math.PI/2){
-                    ctx.scale(-1,1); // 面向左时水平翻转
-                }
-            }
+    // 行走时履带纹路偏移
+    const trackOffset=isMoving?(e.animTime*30)%6:0;
+    // 行走时车身微弹
+    const bob=isMoving?Math.sin(e.animTime*8)*0.8:0;
 
-            // 敌方色调
-            if(e.isEnemy){ctx.filter='hue-rotate(180deg) saturate(1.3)';}
+    ctx.save();
+    ctx.translate(0,bob);
 
-            // 受击闪烁
-            if(e.flashTime>0){ctx.globalAlpha=0.6;}
+    // === 履带（左右两条，带滚动纹路） ===
+    const tw=r*1.8, th=r*0.35;
+    // 左履带
+    ctx.fillStyle=trackColor;
+    ctx.fillRect(-tw/2,-r*0.75,tw,th);
+    // 履带纹路（移动时滚动）
+    ctx.fillStyle=trackHi;
+    for(let i=-tw/2;i<tw/2;i+=6){
+        const xx=i+trackOffset;
+        if(xx>-tw/2&&xx<tw/2-2)ctx.fillRect(xx,-r*0.75,2,th);
+    }
+    // 右履带
+    ctx.fillStyle=trackColor;
+    ctx.fillRect(-tw/2,r*0.4,tw,th);
+    ctx.fillStyle=trackHi;
+    for(let i=-tw/2;i<tw/2;i+=6){
+        const xx=i+trackOffset;
+        if(xx>-tw/2&&xx<tw/2-2)ctx.fillRect(xx,r*0.4,2,th);
+    }
 
-            // 绘制图片（中心在原点，脚部在 y=0 附近）
-            const yOffset=-sz*0.5;
-            ctx.drawImage(sprite,-sz/2+recoilX,yOffset+bobY+recoilY,sz,sz);
+    // === 车身（梯形，前窄后宽） ===
+    ctx.fillStyle=bodyColor;
+    ctx.beginPath();
+    ctx.moveTo(-r*0.9,-r*0.4);
+    ctx.lineTo(r*0.7,-r*0.45);
+    ctx.lineTo(r*0.85,-r*0.35);
+    ctx.lineTo(r*0.85,r*0.35);
+    ctx.lineTo(r*0.7,r*0.45);
+    ctx.lineTo(-r*0.9,r*0.4);
+    ctx.closePath();ctx.fill();
+    // 车身高光（顶部条）
+    ctx.fillStyle=bodyHi;
+    ctx.fillRect(-r*0.85,-r*0.4,r*1.65,r*0.12);
+    // 车身阴影（底部）
+    ctx.fillStyle=bodyDark;
+    ctx.fillRect(-r*0.85,r*0.3,r*1.65,r*0.12);
 
-            // 开火枪口闪光（在朝向方向）
-            if(isFiring&&e.recoil>0.08){
-                ctx.globalAlpha=1;
-                const fx=Math.cos(e.facing)*sz*0.4;
-                const fy=Math.sin(e.facing)*sz*0.4;
-                if(d.isVehicle){/* 载具已经旋转，闪光在本地坐标 */}
-                ctx.fillStyle='#FFD700';
-                ctx.beginPath();ctx.arc(fx,fy+yOffset+bobY,d.isVehicle?6:4,0,Math.PI*2);ctx.fill();
-                ctx.fillStyle='rgba(255,200,50,0.4)';
-                ctx.beginPath();ctx.arc(fx,fy+yOffset+bobY,d.isVehicle?10:7,0,Math.PI*2);ctx.fill();
-            }
+    // === 炮塔（独立旋转到朝向） ===
+    ctx.save();
+    ctx.rotate(ang);
+    // 炮塔本体（圆形）
+    const turretR=r*0.5;
+    ctx.fillStyle=bodyHi;
+    ctx.beginPath();ctx.arc(0,0,turretR,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=bodyDark;ctx.lineWidth=1;
+    ctx.beginPath();ctx.arc(0,0,turretR,0,Math.PI*2);ctx.stroke();
+    // 舱盖
+    ctx.fillStyle=bodyDark;
+    ctx.beginPath();ctx.arc(-r*0.1,0,r*0.2,0,Math.PI*2);ctx.fill();
 
-            if(e.isEnemy){ctx.filter='none';}
-            ctx.globalAlpha=1;
-            ctx.restore();
-        }
-    }else{
-        // 回退形状绘制（保留动画）
-        const fl=e.flashTime>0;
+    // === 炮管（后坐动画） ===
+    const barrelLen=r*1.5-recoil;
+    const barrelW=d.r>15?4:3; // 重坦更粗
+    ctx.fillStyle='#2a2a2a';
+    ctx.fillRect(0,-barrelW/2,barrelLen,barrelW);
+    // 炮口
+    ctx.fillStyle='#444';
+    ctx.beginPath();ctx.arc(barrelLen,0,barrelW/2+1,0,Math.PI*2);ctx.fill();
+
+    // 开火闪光
+    if(isFiring&&e.recoil>0.08){
+        const fx=barrelLen;
+        ctx.fillStyle='#FFD700';
+        ctx.beginPath();ctx.arc(fx,0,5,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(255,200,50,0.5)';
+        ctx.beginPath();ctx.arc(fx,0,9,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.3)';
+        ctx.beginPath();ctx.arc(fx,0,12,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.restore();
+}
+
+// === 精细步兵绘制（头+身+腿行走+手臂持枪，各部件独立动画） ===
+function drawInfantryDetailed(e,d,isEnemy,isMoving,isFiring){
+    const r=d.r;
+    const uniform=isEnemy?'#8B2C2C':'#1F4E8C';
+    const uniformHi=isEnemy?'#A53838':'#2A5BA8';
+    const skin='#C9A87C';
+    const helmet=isEnemy?'#5C2020':'#26416D';
+    const gun='#1a1a1a';
+
+    const ang=e.facing||0;
+    const facingLeft=ang>Math.PI/2||ang<-Math.PI/2;
+
+    // 行走动画：腿交替
+    const walkPhase=isMoving?Math.sin(e.animTime*10):0;
+    const bobY=isMoving?Math.abs(Math.sin(e.animTime*10))*1:0;
+
+    // 开火后坐
+    const recoil=isFiring?e.recoil*3:0;
+
+    ctx.save();
+    if(facingLeft)ctx.scale(-1,1);
+    ctx.translate(-recoil,-bobY);
+
+    // === 腿（行走交替） ===
+    ctx.fillStyle='#2a2a2a';
+    // 左腿
+    const leg1Y=isMoving?walkPhase*2:0;
+    const leg2Y=isMoving?-walkPhase*2:0;
+    ctx.fillRect(-3,r*0.3+leg1Y,4,r*0.5);
+    // 右腿
+    ctx.fillRect(1,r*0.3+leg2Y,4,r*0.5);
+
+    // === 身体（躯干） ===
+    ctx.fillStyle=uniform;
+    ctx.beginPath();
+    ctx.ellipse(0,0,r*0.7,r*0.8,0,0,Math.PI*2);
+    ctx.fill();
+    // 身体高光
+    ctx.fillStyle=uniformHi;
+    ctx.beginPath();
+    ctx.ellipse(-r*0.2,-r*0.2,r*0.4,r*0.4,0,0,Math.PI*2);
+    ctx.fill();
+
+    // === 头部 ===
+    ctx.fillStyle=skin;
+    ctx.beginPath();ctx.arc(0,-r*0.6,r*0.4,0,Math.PI*2);ctx.fill();
+    // 头盔
+    ctx.fillStyle=helmet;
+    ctx.beginPath();ctx.arc(0,-r*0.65,r*0.42,Math.PI,0);ctx.fill();
+    ctx.fillRect(-r*0.42,-r*0.65,r*0.84,r*0.1);
+
+    // === 手臂+枪（朝向方向） ===
+    ctx.save();
+    ctx.rotate(ang);
+    // 手臂
+    ctx.fillStyle=uniform;
+    ctx.fillRect(0,-2,r*0.5,4);
+    // 枪
+    ctx.fillStyle=gun;
+    ctx.fillRect(r*0.3,-1.5,r*0.8,3);
+    // 枪口
+    ctx.fillStyle='#333';
+    ctx.fillRect(r*1.05,-1,2,2);
+
+    // 开火闪光
+    if(isFiring&&e.recoil>0.08){
+        const fx=r*1.1;
+        ctx.fillStyle='#FFD700';
+        ctx.beginPath();ctx.arc(fx,0,3,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(255,200,50,0.4)';
+        ctx.beginPath();ctx.arc(fx,0,6,0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.restore();
+}
+
+// === 采矿车绘制（六边形车身+旋转采矿钻头+矿仓） ===
+function drawHarvesterDetailed(e,d,isEnemy,isMoving){
+    const r=d.r;
+    const bodyColor='#8B7355';
+    const hiColor='#A0855A';
+
+    ctx.save();
+    // 车身
+    ctx.fillStyle=bodyColor;
+    ctx.beginPath();
+    for(let i=0;i<6;i++){
+        const a=i/6*Math.PI*2;
+        const px=Math.cos(a)*r,py=Math.sin(a)*r;
+        if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    }
+    ctx.closePath();ctx.fill();
+    ctx.strokeStyle=hiColor;ctx.lineWidth=1;ctx.stroke();
+
+    // 矿仓（载矿时金色）
+    if(e.oreCarried>0){
+        ctx.fillStyle='#C4A96A';
+        ctx.beginPath();ctx.arc(0,0,r*0.45,0,Math.PI*2);ctx.fill();
+    }
+
+    // 采矿钻头（采集时旋转）
+    if(e.harvestState==='harvesting'){
         ctx.save();
-        ctx.translate(x,y);
-        if(isMoving&&!d.isBuilding){ctx.translate(0,Math.sin(e.animTime*10)*1.5);}
-        if(isFiring){ctx.translate(-Math.cos(e.facing)*e.recoil*4,-Math.sin(e.facing)*e.recoil*4);}
-        if(d.isInfantry){
-            ctx.fillStyle=fl?'#fff':(e.isEnemy?'#8B1E1E':'#1F4E8C');
-            ctx.beginPath();ctx.arc(0,-d.r,d.r,0,Math.PI*2);ctx.fill();
-            ctx.strokeStyle='#222';ctx.lineWidth=2;
-            const a=e.facing;ctx.beginPath();ctx.moveTo(Math.cos(a)*d.r*0.5,-d.r);ctx.lineTo(Math.cos(a)*d.r*1.5,-d.r);ctx.stroke();
-        }else if(d.isVehicle){
-            ctx.rotate(e.facing+Math.PI/2);
-            ctx.fillStyle=fl?'#fff':(e.isEnemy?'#5C2C2C':'#2C4C7E');
-            ctx.fillRect(-d.r,-d.r*0.7,d.r*2,d.r*1.4);
-        }else if(d.isHarvester){
-            ctx.fillStyle=fl?'#fff':'#8B7355';
+        ctx.rotate(e.animTime*4);
+        ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;
+        for(let i=0;i<3;i++){
+            const a=i/3*Math.PI*2;
             ctx.beginPath();
-            for(let i=0;i<6;i++){const a=i/6*Math.PI*2;if(i===0)ctx.moveTo(Math.cos(a)*d.r,Math.sin(a)*d.r);else ctx.lineTo(Math.cos(a)*d.r,Math.sin(a)*d.r);}
-            ctx.closePath();ctx.fill();
-        }else{
-            ctx.fillStyle=fl?'#fff':(e.isEnemy?'#3d2020':'#1a2a3a');
-            ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);
+            ctx.moveTo(Math.cos(a)*r*0.3,Math.sin(a)*r*0.3);
+            ctx.lineTo(Math.cos(a)*r*0.8,Math.sin(a)*r*0.8);
+            ctx.stroke();
         }
         ctx.restore();
     }
-    ctx.globalAlpha=1;
 
-    // HP 条
-    if(e.hp<e.maxHp)drawIsoHPBar(e,iso);
+    // 轮子（移动时旋转）
+    if(isMoving){
+        ctx.fillStyle='#333';
+        for(let i=0;i<4;i++){
+            const a=e.animTime*5+i*Math.PI/2;
+            ctx.beginPath();ctx.arc(Math.cos(a)*r*0.6,Math.sin(a)*r*0.6,2,0,Math.PI*2);ctx.fill();
+        }
+    }
+    ctx.restore();
+}
 
-    // 集结点指示
-    if(e.def.isBuilding&&e.rallyX!==null){
-        const rallyIso=worldToIsoScreen(e.rallyX,e.rallyY);
-        ctx.strokeStyle='#F2C14E';ctx.lineWidth=1;ctx.setLineDash([3,3]);
-        ctx.beginPath();ctx.moveTo(iso.x,iso.y);ctx.lineTo(rallyIso.x,rallyIso.y);ctx.stroke();ctx.setLineDash([]);
-        ctx.fillStyle='#F2C14E';ctx.beginPath();ctx.arc(rallyIso.x,rallyIso.y,5,0,Math.PI*2);ctx.fill();
+// === 精细建筑绘制（本体+烟囱冒烟+雷达旋转+开火闪烁） ===
+function drawBuildingDetailed(d,isEnemy,animTime,isFiring){
+    const w=d.w, h=d.h;
+    const bodyColor=isEnemy?'#3d2020':'#1a2a3a';
+    const hiColor=isEnemy?'#5C3030':'#2C4C5A';
+    const darkColor=isEnemy?'#2A1515':'#152030';
+
+    // 阴影
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.fillRect(-w/2+3,-h/2+3,w,h);
+
+    // 本体
+    ctx.fillStyle=bodyColor;
+    ctx.fillRect(-w/2,-h/2,w,h);
+    // 顶部高光条
+    ctx.fillStyle=hiColor;
+    ctx.fillRect(-w/2,-h/2,w,4);
+    // 底部暗条
+    ctx.fillStyle=darkColor;
+    ctx.fillRect(-w/2,h/2-4,w,4);
+    // 边框
+    ctx.strokeStyle=isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=2;
+    ctx.strokeRect(-w/2,-h/2,w,h);
+
+    // 建筑类型细节
+    const type=d.sprite||'';
+    if(type==='hq'||type==='refinery'||type==='powerplant'||type==='warfactory'){
+        // 烟囱冒烟
+        ctx.fillStyle='#333';
+        ctx.fillRect(-w*0.3,-h*0.6,w*0.12,h*0.2);
+        // 烟雾粒子
+        const smokeY=-h*0.6-animTime*15%20;
+        ctx.fillStyle=`rgba(150,150,150,${0.5-Math.abs(smokeY)/40})`;
+        ctx.beginPath();ctx.arc(-w*0.24,smokeY,3+Math.abs(smokeY)/10,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=`rgba(120,120,120,${0.3-Math.abs(smokeY+10)/50})`;
+        ctx.beginPath();ctx.arc(-w*0.24+2,smokeY-5,2+Math.abs(smokeY+10)/12,0,Math.PI*2);ctx.fill();
+    }
+    if(type==='radar'){
+        // 旋转雷达天线
+        ctx.save();
+        ctx.translate(0,-h*0.2);
+        ctx.rotate(animTime*2);
+        ctx.strokeStyle='#3FA7D6';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-h*0.3);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(-h*0.15,-h*0.25);ctx.lineTo(h*0.15,-h*0.25);ctx.stroke();
+        ctx.restore();
+    }
+    if(type==='mgtower'||type==='atcannon'){
+        // 防御建筑：开火时闪光
+        if(isFiring){
+            ctx.fillStyle='rgba(255,200,50,0.3)';
+            ctx.beginPath();ctx.arc(0,0,w*0.6,0,Math.PI*2);ctx.fill();
+        }
+        // 炮管指示
+        ctx.fillStyle='#444';
+        ctx.fillRect(-2,-h*0.3,4,h*0.3);
+    }
+    if(type==='barracks'){
+        // 旗帜飘动
+        ctx.strokeStyle='#666';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(w*0.3,-h*0.5);ctx.lineTo(w*0.3,-h*0.8);ctx.stroke();
+        const flagWave=Math.sin(animTime*3)*2;
+        ctx.fillStyle=isEnemy?'#E74C3C':'#3FA7D6';
+        ctx.beginPath();
+        ctx.moveTo(w*0.3,-h*0.8);
+        ctx.lineTo(w*0.3+10+flagWave,-h*0.75);
+        ctx.lineTo(w*0.3,-h*0.7);
+        ctx.closePath();ctx.fill();
+    }
+    if(type==='warfactory'){
+        // 车库门（生产时闪烁）
+        ctx.fillStyle='#222';
+        ctx.fillRect(-w*0.2,h*0.1,w*0.4,h*0.3);
+        ctx.strokeStyle='#444';ctx.lineWidth=1;
+        ctx.strokeRect(-w*0.2,h*0.1,w*0.4,h*0.3);
     }
 }
 
-function drawIsoHPBar(e,iso){
-    const w=e.def.isBuilding?e.def.w:e.def.r*2.5;
-    const x=iso.x-w/2,y=iso.y-(e.def.isBuilding?e.def.h/2+10:e.def.r+10);
-    ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(x-1,y-1,w+2,6);
-    ctx.fillStyle='#21262d';ctx.fillRect(x,y,w,4);
-    const r=Math.max(0,e.hp/e.maxHp);
-    ctx.fillStyle=e.isEnemy?'#E74C3C':(r>0.5?'#3FA7D6':r>0.25?'#F2C14E':'#C0392B');
-    ctx.fillRect(x,y,w*r,4);
+function drawUnitBody(d,isEnemy,fl,t){
+    // 死亡时的简化绘制
+    if(d.isInfantry){
+        ctx.fillStyle=isEnemy?'#8B2C2C':'#1F4E8C';
+        ctx.beginPath();ctx.arc(0,0,d.r*0.7,0,Math.PI*2);ctx.fill();
+    }else if(d.isVehicle){
+        ctx.fillStyle=isEnemy?'#5C2C2C':'#2C4C7E';
+        ctx.fillRect(-d.r,-d.r*0.5,d.r*2,d.r);
+    }else{
+        ctx.fillStyle='#8B7355';
+        ctx.fillRect(-d.r,-d.r,d.r*2,d.r*2);
+    }
 }
+
+// drawIsoHPBar 已内联到 drawIsoEntity
 
 function drawSelectionRing(e){
     // 已在 drawIsoEntity 中绘制底环
