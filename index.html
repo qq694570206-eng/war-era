@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>钢铁防线 Demo v0.3</title>
+<title>钢铁防线 Demo v0.4</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:'Segoe UI',system-ui,sans-serif;touch-action:none}
@@ -12,77 +12,67 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:
 #uiOverlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
 #resourceBar{position:absolute;top:6px;left:6px;background:rgba(13,17,23,0.9);border:1px solid #30363d;border-radius:8px;padding:6px 12px;color:#c9d1d9;font-size:12px;display:flex;gap:14px;pointer-events:auto;backdrop-filter:blur(4px)}
 #resourceBar .res{display:flex;align-items:center;gap:3px}
-#resourceBar .icon{font-size:14px}
 #resourceBar .val{color:#F2C14E;font-weight:bold;min-width:40px;font-variant-numeric:tabular-nums}
 #resourceBar .val.low{color:#C0392B}
-#resourceBar .val.pow-ok{color:#3FA7D6}
-#resourceBar .val.pow-low{color:#E74C3C}
+#resourceBar .val.pow-ok{color:#3FA7D6}.val.pow-low{color:#E74C3C}
 #miniMap{position:absolute;top:6px;right:6px;width:160px;height:120px;background:rgba(13,17,23,0.9);border:1px solid #30363d;border-radius:6px;pointer-events:auto;cursor:pointer;backdrop-filter:blur(4px)}
-#alertBar{position:absolute;top:132px;right:6px;width:160px;background:rgba(139,30,30,0.9);border:1px solid #8B1E1E;border-radius:6px;padding:5px 8px;color:#fff;font-size:11px;text-align:center;display:none;animation:pulse-alert 0.8s infinite alternate}
-@keyframes pulse-alert{from{box-shadow:0 0 4px rgba(139,30,30,0.5)}to{box-shadow:0 0 12px rgba(231,76,60,0.7)}}
+#alertBar{position:absolute;top:132px;right:6px;width:160px;background:rgba(139,30,30,0.9);border:1px solid #8B1E1E;border-radius:6px;padding:5px 8px;color:#fff;font-size:11px;text-align:center;display:none;animation:pa 0.8s infinite alternate}
+@keyframes pa{from{box-shadow:0 0 4px rgba(139,30,30,0.5)}to{box-shadow:0 0 12px rgba(231,76,60,0.7)}}
 #squadBar{position:absolute;right:6px;top:170px;display:flex;flex-direction:column;gap:4px;pointer-events:auto}
-.squad-btn{width:38px;height:38px;border:1px solid #30363d;border-radius:6px;background:rgba(13,17,23,0.9);color:#8b949e;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all 0.12s}
-.squad-btn:active{transform:scale(0.92)}
-.squad-btn.has-units{border-color:#3FA7D6;color:#3FA7D6;background:rgba(63,167,214,0.15)}
+.squad-btn{width:38px;height:38px;border:1px solid #30363d;border-radius:6px;background:rgba(13,17,23,0.9);color:#8b949e;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all .12s}
+.squad-btn:active{transform:scale(.92)}
+.squad-btn.has-units{border-color:#3FA7D6;color:#3FA7D6;background:rgba(63,167,214,.15)}
 .squad-btn .count{position:absolute;bottom:-2px;right:-2px;font-size:8px;background:#F2C14E;color:#000;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;font-weight:bold}
-.squad-btn.empty{opacity:0.4}
-.squad-btn.assigning{border-color:#F2C14E;animation:pulse-assign 0.5s infinite alternate}
-@keyframes pulse-assign{from{box-shadow:0 0 4px rgba(242,193,78,0.3)}to{box-shadow:0 0 12px rgba(242,193,78,0.6)}}
-#buildPanel{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,0.92);border-top:1px solid #30363d;padding:6px 8px;pointer-events:auto;display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap;backdrop-filter:blur(6px);min-height:72px}
+.squad-btn.empty{opacity:.4}.squad-btn.assigning{border-color:#F2C14E;animation:pas .5s infinite alternate}
+@keyframes pas{from{box-shadow:0 0 4px rgba(242,193,78,.3)}to{box-shadow:0 0 12px rgba(242,193,78,.6)}}
+#buildPanel{position:absolute;bottom:0;left:0;right:0;background:rgba(13,17,23,.92);border-top:1px solid #30363d;padding:6px 8px;pointer-events:auto;display:flex;gap:4px;align-items:center;justify-content:center;flex-wrap:wrap;backdrop-filter:blur(6px);min-height:72px}
 .build-cat{font-size:10px;color:#6e7681;width:36px;text-align:center;border-right:1px solid #30363d;padding-right:4px;flex-shrink:0}
-.build-btn{width:56px;height:56px;border:1.5px solid #30363d;border-radius:8px;background:#161b22;color:#c9d1d9;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.12s;gap:1px;position:relative;flex-shrink:0}
-.build-btn:active{transform:scale(0.93)}
-.build-btn .bicon{font-size:20px}
-.build-btn .bname{font-size:8px;text-align:center;line-height:1.1}
+.build-btn{width:56px;height:56px;border:1.5px solid #30363d;border-radius:8px;background:#161b22;color:#c9d1d9;font-size:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .12s;gap:1px;position:relative;flex-shrink:0}
+.build-btn:active{transform:scale(.93)}
+.build-btn .bicon{font-size:20px}.build-btn .bname{font-size:8px;text-align:center;line-height:1.1}
 .build-btn .bcost{font-size:8px;color:#F2C14E}
-.build-btn.disabled{opacity:0.35;filter:grayscale(0.5)}
-.build-btn.disabled .bcost{color:#C0392B}
-.build-btn.selected{border-color:#F2C14E;background:rgba(242,193,78,0.12);box-shadow:0 0 10px rgba(242,193,78,0.3)}
+.build-btn.disabled{opacity:.35;filter:grayscale(.5)}.build-btn.disabled .bcost{color:#C0392B}
+.build-btn.selected{border-color:#F2C14E;background:rgba(242,193,78,.12);box-shadow:0 0 10px rgba(242,193,78,.3)}
 .build-btn .lock{position:absolute;top:2px;right:2px;font-size:8px;color:#C0392B}
-#unitInfo{position:absolute;bottom:80px;right:6px;width:180px;background:rgba(13,17,23,0.92);border:1px solid #30363d;border-radius:8px;padding:8px;color:#c9d1d9;font-size:11px;pointer-events:auto;display:none;backdrop-filter:blur(4px)}
+#unitInfo{position:absolute;bottom:80px;right:6px;width:180px;background:rgba(13,17,23,.92);border:1px solid #30363d;border-radius:8px;padding:8px;color:#c9d1d9;font-size:11px;pointer-events:auto;display:none;backdrop-filter:blur(4px)}
 #unitInfo .title{font-size:12px;font-weight:bold;margin-bottom:4px;color:#F2C14E;display:flex;justify-content:space-between;align-items:center}
 #unitInfo .count-badge{background:#3FA7D6;color:#000;padding:1px 6px;border-radius:8px;font-size:10px}
 #unitInfo .hp-bar{width:100%;height:5px;background:#21262d;border-radius:3px;margin:3px 0;overflow:hidden}
-#unitInfo .hp-fill{height:100%;border-radius:3px;transition:width 0.2s}
+#unitInfo .hp-fill{height:100%;border-radius:3px;transition:width .2s}
 #unitInfo .stat{display:flex;justify-content:space-between;margin:1px 0;color:#8b949e}
 #unitInfo .stat span:last-child{color:#c9d1d9}
-#unitInfo .armor-tag{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:bold}
-.armor-light{background:#3d2817;color:#e8a44d}
-.armor-vehicle{background:#1a2d1a;color:#6bcf6b}
-.armor-heavy{background:#2d1a1a;color:#cf6b6b}
-.armor-building{background:#1a1a2d;color:#6b8ccf}
 #unitInfo .cmd-row{display:flex;gap:4px;margin-top:4px}
 .cmd-btn{flex:1;padding:5px;border:1px solid #30363d;border-radius:4px;background:#161b22;color:#8b949e;font-size:10px;cursor:pointer;text-align:center}
 .cmd-btn:active{background:#30363d;color:#c9d1d9}
-#hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,0.5);font-size:13px;text-align:center;pointer-events:none;z-index:5;max-width:300px;line-height:1.6}
-#toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#F2C14E;padding:6px 14px;border-radius:6px;font-size:11px;pointer-events:none;opacity:0;transition:opacity 0.3s;z-index:20;white-space:nowrap}
-#mainMenu{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;pointer-events:auto;gap:14px;overflow-y:auto;padding:20px 0}
+#hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:rgba(255,255,255,.5);font-size:13px;text-align:center;pointer-events:none;z-index:5;max-width:300px;line-height:1.6}
+#toast{position:absolute;bottom:84px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#F2C14E;padding:6px 14px;border-radius:6px;font-size:11px;pointer-events:none;opacity:0;transition:opacity .3s;z-index:20;white-space:nowrap}
+#mainMenu{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;pointer-events:auto;gap:14px;overflow-y:auto;padding:20px 0}
 #mainMenu h1{color:#F2C14E;font-size:26px;margin-bottom:2px;letter-spacing:2px}
 #mainMenu .subtitle{color:#8b949e;font-size:12px;margin-bottom:10px}
-.menu-section{background:rgba(22,27,34,0.9);border:1px solid #30363d;border-radius:10px;padding:14px 20px;min-width:280px}
+.menu-section{background:rgba(22,27,34,.9);border:1px solid #30363d;border-radius:10px;padding:14px 20px;min-width:280px}
 .menu-section .label{color:#6e7681;font-size:11px;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
 .menu-options{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.menu-opt{padding:7px 12px;border:1px solid #30363d;border-radius:6px;background:#161b22;color:#8b949e;font-size:12px;cursor:pointer;transition:all 0.12s}
-.menu-opt:active{transform:scale(0.95)}
-.menu-opt.selected{border-color:#F2C14E;background:rgba(242,193,78,0.12);color:#F2C14E}
-#startBtn{margin-top:6px;padding:12px 36px;border:2px solid #F2C14E;border-radius:8px;background:rgba(242,193,78,0.15);color:#F2C14E;font-size:15px;font-weight:bold;cursor:pointer;transition:all 0.15s}
-#startBtn:active{transform:scale(0.95);background:rgba(242,193,78,0.25)}
-#techBtn{position:absolute;top:44px;left:6px;padding:4px 10px;border:1px solid #30363d;border-radius:6px;background:rgba(13,17,23,0.9);color:#8b949e;font-size:11px;cursor:pointer;pointer-events:auto;backdrop-filter:blur(4px)}
-#techBtn:active{background:#30363d}
-#superWeaponBtn{position:absolute;bottom:80px;left:6px;padding:6px 12px;border:2px solid #C0392B;border-radius:8px;background:rgba(139,30,30,0.2);color:#E74C3C;font-size:11px;cursor:pointer;pointer-events:auto;display:none;animation:pulse-sw 1s infinite alternate}
-@keyframes pulse-sw{from{box-shadow:0 0 4px rgba(231,76,60,0.3)}to{box-shadow:0 0 16px rgba(231,76,60,0.6)}}
+.menu-opt{padding:7px 12px;border:1px solid #30363d;border-radius:6px;background:#161b22;color:#8b949e;font-size:12px;cursor:pointer;transition:all .12s}
+.menu-opt:active{transform:scale(.95)}
+.menu-opt.selected{border-color:#F2C14E;background:rgba(242,193,78,.12);color:#F2C14E}
+#startBtn{margin-top:6px;padding:12px 36px;border:2px solid #F2C14E;border-radius:8px;background:rgba(242,193,78,.15);color:#F2C14E;font-size:15px;font-weight:bold;cursor:pointer;transition:all .15s}
+#startBtn:active{transform:scale(.95)}
+#techBtn{position:absolute;top:44px;left:6px;padding:4px 10px;border:1px solid #30363d;border-radius:6px;background:rgba(13,17,23,.9);color:#8b949e;font-size:11px;cursor:pointer;pointer-events:auto;backdrop-filter:blur(4px)}
+#superWeaponBtn{position:absolute;bottom:80px;left:6px;padding:6px 12px;border:2px solid #C0392B;border-radius:8px;background:rgba(139,30,30,.2);color:#E74C3C;font-size:11px;cursor:pointer;pointer-events:auto;display:none;animation:pulse-sw 1s infinite alternate}
+@keyframes pulse-sw{from{box-shadow:0 0 4px rgba(231,76,60,.3)}to{box-shadow:0 0 16px rgba(231,76,60,.6)}}
 #superWeaponBtn.ready{display:block}
-#techPanel{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(13,17,23,0.95);border:1px solid #30363d;border-radius:10px;padding:12px;display:none;pointer-events:auto;z-index:15;min-width:300px}
+#techPanel{position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(13,17,23,.95);border:1px solid #30363d;border-radius:10px;padding:12px;display:none;pointer-events:auto;z-index:15;min-width:300px}
 #techPanel .tp-title{color:#F2C14E;font-size:13px;font-weight:bold;margin-bottom:8px;text-align:center}
 .tech-item{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border:1px solid #30363d;border-radius:6px;margin-bottom:4px;background:#161b22}
-.tech-item .ti-name{color:#c9d1d9;font-size:11px}
-.tech-item .ti-desc{color:#6e7681;font-size:9px}
+.tech-item .ti-name{color:#c9d1d9;font-size:11px}.tech-item .ti-desc{color:#6e7681;font-size:9px}
 .tech-item .ti-btn{padding:4px 10px;border:1px solid #30363d;border-radius:4px;background:#21262d;color:#F2C14E;font-size:10px;cursor:pointer}
-.tech-item .ti-btn:disabled{opacity:0.3;cursor:not-allowed}
-.tech-item.maxed{opacity:0.5}
-#gameOverScreen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:40;pointer-events:auto}
+.tech-item .ti-btn:disabled{opacity:.3;cursor:not-allowed}.tech-item.maxed{opacity:.5}
+#gameOverScreen{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:40;pointer-events:auto}
 #gameOverScreen h2{font-size:28px;margin-bottom:16px}
-#gameOverScreen .btn{padding:10px 28px;border:2px solid #F2C14E;border-radius:8px;background:rgba(242,193,78,0.15);color:#F2C14E;font-size:14px;cursor:pointer}
+#gameOverScreen .btn{padding:10px 28px;border:2px solid #F2C14E;border-radius:8px;background:rgba(242,193,78,.15);color:#F2C14E;font-size:14px;cursor:pointer}
+#loadingScreen{position:absolute;top:0;left:0;width:100%;height:100%;background:#0d1117;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60;color:#8b949e;font-size:14px;gap:12px}
+#loadingBar{width:200px;height:6px;background:#21262d;border-radius:3px;overflow:hidden}
+#loadingFill{height:100%;background:#F2C14E;width:0;transition:width .3s}
 </style>
 </head>
 <body>
@@ -90,11 +80,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:
 <canvas id="fogCanvas"></canvas>
 <div id="uiOverlay">
     <div id="resourceBar">
-        <div class="res"><span class="icon">💰</span><span class="val" id="resOre">0</span></div>
-        <div class="res"><span class="icon">⚡</span><span class="val pow-ok" id="resPower">0/0</span></div>
-        <div class="res"><span class="icon">🔬</span><span class="val" id="resTech">0</span></div>
+        <div class="res"><span>💰</span><span class="val" id="resOre">0</span></div>
+        <div class="res"><span>⚡</span><span class="val pow-ok" id="resPower">0/0</span></div>
+        <div class="res"><span>🔬</span><span class="val" id="resTech">0</span></div>
     </div>
-    <div id="techBtn" onclick="toggleTechPanel()">🔬 科技 T1</div>
+    <div id="techBtn" onclick="toggleTechPanel()">🔬 T1 (0)</div>
     <canvas id="miniMap" width="160" height="120"></canvas>
     <div id="alertBar"></div>
     <div id="squadBar"></div>
@@ -104,7 +94,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:
         <div class="stat"><span>HP</span><span id="uiHPVal">0/0</span></div>
         <div class="stat"><span>伤害</span><span id="uiDmg">0</span></div>
         <div class="stat"><span>射程</span><span id="uiRange">0</span></div>
-        <div class="stat"><span>护甲</span><span id="uiArmor"></span></div>
         <div class="cmd-row">
             <div class="cmd-btn" id="cmdStop">坚守</div>
             <div class="cmd-btn" id="cmdRally">集结</div>
@@ -137,7 +126,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:
 </div>
 <div id="mainMenu">
     <h1>钢铁防线</h1>
-    <div class="subtitle">移动端即时战略 · Demo v0.3</div>
+    <div class="subtitle">移动端即时战略 · Demo v0.4 · 等距视角</div>
     <div class="menu-section">
         <div class="label">选择阵营</div>
         <div class="menu-options" id="factionOpts">
@@ -163,165 +152,162 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0d1117;font-family:
     </div>
     <button id="startBtn">开始战斗</button>
 </div>
-<div id="gameOverScreen">
-    <h2 id="goText"></h2>
-    <div class="btn" onclick="location.reload()">再来一局</div>
+<div id="gameOverScreen"><h2 id="goText"></h2><div class="btn" onclick="location.reload()">再来一局</div></div>
+<div id="loadingScreen">
+    <div>加载素材中...</div>
+    <div id="loadingBar"><div id="loadingFill"></div></div>
+    <div id="loadingText">0/12</div>
 </div>
 
 <script>
 // ================================================================
-// 钢铁防线 Demo v0.3
-// P0: 编队长按编入 | P1: 音效(Web Audio合成) | P2: 单位朝向+后坐+死亡溶解
-// P3: 战争迷雾 | P4: 敌方基地扩展 | P5: 地图加大+更多矿点
+// 钢铁防线 Demo v0.4 — 等距视角 + 真实图片素材
 // ================================================================
 
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const fogCanvas = document.getElementById('fogCanvas');
-const fogCtx = fogCanvas.getContext('2d');
-const miniCanvas = document.getElementById('miniMap');
-const miniCtx = miniCanvas.getContext('2d');
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+const fogCanvas=document.getElementById('fogCanvas');
+const fogCtx=fogCanvas.getContext('2d');
+const miniCanvas=document.getElementById('miniMap');
+const miniCtx=miniCanvas.getContext('2d');
 
-const CONFIG = { WORLD_W: 2400, WORLD_H: 1600, TILE: 24, FPS: 60, FOG_TILE: 48 };
+const CONFIG={WORLD_W:2400,WORLD_H:1600,TILE:24,FOG_TILE:48,
+    // 等距投影参数
+    ISO_ANGLE:Math.PI/6, // 30度倾斜
+    ISO_TILE_W:32, ISO_TILE_H:16, // 等距格子尺寸
+};
 
-// === 音效引擎 (Web Audio API 合成，无需音频文件) ===
-const AudioEngine = {
-    ctx: null, enabled: true, channels: [], maxChannels: 24,
-    init() {
-        try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) { this.enabled = false; }
-    },
-    resume() { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
-    play(type, volume = 1) {
-        if (!this.enabled || !this.ctx) return;
-        this.resume();
-        const now = this.ctx.currentTime;
-        const gain = this.ctx.createGain();
-        gain.connect(this.ctx.destination);
-        gain.gain.value = 0;
-        const osc = this.ctx.createOscillator();
-        osc.connect(gain);
-        switch(type) {
-            case 'shoot':
-                osc.type = 'square'; osc.frequency.setValueAtTime(180, now);
-                osc.frequency.exponentialRampToValueAtTime(60, now + 0.08);
-                gain.gain.linearRampToValueAtTime(0.06 * volume, now + 0.005);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1); break;
-            case 'cannon':
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, now);
-                osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
-                gain.gain.linearRampToValueAtTime(0.12 * volume, now + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2); break;
-            case 'explosion':
-                // 白噪声爆炸
-                const bufSize = this.ctx.sampleRate * 0.3;
-                const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
-                const data = buf.getChannelData(0);
-                for (let i = 0; i < bufSize; i++) data[i] = (Math.random()*2-1) * Math.pow(1-i/bufSize, 2);
-                const src = this.ctx.createBufferSource(); src.buffer = buf;
-                const filter = this.ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
-                src.connect(filter); filter.connect(gain);
-                gain.gain.value = 0.15 * volume;
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-                src.start(now); break;
-            case 'nuke':
-                // 低频轰鸣
-                osc.type = 'sine'; osc.frequency.setValueAtTime(40, now);
-                osc.frequency.linearRampToValueAtTime(20, now + 1.5);
-                gain.gain.linearRampToValueAtTime(0.3, now + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 2);
-                osc.start(now); osc.stop(now + 2);
-                // 叠加白噪声
-                const nBuf = this.ctx.sampleRate * 1.5;
-                const nBuf2 = this.ctx.createBuffer(1, nBuf, this.ctx.sampleRate);
-                const nData = nBuf2.getChannelData(0);
-                for (let i = 0; i < nBuf; i++) nData[i] = (Math.random()*2-1) * Math.pow(1-i/nBuf, 1.5);
-                const nSrc = this.ctx.createBufferSource(); nSrc.buffer = nBuf2;
-                const nFilter = this.ctx.createBiquadFilter(); nFilter.type = 'lowpass'; nFilter.frequency.value = 200;
-                const nGain = this.ctx.createGain();
-                nSrc.connect(nFilter); nFilter.connect(nGain); nGain.connect(this.ctx.destination);
-                nGain.gain.value = 0.2; nGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
-                nSrc.start(now); break;
-            case 'build':
-                osc.type = 'triangle'; osc.frequency.setValueAtTime(440, now);
-                osc.frequency.linearRampToValueAtTime(660, now + 0.15);
-                gain.gain.linearRampToValueAtTime(0.08 * volume, now + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-                osc.start(now); osc.stop(now + 0.2); break;
-            case 'select':
-                osc.type = 'sine'; osc.frequency.setValueAtTime(800, now);
-                gain.gain.linearRampToValueAtTime(0.04 * volume, now + 0.005);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-                osc.start(now); osc.stop(now + 0.06); break;
-            case 'move':
-                osc.type = 'sine'; osc.frequency.setValueAtTime(600, now);
-                gain.gain.linearRampToValueAtTime(0.03 * volume, now + 0.005);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-                osc.start(now); osc.stop(now + 0.05); break;
-            case 'error':
-                osc.type = 'square'; osc.frequency.setValueAtTime(150, now);
-                gain.gain.linearRampToValueAtTime(0.06 * volume, now + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                osc.start(now); osc.stop(now + 0.15); break;
-            case 'alert':
-                osc.type = 'square'; osc.frequency.setValueAtTime(880, now);
-                gain.gain.linearRampToValueAtTime(0.05, now + 0.01);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
-                // 间隔后第二声
-                const osc2 = this.ctx.createOscillator();
-                const gain2 = this.ctx.createGain();
-                osc2.connect(gain2); gain2.connect(this.ctx.destination);
-                osc2.type = 'square'; osc2.frequency.value = 880;
-                gain2.gain.setValueAtTime(0, now + 0.2);
-                gain2.gain.linearRampToValueAtTime(0.05, now + 0.21);
-                gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-                osc2.start(now + 0.2); osc2.stop(now + 0.35);
-                break;
+// === 图片素材加载 ===
+const SPRITES={};
+const SPRITE_LIST=[
+    'tank','heavytank','rifleman','bazooka','harvester',
+    'hq','powerplant','refinery','barracks','warfactory','radar','mgtower','atcannon'
+];
+let spritesLoaded=0;
+
+function loadSprites(callback){
+    const loadingScreen=document.getElementById('loadingScreen');
+    const loadingFill=document.getElementById('loadingFill');
+    const loadingText=document.getElementById('loadingText');
+    SPRITE_LIST.forEach(name=>{
+        const img=new Image();
+        img.onload=()=>{
+            SPRITES[name]=img;
+            spritesLoaded++;
+            const pct=Math.round(spritesLoaded/SPRITE_LIST.length*100);
+            loadingFill.style.width=pct+'%';
+            loadingText.textContent=spritesLoaded+'/'+SPRITE_LIST.length;
+            if(spritesLoaded===SPRITE_LIST.length){
+                loadingScreen.style.display='none';
+                callback();
+            }
+        };
+        img.onerror=()=>{
+            spritesLoaded++;
+            if(spritesLoaded===SPRITE_LIST.length){
+                loadingScreen.style.display='none';
+                callback();
+            }
+        };
+        img.src='assets/'+name+'.png';
+    });
+}
+
+// === 等距投影坐标转换 ===
+function isoToScreen(ix,iy){
+    // 等距投影：x'=(ix-iy)*tileW/2, y'=(ix+iy)*tileH/2
+    return{
+        x:(ix-iy)*CONFIG.ISO_TILE_W/2,
+        y:(ix+iy)*CONFIG.ISO_TILE_H/2
+    };
+}
+function screenToIso(sx,sy){
+    return{
+        x:(sx/(CONFIG.ISO_TILE_W/2)+sy/(CONFIG.ISO_TILE_H/2))/2,
+        y:(sy/(CONFIG.ISO_TILE_H/2)-sx/(CONFIG.ISO_TILE_W/2))/2
+    };
+}
+// 世界坐标→等距屏幕坐标
+function worldToIsoScreen(wx,wy){
+    const ix=wx/CONFIG.ISO_TILE_W;
+    const iy=wy/CONFIG.ISO_TILE_H;
+    return isoToScreen(ix,iy);
+}
+
+// === 音效引擎 ===
+const AudioEngine={
+    ctx:null,enabled:true,
+    init(){try{this.ctx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){this.enabled=false;}},
+    resume(){if(this.ctx&&this.ctx.state==='suspended')this.ctx.resume();},
+    play(type,vol=1){
+        if(!this.enabled||!this.ctx)return;
+        this.resume();const now=this.ctx.currentTime;
+        const g=this.ctx.createGain();g.connect(this.ctx.destination);g.gain.value=0;
+        const o=this.ctx.createOscillator();o.connect(g);
+        switch(type){
+            case'shoot':o.type='square';o.frequency.setValueAtTime(180,now);o.frequency.exponentialRampToValueAtTime(60,now+.08);
+                g.gain.linearRampToValueAtTime(.06*vol,now+.005);g.gain.exponentialRampToValueAtTime(.001,now+.1);o.start(now);o.stop(now+.1);break;
+            case'cannon':o.type='sawtooth';o.frequency.setValueAtTime(80,now);o.frequency.exponentialRampToValueAtTime(30,now+.15);
+                g.gain.linearRampToValueAtTime(.12*vol,now+.01);g.gain.exponentialRampToValueAtTime(.001,now+.2);o.start(now);o.stop(now+.2);break;
+            case'explosion':
+                const bs=this.ctx.sampleRate*.3;const buf=this.ctx.createBuffer(1,bs,this.ctx.sampleRate);const d=buf.getChannelData(0);
+                for(let i=0;i<bs;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/bs,2);
+                const src=this.ctx.createBufferSource();src.buffer=buf;
+                const fl=this.ctx.createBiquadFilter();fl.type='lowpass';fl.frequency.value=400;
+                src.connect(fl);fl.connect(g);g.gain.value=.15*vol;g.gain.exponentialRampToValueAtTime(.001,now+.3);src.start(now);break;
+            case'nuke':o.type='sine';o.frequency.setValueAtTime(40,now);o.frequency.linearRampToValueAtTime(20,now+1.5);
+                g.gain.linearRampToValueAtTime(.3,now+.1);g.gain.exponentialRampToValueAtTime(.001,now+2);o.start(now);o.stop(now+2);
+                const nb=this.ctx.sampleRate*1.5;const nb2=this.ctx.createBuffer(1,nb,this.ctx.sampleRate);const nd=nb2.getChannelData(0);
+                for(let i=0;i<nb;i++)nd[i]=(Math.random()*2-1)*Math.pow(1-i/nb,1.5);
+                const ns=this.ctx.createBufferSource();ns.buffer=nb2;const nf=this.ctx.createBiquadFilter();nf.type='lowpass';nf.frequency.value=200;
+                const ng=this.ctx.createGain();ns.connect(nf);nf.connect(ng);ng.connect(this.ctx.destination);
+                ng.gain.value=.2;ng.gain.exponentialRampToValueAtTime(.001,now+1.5);ns.start(now);break;
+            case'build':o.type='triangle';o.frequency.setValueAtTime(440,now);o.frequency.linearRampToValueAtTime(660,now+.15);
+                g.gain.linearRampToValueAtTime(.08*vol,now+.01);g.gain.exponentialRampToValueAtTime(.001,now+.2);o.start(now);o.stop(now+.2);break;
+            case'select':o.type='sine';o.frequency.setValueAtTime(800,now);
+                g.gain.linearRampToValueAtTime(.04*vol,now+.005);g.gain.exponentialRampToValueAtTime(.001,now+.06);o.start(now);o.stop(now+.06);break;
+            case'move':o.type='sine';o.frequency.setValueAtTime(600,now);
+                g.gain.linearRampToValueAtTime(.03*vol,now+.005);g.gain.exponentialRampToValueAtTime(.001,now+.05);o.start(now);o.stop(now+.05);break;
+            case'error':o.type='square';o.frequency.setValueAtTime(150,now);
+                g.gain.linearRampToValueAtTime(.06*vol,now+.01);g.gain.exponentialRampToValueAtTime(.001,now+.15);o.start(now);o.stop(now+.15);break;
+            case'alert':o.type='square';o.frequency.setValueAtTime(880,now);
+                g.gain.linearRampToValueAtTime(.05,now+.01);g.gain.exponentialRampToValueAtTime(.001,now+.15);o.start(now);o.stop(now+.15);
+                const o2=this.ctx.createOscillator();const g2=this.ctx.createGain();o2.connect(g2);g2.connect(this.ctx.destination);
+                o2.type='square';o2.frequency.value=880;g2.gain.setValueAtTime(0,now+.2);g2.gain.linearRampToValueAtTime(.05,now+.21);
+                g2.gain.exponentialRampToValueAtTime(.001,now+.35);o2.start(now+.2);o2.stop(now+.35);break;
         }
     }
 };
 
-// === 阵营 ===
-const FACTIONS = {
-    allies: { name:'盟军', color:'#3FA7D6', desc:'精准打击', unitMod:{speedMul:1.15,costMul:1.2,rangeMul:1.1} },
-    axis:   { name:'轴心军', color:'#E74C3C', desc:'装甲洪流', unitMod:{speedMul:1.0,costMul:0.85,rangeMul:1.0,hpMul:1.2} },
+const FACTIONS={allies:{name:'盟军',color:'#3FA7D6',unitMod:{speedMul:1.15,costMul:1.2,rangeMul:1.1}},axis:{name:'轴心军',color:'#E74C3C',unitMod:{speedMul:1.0,costMul:.85,rangeMul:1.0,hpMul:1.2}}};
+const BASE_DEFS={
+    hq:{name:'指挥中心',hp:2500,w:56,h:56,isBuilding:true,power:0,powerNeed:0,cost:0,sight:220,sprite:'hq'},
+    powerplant:{name:'电厂',hp:400,w:40,h:40,isBuilding:true,power:25,powerNeed:0,cost:300,sight:100,sprite:'powerplant'},
+    refinery:{name:'矿场',hp:500,w:44,h:44,isBuilding:true,power:0,powerNeed:10,cost:500,sight:100,sprite:'refinery'},
+    barracks:{name:'兵营',hp:600,w:44,h:44,isBuilding:true,power:0,powerNeed:10,cost:400,sight:100,sprite:'barracks'},
+    warfactory:{name:'车厂',hp:800,w:52,h:52,isBuilding:true,power:0,powerNeed:20,cost:800,sight:100,sprite:'warfactory'},
+    radar:{name:'雷达站',hp:450,w:40,h:40,isBuilding:true,power:0,powerNeed:15,cost:600,sight:350,sprite:'radar'},
+    mgtower:{name:'机枪塔',hp:350,w:32,h:32,isBuilding:true,power:0,powerNeed:5,cost:350,sight:150,dmg:15,range:130,fireRate:.25,dmgType:'light',sprite:'mgtower'},
+    atcannon:{name:'反坦炮',hp:300,w:32,h:32,isBuilding:true,power:0,powerNeed:10,cost:500,sight:150,dmg:45,range:140,fireRate:1.2,dmgType:'piercing',sprite:'atcannon'},
+    rifleman:{name:'步枪兵',hp:100,r:7,speed:42,dmg:12,range:75,fireRate:.5,dmgType:'light',cost:150,isInfantry:true,sight:130,sprite:'rifleman'},
+    bazooka:{name:'反坦兵',hp:90,r:7,speed:38,dmg:35,range:80,fireRate:1.5,dmgType:'piercing',cost:300,isInfantry:true,sight:120,sprite:'bazooka'},
+    sniper:{name:'狙击手',hp:80,r:7,speed:35,dmg:80,range:120,fireRate:2.5,dmgType:'light',cost:650,isInfantry:true,sight:200,techLevel:2,sprite:'rifleman'},
+    tank:{name:'中型坦克',hp:550,r:14,speed:32,dmg:55,range:100,fireRate:1.0,dmgType:'piercing',cost:900,isVehicle:true,sight:140,sprite:'tank'},
+    heavytank:{name:'重型坦克',hp:900,r:17,speed:24,dmg:75,range:105,fireRate:1.2,dmgType:'piercing',cost:1300,isVehicle:true,sight:140,techLevel:2,sprite:'heavytank'},
+    artillery:{name:'自行火炮',hp:350,r:13,speed:26,dmg:90,range:180,fireRate:3.0,dmgType:'explosive',cost:1200,isVehicle:true,sight:160,techLevel:2,sprite:'tank'},
+    harvester:{name:'采矿车',hp:250,r:11,speed:36,dmg:0,range:0,fireRate:0,isHarvester:true,sight:90,sprite:'harvester'},
 };
-
-const BASE_DEFS = {
-    hq:{name:'指挥中心',hp:2500,w:56,h:56,isBuilding:true,power:0,powerNeed:0,cost:0,sight:220},
-    powerplant:{name:'电厂',hp:400,w:40,h:40,isBuilding:true,power:25,powerNeed:0,cost:300,sight:100},
-    refinery:{name:'矿场',hp:500,w:44,h:44,isBuilding:true,power:0,powerNeed:10,cost:500,sight:100},
-    barracks:{name:'兵营',hp:600,w:44,h:44,isBuilding:true,power:0,powerNeed:10,cost:400,sight:100},
-    warfactory:{name:'车厂',hp:800,w:52,h:52,isBuilding:true,power:0,powerNeed:20,cost:800,sight:100},
-    radar:{name:'雷达站',hp:450,w:40,h:40,isBuilding:true,power:0,powerNeed:15,cost:600,sight:350,revealsMap:true},
-    mgtower:{name:'机枪塔',hp:350,w:32,h:32,isBuilding:true,power:0,powerNeed:5,cost:350,sight:150,dmg:15,range:130,fireRate:0.25,dmgType:'light'},
-    atcannon:{name:'反坦炮',hp:300,w:32,h:32,isBuilding:true,power:0,powerNeed:10,cost:500,sight:150,dmg:45,range:140,fireRate:1.2,dmgType:'piercing'},
-    rifleman:{name:'步枪兵',hp:100,r:7,speed:42,dmg:12,range:75,fireRate:0.5,dmgType:'light',cost:150,isInfantry:true,sight:130},
-    bazooka:{name:'反坦兵',hp:90,r:7,speed:38,dmg:35,range:80,fireRate:1.5,dmgType:'piercing',cost:300,isInfantry:true,sight:120},
-    sniper:{name:'狙击手',hp:80,r:7,speed:35,dmg:80,range:120,fireRate:2.5,dmgType:'light',cost:650,isInfantry:true,sight:200,techLevel:2},
-    tank:{name:'中型坦克',hp:550,r:14,speed:32,dmg:55,range:100,fireRate:1.0,dmgType:'piercing',cost:900,isVehicle:true,sight:140},
-    heavytank:{name:'重型坦克',hp:900,r:17,speed:24,dmg:75,range:105,fireRate:1.2,dmgType:'piercing',cost:1300,isVehicle:true,sight:140,techLevel:2},
-    artillery:{name:'自行火炮',hp:350,r:13,speed:26,dmg:90,range:180,fireRate:3.0,dmgType:'explosive',cost:1200,isVehicle:true,sight:160,techLevel:2},
-    harvester:{name:'采矿车',hp:250,r:11,speed:36,dmg:0,range:0,fireRate:0,isHarvester:true,sight:90},
-};
-
 function makeEnemyDefs(){const d={};for(const k in BASE_DEFS)d['enemy_'+k]={...BASE_DEFS[k]};return d;}
-
 const DMG_MATRIX={light:{infantry:1.25,vehicle:0.75,heavy:0.4,building:0.3},piercing:{infantry:0.6,vehicle:1.2,heavy:1.15,building:1.0},explosive:{infantry:1.4,vehicle:1.0,heavy:0.7,building:1.3}};
 function getArmorType(u){const d=u.def;if(d.isBuilding)return'building';if(d.isInfantry)return'infantry';if(d.isVehicle)return d.r>15?'heavy':'vehicle';return'vehicle';}
 
 const MAPS={
     plain:{name:'平原遭遇',oreNodes:[{x:800,y:800,r:25},{x:1200,y:600,r:25},{x:500,y:400,r:25},{x:1600,y:1000,r:25},{x:1000,y:1200,r:25},{x:300,y:1000,r:25}],terrain:'grass',obstacles:[]},
-    urban:{name:'城市巷战',oreNodes:[{x:700,y:700,r:25},{x:1200,y:800,r:25},{x:1700,y:500,r:25},{x:400,y:1100,r:25}],terrain:'urban',
-        obstacles:[{x:600,y:500,w:60,h:60},{x:900,y:400,w:80,h:50},{x:1300,y:600,w:60,h:80},{x:700,y:1000,w:70,h:60},{x:1500,y:800,w:50,h:70},{x:1000,y:300,w:90,h:40},{x:1100,y:1100,w:70,h:50}]},
-    crossroad:{name:'十字路口',oreNodes:[{x:1200,y:800,r:25},{x:800,y:500,r:25},{x:1400,y:1100,r:25},{x:500,y:800,r:25},{x:1000,y:1000,r:25}],
-        obstacles:[{x:1200,y:800,w:50,h:250},{x:800,y:500,w:250,h:50}]},
+    urban:{name:'城市巷战',oreNodes:[{x:700,y:700,r:25},{x:1200,y:800,r:25},{x:1700,y:500,r:25},{x:400,y:1100,r:25}],terrain:'urban',obstacles:[{x:600,y:500,w:60,h:60},{x:900,y:400,w:80,h:50},{x:1300,y:600,w:60,h:80},{x:700,y:1000,w:70,h:60},{x:1500,y:800,w:50,h:70},{x:1000,y:300,w:90,h:40},{x:1100,y:1100,w:70,h:50}]},
+    crossroad:{name:'十字路口',oreNodes:[{x:1200,y:800,r:25},{x:800,y:500,r:25},{x:1400,y:1100,r:25},{x:500,y:800,r:25},{x:1000,y:1000,r:25}],obstacles:[{x:1200,y:800,w:50,h:250},{x:800,y:500,w:250,h:50}]},
 };
 
-let game=null, menuState={faction:'allies',difficulty:'normal',map:'plain'};
+let game=null,menuState={faction:'allies',difficulty:'normal',map:'plain'};
 let input={pointers:[],isPanning:false,isBoxSelect:false,boxStart:null,boxEnd:null,longPressTimer:null,lastPanPos:null,isSuperWeaponTargeting:false,isRallyMode:false,squadAssignSlot:-1};
 let techEffects={hpMul:1,dmgMul:1,speedMul:1};
 let lastTime=0;
@@ -332,29 +318,24 @@ function startGame(){
     const enemyDefs=makeEnemyDefs();
     const mapData=MAPS[menuState.map];
     const ds={easy:{aiInterval:25,aiScale:0.6,aiMaxUnits:10,aiBuild:false},normal:{aiInterval:18,aiScale:1.0,aiMaxUnits:18,aiBuild:true},hard:{aiInterval:12,aiScale:1.4,aiMaxUnits:28,aiBuild:true}}[menuState.difficulty];
-    game={faction,enemyFactionKey:menuState.faction==='allies'?'axis':'allies',enemyDefs,mapData,difficulty:menuState.difficulty,diffSettings:ds,
+    game={faction,enemyDefs,mapData,difficulty:menuState.difficulty,diffSettings:ds,
         ore:1200,powerUsed:0,powerSupply:25,techPoints:0,techLevel:1,
         entities:[],bullets:[],effects:[],particles:[],
         selected:[],buildSelection:null,squads:[null,null,null,null,null],
-        camera:{x:0,y:0,zoom:1},
+        camera:{x:CONFIG.WORLD_W/2,y:CONFIG.WORLD_H/2-200,zoom:1},
         enemyAI:{timer:0,phase:0,unitCount:0,buildTimer:0,ore:800},
         superWeapon:{ready:false,charge:0},
         time:0,gameStarted:true,gameOver:false,victory:false,
-        purchasedTechs:[],
-        exploredGrid:null,
-        fogTileSize:CONFIG.FOG_TILE,
+        purchasedTechs:[],exploredGrid:null,
+        fogCols:0,fogRows:0,
     };
-    // 迷雾网格
-    const cols=Math.ceil(CONFIG.WORLD_W/CONFIG.FOG_TILE);
-    const rows=Math.ceil(CONFIG.WORLD_H/CONFIG.FOG_TILE);
-    game.exploredGrid=new Uint8Array(cols*rows);
-    game.fogCols=cols; game.fogRows=rows;
+    const cols=Math.ceil(CONFIG.WORLD_W/CONFIG.FOG_TILE),rows=Math.ceil(CONFIG.WORLD_H/CONFIG.FOG_TILE);
+    game.exploredGrid=new Uint8Array(cols*rows);game.fogCols=cols;game.fogRows=rows;
 
     spawnEntity('hq',200,1200,false);
     spawnEntity('harvester',240,1200,false);
     spawnEntity('powerplant',150,1140,false);
 
-    // 敌方基地（右上）
     const ex=2100,ey=400;
     spawnEntity('enemy_hq',ex,ey,true);
     spawnEntity('enemy_powerplant',ex-60,ey-40,true);
@@ -364,50 +345,64 @@ function startGame(){
     spawnEntity('enemy_mgtower',ex-50,ey+60,true);
     spawnEntity('enemy_mgtower',ex+50,ey+60,true);
     spawnEntity('enemy_warfactory',ex-70,ey-60,true);
-    // 敌方初始采矿车
     spawnEntity('enemy_harvester',ex-20,ey+20,true);
     game.entities.filter(e=>e.isEnemy).forEach(e=>{e.buildProgress=1;e.constructing=false;});
 
-    game.camera.x=100; game.camera.y=1000; clampCamera();
+    // 摄像机对准玩家基地（等距投影后的中心）
+    centerCameraOn(200,1200);
+
     document.getElementById('mainMenu').style.display='none';
     document.getElementById('hint').style.display='none';
-    setupBuildPanel(); setupSquadBar(); setupCommandButtons(); updateTechPanel();
+    setupBuildPanel();setupSquadBar();setupCommandButtons();updateTechPanel();
     requestAnimationFrame(gameLoop);
 }
 
+function centerCameraOn(wx,wy){
+    const iso=worldToIsoScreen(wx,wy);
+    game.camera.x=iso.x-canvas.width/2/game.camera.zoom;
+    game.camera.y=iso.y-canvas.height/2/game.camera.zoom;
+    clampCamera();
+}
+
 function spawnEntity(typeId,x,y,isEnemy){
-    const def=(isEnemy?game.enemyDefs:BASE_DEFS)[typeId]; if(!def)return null;
+    const baseType=typeId.replace('enemy_','');
+    const def=(isEnemy?game.enemyDefs:BASE_DEFS)[typeId];if(!def)return null;
     let fd=def;
     if(!isEnemy&&game.faction.unitMod){const m=game.faction.unitMod;fd={...def,speed:def.speed?(def.speed*(m.speedMul||1)):def.speed,cost:def.cost?Math.round(def.cost*(m.costMul||1)):def.cost,range:def.range?(def.range*(m.rangeMul||1)):def.range,hp:def.hp?Math.round(def.hp*(m.hpMul||1)):def.hp};}
-    // 科技加成
     if(!isEnemy){fd={...fd,hp:Math.round(fd.hp*techEffects.hpMul),dmg:Math.round((fd.dmg||0)*techEffects.dmgMul),speed:(fd.speed||0)*techEffects.speedMul};}
-    let e={id:Math.random().toString(36).substr(2,9),type:typeId,def:fd,x,y,hp:fd.hp,maxHp:fd.hp,isEnemy,
+    let e={id:Math.random().toString(36).substr(2,9),type:typeId,baseType:baseType,def:fd,x,y,hp:fd.hp,maxHp:fd.hp,isEnemy,
         targetX:null,targetY:null,target:null,fireTimer:0,holdPosition:false,dead:false,
         buildProgress:fd.isBuilding?0:1,constructing:fd.isBuilding&&!isEnemy,
         rallyX:null,rallyY:null,animTime:0,flashTime:0,facing:0,
         harvestState:'idle',harvestTarget:null,oreCarried:0,harvestTimer:0,
-        recoil:0, // 后坐偏移
-        deathTimer:0, // 死亡溶解
+        recoil:0,deathTimer:0,
     };
     game.entities.push(e);
-    if(!isEnemy){if(fd.power>0)game.powerSupply+=fd.power;if(fd.powerNeed>0)game.powerUsed+=fd.powerNeed;}
-    else game.enemyAI.unitCount++;
+    if(!isEnemy){if(fd.power>0)game.powerSupply+=fd.power;if(fd.powerNeed>0)game.powerUsed+=fd.powerNeed;}else game.enemyAI.unitCount++;
     return e;
 }
 
-function removeEntity(e){
-    const i=game.entities.indexOf(e);if(i>=0)game.entities.splice(i,1);
-    if(!e.isEnemy){if(e.def.power>0)game.powerSupply-=e.def.power;if(e.def.powerNeed>0)game.powerUsed-=e.def.powerNeed;}
-    else game.enemyAI.unitCount--;
-    const si=game.selected.indexOf(e);if(si>=0)game.selected.splice(si,1);
-    game.squads=game.squads.map(s=>s?s.filter(u=>u!==e):null);
-    game.entities.forEach(u=>{if(u.target===e)u.target=null;});
+function removeEntity(e){const i=game.entities.indexOf(e);if(i>=0)game.entities.splice(i,1);if(!e.isEnemy){if(e.def.power>0)game.powerSupply-=e.def.power;if(e.def.powerNeed>0)game.powerUsed-=e.def.powerNeed;}else game.enemyAI.unitCount--;const si=game.selected.indexOf(e);if(si>=0)game.selected.splice(si,1);game.squads=game.squads.map(s=>s?s.filter(u=>u!==e):null);game.entities.forEach(u=>{if(u.target===e)u.target=null;});}
+
+// 等距坐标转换用于输入
+function screenToWorld(sx,sy){
+    // 反向等距投影
+    const isoX=(sx/game.camera.zoom+game.camera.x);
+    const isoY=(sy/game.camera.zoom+game.camera.y);
+    // iso→world
+    const wx=(isoX/(CONFIG.ISO_TILE_W/2)+isoY/(CONFIG.ISO_TILE_H/2))/2*CONFIG.ISO_TILE_W;
+    const wy=(isoY/(CONFIG.ISO_TILE_H/2)-isoX/(CONFIG.ISO_TILE_W/2))/2*CONFIG.ISO_TILE_H;
+    return{x:wx,y:wy};
 }
 
-function screenToWorld(sx,sy){return{x:sx/game.camera.zoom+game.camera.x,y:sy/game.camera.zoom+game.camera.y};}
-function clampCamera(){const m=80;game.camera.x=Math.max(-m,Math.min(CONFIG.WORLD_W-canvas.width/game.camera.zoom+m,game.camera.x));game.camera.y=Math.max(-m,Math.min(CONFIG.WORLD_H-canvas.height/game.camera.zoom+m,game.camera.y));}
+function clampCamera(){
+    const margin=200;
+    const isoW=CONFIG.WORLD_W*0.7;
+    const isoH=CONFIG.WORLD_H*0.5;
+    game.camera.x=Math.max(-margin,Math.min(isoW-canvas.width/game.camera.zoom+margin,game.camera.x));
+    game.camera.y=Math.max(-margin,Math.min(isoH-canvas.height/game.camera.zoom+margin,game.camera.y));
+}
 
-// === 输入 ===
 function setupInput(){
     canvas.addEventListener('pointerdown',onPointerDown);
     canvas.addEventListener('pointermove',onPointerMove);
@@ -421,35 +416,24 @@ function setupInput(){
     canvas.addEventListener('touchend',()=>pinchDist=null);
     document.getElementById('miniMap').addEventListener('click',e=>{
         const r=e.target.getBoundingClientRect();
-        game.camera.x=(e.clientX-r.left)/miniCanvas.width*CONFIG.WORLD_W-canvas.width/game.camera.zoom/2;
-        game.camera.y=(e.clientY-r.top)/miniCanvas.height*CONFIG.WORLD_H-canvas.height/game.camera.zoom/2;
-        clampCamera();
+        const mx=(e.clientX-r.left)/miniCanvas.width*CONFIG.WORLD_W;
+        const my=(e.clientY-r.top)/miniCanvas.height*CONFIG.WORLD_H;
+        centerCameraOn(mx,my);
     });
 }
 
 function onPointerDown(e){
-    e.preventDefault(); AudioEngine.resume();
+    e.preventDefault();AudioEngine.resume();
     input.pointers.push({id:e.pointerId,x:e.clientX,y:e.clientY});
     if(input.pointers.length===1){
         const wp=screenToWorld(e.clientX,e.clientY);
         if(input.isSuperWeaponTargeting){fireSuperWeapon(wp.x,wp.y);input.isSuperWeaponTargeting=false;document.getElementById('superWeaponBtn').classList.remove('ready');document.getElementById('superWeaponBtn').textContent='☢ 充能中...';return;}
-        if(input.isRallyMode){
-            game.selected.forEach(u=>{if(u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory')){u.rallyX=wp.x;u.rallyY=wp.y;}});
-            input.isRallyMode=false; showToast('集结点已设置'); spawnEffect('moveIndicator',wp.x,wp.y); return;
-        }
+        if(input.isRallyMode){game.selected.forEach(u=>{if(u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory')){u.rallyX=wp.x;u.rallyY=wp.y;}});input.isRallyMode=false;showToast('集结点已设置');spawnEffect('moveIndicator',wp.x,wp.y);return;}
         if(game.buildSelection){tryBuild(game.buildSelection,wp.x,wp.y);return;}
         const clicked=pickEntity(wp.x,wp.y);
         if(clicked){
-            if(!clicked.isEnemy){
-                if(!e.shiftKey)clearSelection();
-                if(!game.selected.includes(clicked))game.selected.push(clicked);
-                showUnitInfo(clicked); AudioEngine.play('select');
-            }else{
-                if(game.selected.length>0){
-                    game.selected.forEach(u=>{if(!u.def.isBuilding&&!u.def.isHarvester){u.target=clicked;u.targetX=clicked.x;u.targetY=clicked.y;u.holdPosition=false;}});
-                    spawnEffect('attackIndicator',clicked.x,clicked.y); AudioEngine.play('move');
-                }
-            }
+            if(!clicked.isEnemy){if(!e.shiftKey)clearSelection();if(!game.selected.includes(clicked))game.selected.push(clicked);showUnitInfo(clicked);AudioEngine.play('select');}
+            else{if(game.selected.length>0){game.selected.forEach(u=>{if(!u.def.isBuilding&&!u.def.isHarvester){u.target=clicked;u.targetX=clicked.x;u.targetY=clicked.y;u.holdPosition=false;}});spawnEffect('attackIndicator',clicked.x,clicked.y);AudioEngine.play('move');}}
             return;
         }
         if(game.selected.length>0){
@@ -459,13 +443,13 @@ function onPointerDown(e){
             if(hh){game.selected.filter(u=>u.def.isHarvester).forEach(u=>{const n=findNearestOreNode(wp.x,wp.y);if(n){u.harvestTarget=n;u.harvestState='moving';}});}
             return;
         }
-        input.lastPanPos={x:e.clientX,y:e.clientY}; input.boxStart={x:e.clientX,y:e.clientY};
+        input.lastPanPos={x:e.clientX,y:e.clientY};input.boxStart={x:e.clientX,y:e.clientY};
         input.longPressTimer=setTimeout(()=>{input.isBoxSelect=true;},180);
     }
 }
 
 function onPointerMove(e){
-    const p=input.pointers.find(p=>p.id===e.pointerId); if(p){p.x=e.clientX;p.y=e.clientY;}
+    const p=input.pointers.find(p=>p.id===e.pointerId);if(p){p.x=e.clientX;p.y=e.clientY;}
     if(input.pointers.length===1){
         const p0=input.pointers[0];
         if(input.lastPanPos){
@@ -473,24 +457,22 @@ function onPointerMove(e){
             if(input.isBoxSelect){input.boxEnd={x:p0.x,y:p0.y};}
             else if(Math.abs(dx)>4||Math.abs(dy)>4){
                 if(input.longPressTimer){clearTimeout(input.longPressTimer);input.longPressTimer=null;}
-                input.isPanning=true;
-                game.camera.x-=dx/game.camera.zoom; game.camera.y-=dy/game.camera.zoom;
-                clampCamera(); input.lastPanPos={x:p0.x,y:p0.y};
+                input.isPanning=true;game.camera.x-=dx/game.camera.zoom;game.camera.y-=dy/game.camera.zoom;
+                clampCamera();input.lastPanPos={x:p0.x,y:p0.y};
             }
         }
     }
 }
 
 function onPointerUp(e){
-    const i=input.pointers.findIndex(p=>p.id===e.pointerId); if(i>=0)input.pointers.splice(i,1);
+    const i=input.pointers.findIndex(p=>p.id===e.pointerId);if(i>=0)input.pointers.splice(i,1);
     if(input.longPressTimer){clearTimeout(input.longPressTimer);input.longPressTimer=null;}
     if(input.isBoxSelect&&input.boxStart&&input.boxEnd){
         const w1=screenToWorld(input.boxStart.x,input.boxStart.y),w2=screenToWorld(input.boxEnd.x,input.boxEnd.y);
         const mx=Math.min(w1.x,w2.x),MX=Math.max(w1.x,w2.x),my=Math.min(w1.y,w2.y),MY=Math.max(w1.y,w2.y);
         clearSelection();
         game.entities.forEach(u=>{if(!u.isEnemy&&!u.def.isBuilding&&!u.def.isHarvester&&!u.dead&&u.x>=mx&&u.x<=MX&&u.y>=my&&u.y<=MY)game.selected.push(u);});
-        if(game.selected.length>0){showUnitInfo(game.selected[0]);AudioEngine.play('select');}
-        else hideUnitInfo();
+        if(game.selected.length>0){showUnitInfo(game.selected[0]);AudioEngine.play('select');}else hideUnitInfo();
     }
     input.isBoxSelect=false;input.isPanning=false;input.boxStart=null;input.boxEnd=null;input.lastPanPos=null;
 }
@@ -499,507 +481,183 @@ function clearSelection(){game.selected=[];hideUnitInfo();}
 function pickEntity(wx,wy){
     for(let i=game.entities.length-1;i>=0;i--){const e=game.entities[i];if(e.dead)continue;
         if(e.def.isBuilding){if(wx>=e.x-e.def.w/2&&wx<=e.x+e.def.w/2&&wy>=e.y-e.def.h/2&&wy<=e.y+e.def.h/2)return e;}
-        else{const dx=wx-e.x,dy=wy-e.y;if(dx*dx+dy*dy<=(e.def.r+8)*(e.def.r+8))return e;}
+        else{const dx=wx-e.x,dy=wy-e.y;if(dx*dx+dy*dy<=(e.def.r+10)*(e.def.r+10))return e;}
     }
     return null;
 }
 function findNearestOreNode(x,y){let n=null,m=Infinity;game.mapData.oreNodes.forEach(o=>{const dx=o.x-x,dy=o.y-y,d=dx*dx+dy*dy;if(d<m){m=d;n=o;}});return n;}
 
-// === 建造/生产 ===
 function setupBuildPanel(){
     document.querySelectorAll('.build-btn').forEach(btn=>{
         btn.onclick=()=>{
-            if(btn.dataset.build){
-                const def=BASE_DEFS[btn.dataset.build];
-                if(game.ore<def.cost){showToast('矿石不足！');AudioEngine.play('error');return;}
-                if(game.powerSupply-game.powerUsed<(def.powerNeed||0)){showToast('电力不足！');AudioEngine.play('error');return;}
-                document.querySelectorAll('.build-btn').forEach(b=>b.classList.remove('selected'));
-                btn.classList.add('selected'); game.buildSelection=btn.dataset.build; showToast('点击地图放置 '+def.name);
-            }else if(btn.dataset.produce){tryProduceUnit(btn.dataset.produce);}
+            if(btn.dataset.build){const def=BASE_DEFS[btn.dataset.build];if(game.ore<def.cost){showToast('矿石不足！');AudioEngine.play('error');return;}if(game.powerSupply-game.powerUsed<(def.powerNeed||0)){showToast('电力不足！');AudioEngine.play('error');return;}document.querySelectorAll('.build-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');game.buildSelection=btn.dataset.build;showToast('点击地图放置 '+def.name);}
+            else if(btn.dataset.produce){tryProduceUnit(btn.dataset.produce);}
         };
     });
 }
 function tryBuild(typeId,x,y){
-    const def=BASE_DEFS[typeId];
-    if(game.ore<def.cost){showToast('矿石不足！');AudioEngine.play('error');return;}
+    const def=BASE_DEFS[typeId];if(game.ore<def.cost){showToast('矿石不足！');AudioEngine.play('error');return;}
     for(const e of game.entities){if(e.def.isBuilding){const dx=e.x-x,dy=e.y-y;if(Math.sqrt(dx*dx+dy*dy)<36){showToast('离其他建筑太近！');AudioEngine.play('error');return;}}}
     if(game.mapData.obstacles){for(const o of game.mapData.obstacles){if(x>o.x-o.w/2-def.w/2&&x<o.x+o.w/2+def.w/2&&y>o.y-o.h/2-def.h/2&&y<o.y+o.h/2+def.h/2){showToast('地形阻挡！');AudioEngine.play('error');return;}}}
-    game.ore-=def.cost; spawnEntity(typeId,x,y,false);
-    game.buildSelection=null; document.querySelectorAll('.build-btn').forEach(b=>b.classList.remove('selected'));
-    AudioEngine.play('build');
+    game.ore-=def.cost;spawnEntity(typeId,x,y,false);game.buildSelection=null;document.querySelectorAll('.build-btn').forEach(b=>b.classList.remove('selected'));AudioEngine.play('build');
 }
 function tryProduceUnit(typeId){
-    const def=BASE_DEFS[typeId];
-    if(def.techLevel&&game.techLevel<def.techLevel){showToast('需要科技 T'+def.techLevel+'！');AudioEngine.play('error');return;}
+    const def=BASE_DEFS[typeId];if(def.techLevel&&game.techLevel<def.techLevel){showToast('需要科技 T'+def.techLevel+'！');AudioEngine.play('error');return;}
     const cost=game.faction.unitMod?Math.round(def.cost*(game.faction.unitMod.costMul||1)):def.cost;
     if(game.ore<cost){showToast('矿石不足！');AudioEngine.play('error');return;}
-    const nb=def.isInfantry?'barracks':'warfactory';
-    const prod=game.entities.find(e=>e.type===nb&&!e.isEnemy&&e.buildProgress>=1&&!e.dead);
+    const nb=def.isInfantry?'barracks':'warfactory';const prod=game.entities.find(e=>e.type===nb&&!e.isEnemy&&e.buildProgress>=1&&!e.dead);
     if(!prod){showToast('需要先建'+(def.isInfantry?'兵营':'车厂')+'！');AudioEngine.play('error');return;}
-    game.ore-=cost;
-    const ox=def.isInfantry?28:36;
-    const u=spawnEntity(typeId,prod.x+ox,prod.y+prod.def.h/2+12,false);
+    game.ore-=cost;const ox=def.isInfantry?28:36;const u=spawnEntity(typeId,prod.x+ox,prod.y+prod.def.h/2+12,false);
     if(prod.rallyX!==null){u.targetX=prod.rallyX;u.targetY=prod.rallyY;}
-    spawnEffect('spawn',prod.x+ox,prod.y+prod.def.h/2+12);
-    AudioEngine.play('build'); showToast(def.name+' 已生产');
+    spawnEffect('spawn',prod.x+ox,prod.y+prod.def.h/2+12);AudioEngine.play('build');showToast(def.name+' 已生产');
 }
-
 function setupCommandButtons(){
     document.getElementById('cmdStop').onclick=()=>{game.selected.forEach(u=>{u.holdPosition=true;u.target=null;u.targetX=u.x;u.targetY=u.y;});showToast('坚守位置');AudioEngine.play('move');};
-    document.getElementById('cmdRally').onclick=()=>{
-        const b=game.selected.filter(u=>u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory'));
-        if(b.length===0){showToast('选中兵营或车厂才能设集结点');return;}
-        input.isRallyMode=true; showToast('点击地面设置集结点');
-    };
+    document.getElementById('cmdRally').onclick=()=>{const b=game.selected.filter(u=>u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory'));if(b.length===0){showToast('选中兵营或车厂才能设集结点');return;}input.isRallyMode=true;showToast('点击地面设置集结点');};
     document.getElementById('cmdDelete').onclick=()=>{game.selected.forEach(u=>{if(u.type!=='hq'&&u.type!=='enemy_hq'){u.dead=true;u.deathTimer=0;spawnEffect('explosion',u.x,u.y);AudioEngine.play('explosion');}});clearSelection();showToast('已解散');};
 }
 
-// === 编队（P0: 长按编入）===
 function setupSquadBar(){updateSquadBar();}
 function updateSquadBar(){
-    const bar=document.getElementById('squadBar'); bar.innerHTML='';
+    const bar=document.getElementById('squadBar');bar.innerHTML='';
     for(let i=0;i<5;i++){
-        const btn=document.createElement('div'); btn.className='squad-btn';
-        const sq=game.squads[i];
-        if(sq&&sq.filter(u=>!u.dead).length>0){
-            btn.classList.add('has-units');
-            btn.textContent=(i+1);
-            const c=document.createElement('span');c.className='count';c.textContent=sq.filter(u=>!u.dead).length;btn.appendChild(c);
-        }else{btn.classList.add('empty');btn.textContent=(i+1);}
+        const btn=document.createElement('div');btn.className='squad-btn';const sq=game.squads[i];
+        if(sq&&sq.filter(u=>!u.dead).length>0){btn.classList.add('has-units');btn.textContent=(i+1);const c=document.createElement('span');c.className='count';c.textContent=sq.filter(u=>!u.dead).length;btn.appendChild(c);}
+        else{btn.classList.add('empty');btn.textContent=(i+1);}
         if(input.squadAssignSlot===i)btn.classList.add('assigning');
-        // 点击=选中编队
-        btn.onclick=()=>{
-            if(input.squadAssignSlot>=0){
-                // 编入模式下点击=确认编入
-                assignSquad(input.squadAssignSlot);
-                return;
-            }
-            if(sq&&sq.filter(u=>!u.dead).length>0){
-                clearSelection();
-                game.selected=[...sq.filter(u=>!u.dead)];
-                if(game.selected.length>0){
-                    showUnitInfo(game.selected[0]); AudioEngine.play('select');
-                    const cx=game.selected.reduce((s,u)=>s+u.x,0)/game.selected.length;
-                    const cy=game.selected.reduce((s,u)=>s+u.y,0)/game.selected.length;
-                    game.camera.x=cx-canvas.width/game.camera.zoom/2;
-                    game.camera.y=cy-canvas.height/game.camera.zoom/2;
-                    clampCamera();
-                }
-            }
-        };
-        // 长按=进入编入模式
-        let pressTimer=null;
-        btn.addEventListener('pointerdown',()=>{
-            pressTimer=setTimeout(()=>{
-                if(game.selected.length===0){showToast('没有选中单位');return;}
-                const m=game.selected.filter(u=>!u.def.isBuilding&&!u.def.isHarvester);
-                if(m.length===0){showToast('只能编入战斗单位');return;}
-                input.squadAssignSlot=i;
-                updateSquadBar();
-                showToast('编入编队 '+(i+1)+' — 再次点击确认');
-            },400);
-        });
-        btn.addEventListener('pointerup',()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}});
-        btn.addEventListener('pointerleave',()=>{if(pressTimer){clearTimeout(pressTimer);pressTimer=null;}});
+        btn.onclick=()=>{if(input.squadAssignSlot>=0){assignSquad(input.squadAssignSlot);return;}if(sq&&sq.filter(u=>!u.dead).length>0){clearSelection();game.selected=[...sq.filter(u=>!u.dead)];if(game.selected.length>0){showUnitInfo(game.selected[0]);AudioEngine.play('select');centerCameraOn(game.selected[0].x,game.selected[0].y);}}};
+        let pt=null;
+        btn.addEventListener('pointerdown',()=>{pt=setTimeout(()=>{if(game.selected.length===0){showToast('没有选中单位');return;}const m=game.selected.filter(u=>!u.def.isBuilding&&!u.def.isHarvester);if(m.length===0){showToast('只能编入战斗单位');return;}input.squadAssignSlot=i;updateSquadBar();showToast('编入编队 '+(i+1)+' — 再次点击确认');},400);});
+        btn.addEventListener('pointerup',()=>{if(pt){clearTimeout(pt);pt=null;}});
+        btn.addEventListener('pointerleave',()=>{if(pt){clearTimeout(pt);pt=null;}});
         bar.appendChild(btn);
     }
 }
-function assignSquad(slot){
-    const m=game.selected.filter(u=>!u.def.isBuilding&&!u.def.isHarvester&&!u.dead);
-    if(m.length===0){showToast('没有可编入的战斗单位');input.squadAssignSlot=-1;updateSquadBar();return;}
-    game.squads[slot]=[...m]; input.squadAssignSlot=-1;
-    updateSquadBar(); AudioEngine.play('select');
-    showToast('已编入编队 '+(slot+1)+'（'+m.length+'个单位）');
-}
+function assignSquad(slot){const m=game.selected.filter(u=>!u.def.isBuilding&&!u.def.isHarvester&&!u.dead);if(m.length===0){showToast('没有可编入的战斗单位');input.squadAssignSlot=-1;updateSquadBar();return;}game.squads[slot]=[...m];input.squadAssignSlot=-1;updateSquadBar();AudioEngine.play('select');showToast('已编入编队 '+(slot+1)+'（'+m.length+'个单位）');}
 
-// === 科技 ===
-const TECH_UPGRADES=[
-    {id:'t2',name:'T2 科技解锁',desc:'解锁狙击手/重坦/火炮',cost:3,techLevel:2},
-    {id:'armor',name:'装甲强化',desc:'全军 HP +15%',cost:5,techLevel:2,effect:{hpMul:1.15}},
-    {id:'firepower',name:'火力升级',desc:'全军伤害 +20%',cost:5,techLevel:2,effect:{dmgMul:1.2}},
-    {id:'speed',name:'机动强化',desc:'全军速度 +10%',cost:4,techLevel:2,effect:{speedMul:1.1}},
-];
-function updateTechPanel(){
-    const c=document.getElementById('techItems');c.innerHTML='';
-    TECH_UPGRADES.forEach(t=>{
-        const p=game.purchasedTechs.includes(t.id);
-        const cb=!p&&game.techPoints>=t.cost&&game.techLevel>=(t.techLevel-1);
-        const it=document.createElement('div');it.className='tech-item'+(p?' maxed':'');
-        it.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-desc">${t.desc} · 🔬${t.cost}</div></div><button class="ti-btn" ${(!cb||p)?'disabled':''}>${p?'✓':'升级'}</button>`;
-        it.querySelector('.ti-btn').onclick=()=>purchaseTech(t);
-        c.appendChild(it);
-    });
-}
-function purchaseTech(t){
-    if(game.purchasedTechs.includes(t.id))return;
-    if(game.techPoints<t.cost){showToast('科技点不足');AudioEngine.play('error');return;}
-    game.techPoints-=t.cost; game.purchasedTechs.push(t.id);
-    if(t.id==='t2')game.techLevel=2;
-    if(t.effect){
-        if(t.effect.hpMul)techEffects.hpMul*=t.effect.hpMul;
-        if(t.effect.dmgMul)techEffects.dmgMul*=t.effect.dmgMul;
-        if(t.effect.speedMul)techEffects.speedMul*=t.effect.speedMul;
-        game.entities.forEach(e=>{if(!e.isEnemy&&!e.dead){
-            if(t.effect.hpMul){e.maxHp=Math.round(e.maxHp*t.effect.hpMul);e.hp=Math.round(e.hp*t.effect.hpMul);}
-            if(t.effect.dmgMul)e.def={...e.def,dmg:Math.round((e.def.dmg||0)*t.effect.dmgMul)};
-            if(t.effect.speedMul)e.def={...e.def,speed:(e.def.speed||0)*t.effect.speedMul};
-        }});
-    }
-    updateTechPanel(); AudioEngine.play('build'); showToast(t.name+' 已升级！');
-}
+const TECH_UPGRADES=[{id:'t2',name:'T2 科技解锁',desc:'解锁狙击手/重坦/火炮',cost:3,techLevel:2},{id:'armor',name:'装甲强化',desc:'全军 HP +15%',cost:5,techLevel:2,effect:{hpMul:1.15}},{id:'firepower',name:'火力升级',desc:'全军伤害 +20%',cost:5,techLevel:2,effect:{dmgMul:1.2}},{id:'speed',name:'机动强化',desc:'全军速度 +10%',cost:4,techLevel:2,effect:{speedMul:1.1}}];
+function updateTechPanel(){const c=document.getElementById('techItems');c.innerHTML='';TECH_UPGRADES.forEach(t=>{const p=game.purchasedTechs.includes(t.id);const cb=!p&&game.techPoints>=t.cost&&game.techLevel>=(t.techLevel-1);const it=document.createElement('div');it.className='tech-item'+(p?' maxed':'');it.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-desc">${t.desc} · 🔬${t.cost}</div></div><button class="ti-btn" ${(!cb||p)?'disabled':''}>${p?'✓':'升级'}</button>`;it.querySelector('.ti-btn').onclick=()=>purchaseTech(t);c.appendChild(it);});}
+function purchaseTech(t){if(game.purchasedTechs.includes(t.id))return;if(game.techPoints<t.cost){showToast('科技点不足');AudioEngine.play('error');return;}game.techPoints-=t.cost;game.purchasedTechs.push(t.id);if(t.id==='t2')game.techLevel=2;if(t.effect){if(t.effect.hpMul)techEffects.hpMul*=t.effect.hpMul;if(t.effect.dmgMul)techEffects.dmgMul*=t.effect.dmgMul;if(t.effect.speedMul)techEffects.speedMul*=t.effect.speedMul;game.entities.forEach(e=>{if(!e.isEnemy&&!e.dead){if(t.effect.hpMul){e.maxHp=Math.round(e.maxHp*t.effect.hpMul);e.hp=Math.round(e.hp*t.effect.hpMul);}if(t.effect.dmgMul)e.def={...e.def,dmg:Math.round((e.def.dmg||0)*t.effect.dmgMul)};if(t.effect.speedMul)e.def={...e.def,speed:(e.def.speed||0)*t.effect.speedMul};}});}updateTechPanel();AudioEngine.play('build');showToast(t.name+' 已升级！');}
 function toggleTechPanel(){const p=document.getElementById('techPanel');if(p.style.display==='block'){p.style.display='none';}else{p.style.display='block';updateTechPanel();}}
 
-// === 超武 ===
-function updateSuperWeapon(){
-    const hasRadar=game.entities.some(e=>e.type==='radar'&&!e.isEnemy&&!e.dead&&e.buildProgress>=1);
-    if(!hasRadar)return;
-    if(!game.superWeapon.ready){
-        game.superWeapon.charge+=1/60;
-        if(game.superWeapon.charge>=60){
-            game.superWeapon.ready=true;
-            document.getElementById('superWeaponBtn').classList.add('ready');
-            document.getElementById('superWeaponBtn').textContent='☢ 超武就绪 — 点击目标';
-            showAlert('终极武器就绪！'); AudioEngine.play('alert');
-        }
-    }
-}
-function activateSuperWeapon(){
-    if(!game.superWeapon||!game.superWeapon.ready)return;
-    input.isSuperWeaponTargeting=true; showToast('选择打击目标');
-}
-function fireSuperWeapon(x,y){
-    game.superWeapon.ready=false; game.superWeapon.charge=0;
-    spawnEffect('nukeFlash',x,y); spawnEffect('nukeCloud',x,y);
-    AudioEngine.play('nuke');
-    setTimeout(()=>{
-        const R=140,D=600;
-        game.entities.forEach(e=>{
-            if(!e.dead){const dx=e.x-x,dy=e.y-y,d=Math.sqrt(dx*dx+dy*dy);
-            if(d<R){const f=1-d/R;e.hp-=D*f;e.flashTime=0.3;if(e.hp<=0){e.dead=true;e.deathTimer=0;spawnEffect('explosion',e.x,e.y);AudioEngine.play('explosion');}}
-            }
-        });
-        for(let i=0;i<30;i++){const a=Math.random()*Math.PI*2,r=Math.random()*R;spawnEffect('radiation',x+Math.cos(a)*r,y+Math.sin(a)*r);}
-    },500);
-    showToast('核弹已发射！');
-}
+function updateSuperWeapon(){const hr=game.entities.some(e=>e.type==='radar'&&!e.isEnemy&&!e.dead&&e.buildProgress>=1);if(!hr)return;if(!game.superWeapon.ready){game.superWeapon.charge+=1/60;if(game.superWeapon.charge>=60){game.superWeapon.ready=true;document.getElementById('superWeaponBtn').classList.add('ready');document.getElementById('superWeaponBtn').textContent='☢ 超武就绪 — 点击目标';showAlert('终极武器就绪！');AudioEngine.play('alert');}}}
+function activateSuperWeapon(){if(!game.superWeapon||!game.superWeapon.ready)return;input.isSuperWeaponTargeting=true;showToast('选择打击目标');}
+function fireSuperWeapon(x,y){game.superWeapon.ready=false;game.superWeapon.charge=0;spawnEffect('nukeFlash',x,y);spawnEffect('nukeCloud',x,y);AudioEngine.play('nuke');setTimeout(()=>{const R=140,D=600;game.entities.forEach(e=>{if(!e.dead){const dx=e.x-x,dy=e.y-y,d=Math.sqrt(dx*dx+dy*dy);if(d<R){const f=1-d/R;e.hp-=D*f;e.flashTime=0.3;if(e.hp<=0){e.dead=true;e.deathTimer=0;spawnEffect('explosion',e.x,e.y);AudioEngine.play('explosion');}}}});for(let i=0;i<30;i++){const a=Math.random()*Math.PI*2,r=Math.random()*R;spawnEffect('radiation',x+Math.cos(a)*r,y+Math.sin(a)*r);}},500);showToast('核弹已发射！');}
 
-// === 单位更新 ===
 function updateUnit(e,dt){
-    if(e.dead){
-        // 死亡溶解动画
-        e.deathTimer+=dt;
-        return;
-    }
-    e.animTime+=dt;
-    if(e.flashTime>0)e.flashTime-=dt;
-    if(e.recoil>0)e.recoil-=dt*3; // 后坐恢复
-
+    if(e.dead){e.deathTimer+=dt;return;}
+    e.animTime+=dt;if(e.flashTime>0)e.flashTime-=dt;if(e.recoil>0)e.recoil-=dt*3;
     if(e.def.isBuilding){
         if(e.constructing){e.buildProgress+=dt/3;if(e.buildProgress>=1){e.buildProgress=1;e.constructing=false;if(!e.isEnemy){showToast(e.def.name+' 建造完成');AudioEngine.play('build');}}}
-        if(e.def.dmg&&e.buildProgress>=1){
-            e.fireTimer-=dt;
-            if(e.fireTimer<=0){
-                let t=null,md=e.def.range*e.def.range;
-                game.entities.forEach(u=>{if(u.isEnemy===e.isEnemy||u.dead)return;const dx=u.x-e.x,dy=u.y-e.y,d=dx*dx+dy*dy;if(d<md){md=d;t=u;}});
-                if(t){e.fireTimer=e.def.fireRate;e.facing=Math.atan2(t.y-e.y,t.x-e.x);dealDamage(e,t);
-                    spawnBullet(e.x,e.y,t.x,t.y,e.isEnemy?'#E74C3C':'#F2C14E',e.def.dmgType);
-                    spawnEffect('muzzleFlash',e.x+Math.cos(e.facing)*e.def.w*0.4,e.y+Math.sin(e.facing)*e.def.h*0.4);
-                    AudioEngine.play(e.def.dmgType==='piercing'?'cannon':'shoot',0.5);
-                }
-            }
-        }
+        if(e.def.dmg&&e.buildProgress>=1){e.fireTimer-=dt;if(e.fireTimer<=0){let t=null,md=e.def.range*e.def.range;game.entities.forEach(u=>{if(u.isEnemy===e.isEnemy||u.dead)return;const dx=u.x-e.x,dy=u.y-e.y,d=dx*dx+dy*dy;if(d<md){md=d;t=u;}});if(t){e.fireTimer=e.def.fireRate;e.facing=Math.atan2(t.y-e.y,t.x-e.x);dealDamage(e,t);spawnBullet(e.x,e.y,t.x,t.y,e.isEnemy?'#E74C3C':'#F2C14E',e.def.dmgType);spawnEffect('muzzleFlash',e.x+Math.cos(e.facing)*e.def.w*0.4,e.y+Math.sin(e.facing)*e.def.h*0.4);AudioEngine.play(e.def.dmgType==='piercing'?'cannon':'shoot',0.5);}}}
         return;
     }
     if(e.def.isHarvester){updateHarvester(e,dt);return;}
-
-    // 自动寻敌
-    if(!e.target&&!e.holdPosition&&e.targetX===null){
-        let n=null,md=(e.def.range*1.8)*(e.def.range*1.8);
-        game.entities.forEach(u=>{if(u.isEnemy===e.isEnemy||u.dead||u.def.isHarvester)return;const dx=u.x-e.x,dy=u.y-e.y,d=dx*dx+dy*dy;if(d<md){md=d;n=u;}});
-        if(n)e.target=n;
-    }
-    if(e.target){
-        if(e.target.dead)e.target=null;
-        else{
-            const dx=e.target.x-e.x,dy=e.target.y-e.y,d=Math.sqrt(dx*dx+dy*dy);
-            e.facing=Math.atan2(dy,dx);
-            if(d<=e.def.range){
-                e.fireTimer-=dt;
-                if(e.fireTimer<=0){
-                    e.fireTimer=e.def.fireRate; e.recoil=0.15; // 后坐
-                    dealDamage(e,e.target);
-                    spawnBullet(e.x,e.y,e.target.x,e.target.y,e.isEnemy?'#E74C3C':'#F2C14E',e.def.dmgType);
-                    spawnEffect('muzzleFlash',e.x+Math.cos(e.facing)*e.def.r,e.y+Math.sin(e.facing)*e.def.r);
-                    AudioEngine.play(e.def.dmgType==='piercing'?'cannon':'shoot',e.def.isVehicle?0.7:0.4);
-                }
-            }else if(!e.holdPosition)moveTowards(e,e.target.x,e.target.y,dt);
-        }
-    }else if(e.targetX!==null){
-        const dx=e.targetX-e.x,dy=e.targetY-e.y,d=Math.sqrt(dx*dx+dy*dy);
-        if(d>3){e.facing=Math.atan2(dy,dx);moveTowards(e,e.targetX,e.targetY,dt);}
-        else{e.targetX=null;e.targetY=null;}
-    }
+    if(!e.target&&!e.holdPosition&&e.targetX===null){let n=null,md=(e.def.range*1.8)*(e.def.range*1.8);game.entities.forEach(u=>{if(u.isEnemy===e.isEnemy||u.dead||u.def.isHarvester)return;const dx=u.x-e.x,dy=u.y-e.y,d=dx*dx+dy*dy;if(d<md){md=d;n=u;}});if(n)e.target=n;}
+    if(e.target){if(e.target.dead)e.target=null;else{const dx=e.target.x-e.x,dy=e.target.y-e.y,d=Math.sqrt(dx*dx+dy*dy);e.facing=Math.atan2(dy,dx);if(d<=e.def.range){e.fireTimer-=dt;if(e.fireTimer<=0){e.fireTimer=e.def.fireRate;e.recoil=0.15;dealDamage(e,e.target);spawnBullet(e.x,e.y,e.target.x,e.target.y,e.isEnemy?'#E74C3C':'#F2C14E',e.def.dmgType);spawnEffect('muzzleFlash',e.x+Math.cos(e.facing)*e.def.r,e.y+Math.sin(e.facing)*e.def.r);AudioEngine.play(e.def.dmgType==='piercing'?'cannon':'shoot',e.def.isVehicle?0.7:0.4);}}else if(!e.holdPosition)moveTowards(e,e.target.x,e.target.y,dt);}}
+    else if(e.targetX!==null){const dx=e.targetX-e.x,dy=e.targetY-e.y,d=Math.sqrt(dx*dx+dy*dy);if(d>3){e.facing=Math.atan2(dy,dx);moveTowards(e,e.targetX,e.targetY,dt);}else{e.targetX=null;e.targetY=null;}}
 }
+function moveTowards(e,tx,ty,dt){const dx=tx-e.x,dy=ty-e.y,d=Math.sqrt(dx*dx+dy*dy);if(d>0.1){const s=e.def.speed*dt;let ax=0,ay=0;game.entities.forEach(u=>{if(u===e||u.dead||u.def.isBuilding)return;const ddx=e.x-u.x,ddy=e.y-u.y,dd=ddx*ddx+ddy*ddy;const md=(e.def.r+u.def.r+2);if(dd<md*md&&dd>0.01){const d2=Math.sqrt(dd);const f=(md-d2)/md;ax+=(ddx/d2)*f*s*0.5;ay+=(ddy/d2)*f*s*0.5;}});e.x+=(dx/d)*s+ax;e.y+=(dy/d)*s+ay;}}
+function dealDamage(attacker,target){const a=getArmorType(target);const m=DMG_MATRIX[attacker.def.dmgType]||DMG_MATRIX.light;let dmg=attacker.def.dmg*(m[a]||1);target.hp-=dmg;target.flashTime=0.08;if(target.hp<=0){target.dead=true;target.deathTimer=0;spawnEffect('explosion',target.x,target.y);spawnParticles(target.x,target.y,target.def.isInfantry?6:12,'#888');AudioEngine.play('explosion',target.def.isVehicle?0.8:0.4);}}
+function updateHarvester(e,dt){if(!e.harvestTarget){const n=findNearestOreNode(e.x,e.y);if(n){e.harvestTarget=n;e.harvestState='moving';}return;}if(e.harvestState==='moving'){const dx=e.harvestTarget.x-e.x,dy=e.harvestTarget.y-e.y,d=Math.sqrt(dx*dx+dy*dy);if(d<(e.harvestTarget.radius||20)){e.harvestState='harvesting';e.harvestTimer=2;}else{e.facing=Math.atan2(dy,dx);moveTowards(e,e.harvestTarget.x,e.harvestTarget.y,dt);}}else if(e.harvestState==='harvesting'){e.harvestTimer-=dt;if(e.harvestTimer<=0){e.oreCarried=100;e.harvestState='returning';}}else if(e.harvestState==='returning'){const ref=game.entities.find(b=>b.type==='refinery'&&!b.isEnemy&&!b.dead&&b.buildProgress>=1);if(!ref)return;const dx=ref.x-e.x,dy=ref.y-e.y,d=Math.sqrt(dx*dx+dy*dy);if(d<30){game.ore+=e.oreCarried;game.techPoints+=1;e.oreCarried=0;e.harvestState='moving';}else{e.facing=Math.atan2(dy,dx);moveTowards(e,ref.x,ref.y,dt);}}}
 
-function moveTowards(e,tx,ty,dt){
-    const dx=tx-e.x,dy=ty-e.y,d=Math.sqrt(dx*dx+dy*dy);
-    if(d>0.1){
-        const s=e.def.speed*dt;
-        let ax=0,ay=0;
-        game.entities.forEach(u=>{if(u===e||u.dead||u.def.isBuilding)return;const ddx=e.x-u.x,ddy=e.y-u.y,dd=ddx*ddx+ddy*ddy;const md=(e.def.r+u.def.r+2);if(dd<md*md&&dd>0.01){const d2=Math.sqrt(dd);const f=(md-d2)/md;ax+=(ddx/d2)*f*s*0.5;ay+=(ddy/d2)*f*s*0.5;}});
-        e.x+=(dx/d)*s+ax; e.y+=(dy/d)*s+ay;
-    }
-}
-
-function dealDamage(attacker,target){
-    const a=getArmorType(target);
-    const m=DMG_MATRIX[attacker.def.dmgType]||DMG_MATRIX.light;
-    let dmg=attacker.def.dmg*(m[a]||1);
-    target.hp-=dmg; target.flashTime=0.08;
-    if(target.hp<=0){
-        target.dead=true; target.deathTimer=0;
-        spawnEffect('explosion',target.x,target.y);
-        spawnParticles(target.x,target.y,target.def.isInfantry?6:12,target.def.isInfantry?'#8b949e':'#555');
-        AudioEngine.play('explosion',target.def.isVehicle?0.8:0.4);
-    }
-}
-
-function updateHarvester(e,dt){
-    if(!e.harvestTarget){const n=findNearestOreNode(e.x,e.y);if(n){e.harvestTarget=n;e.harvestState='moving';}return;}
-    if(e.harvestState==='moving'){
-        const dx=e.harvestTarget.x-e.x,dy=e.harvestTarget.y-e.y,d=Math.sqrt(dx*dx+dy*dy);
-        if(d<(e.harvestTarget.radius||20)){e.harvestState='harvesting';e.harvestTimer=2;}
-        else{e.facing=Math.atan2(dy,dx);moveTowards(e,e.harvestTarget.x,e.harvestTarget.y,dt);}
-    }else if(e.harvestState==='harvesting'){
-        e.harvestTimer-=dt;
-        if(e.harvestTimer<=0){e.oreCarried=100;e.harvestState='returning';}
-    }else if(e.harvestState==='returning'){
-        const ref=game.entities.find(b=>b.type==='refinery'&&!b.isEnemy&&!b.dead&&b.buildProgress>=1);
-        if(!ref){const ref2=game.entities.find(b=>b.type==='enemy_refinery'&&b.isEnemy&&!b.dead&&b.buildProgress>=1);if(!ref2)return;
-            const dx=ref2.x-e.x,dy=ref2.y-e.y,d=Math.sqrt(dx*dx+dy*dy);
-            if(d<30){game.enemyAI.ore+=e.oreCarried;e.oreCarried=0;e.harvestState='moving';}else{e.facing=Math.atan2(dy,dx);moveTowards(e,ref2.x,ref2.y,dt);}
-            return;
-        }
-        const dx=ref.x-e.x,dy=ref.y-e.y,d=Math.sqrt(dx*dx+dy*dy);
-        if(d<30){game.ore+=e.oreCarried;game.techPoints+=1;e.oreCarried=0;e.harvestState='moving';}
-        else{e.facing=Math.atan2(dy,dx);moveTowards(e,ref.x,ref.y,dt);}
-    }
-}
-
-// === 敌方 AI (P4: 基地扩展) ===
 function updateEnemyAI(dt){
-    game.enemyAI.timer+=dt;
-    const ds=game.diffSettings;
-
-    // 敌方经济：采矿车自动采矿（已通过 harvester 逻辑处理）
-    // 敌方建造
-    if(ds.aiBuild){
-        game.enemyAI.buildTimer+=dt;
-        if(game.enemyAI.buildTimer>15){
-            game.enemyAI.buildTimer=0;
-            const enemyBuildings=game.entities.filter(e=>e.isEnemy&&e.def.isBuilding&&!e.dead);
-            const hasRefinery=enemyBuildings.some(e=>e.type==='enemy_refinery');
-            const hasWarfactory=enemyBuildings.some(e=>e.type==='enemy_warfactory');
-            const towerCount=enemyBuildings.filter(e=>e.type==='enemy_mgtower').length;
-            const ex=2100,ey=400;
-            if(!hasRefinery&&game.enemyAI.ore>=500){
-                spawnEntity('enemy_refinery',ex+130,ey+80,true).buildProgress=1;
-                game.enemyAI.ore-=500;
-                spawnEntity('enemy_harvester',ex-20,ey+20,true);
-            }else if(!hasWarfactory&&game.enemyAI.ore>=800){
-                spawnEntity('enemy_warfactory',ex-130,ey-60,true).buildProgress=1;
-                game.enemyAI.ore-=800;
-            }else if(towerCount<6&&game.enemyAI.ore>=350){
-                spawnEntity('enemy_mgtower',ex+Math.random()*200-100,ey+Math.random()*100-50,true).buildProgress=1;
-                game.enemyAI.ore-=350;
-            }
-        }
-    }
-
-    // 敌方出兵
-    if(game.enemyAI.timer>ds.aiInterval&&game.enemyAI.phase===0){
-        const c=Math.round(4*ds.aiScale);
-        for(let i=0;i<c;i++){const u=spawnEntity('enemy_rifleman',2080+Math.random()*40,380+i*25,true);u.targetX=250;u.targetY=1200;}
-        game.enemyAI.phase=1; showAlert('敌方步兵来袭！'); AudioEngine.play('alert');
-    }
-    if(game.enemyAI.timer>ds.aiInterval*2&&game.enemyAI.phase===1){
-        const c=Math.round(2*ds.aiScale);
-        for(let i=0;i<c;i++){const u=spawnEntity('enemy_bazooka',2080+Math.random()*30,400+i*30,true);u.targetX=250;u.targetY=1180;}
-        game.enemyAI.phase=2; showAlert('敌方反装甲部队来袭！'); AudioEngine.play('alert');
-    }
-    if(game.enemyAI.timer>ds.aiInterval*3&&game.enemyAI.phase===2){
-        const c=Math.round(2*ds.aiScale);
-        for(let i=0;i<c;i++){const u=spawnEntity('enemy_tank',2080+Math.random()*30,380+i*40,true);u.targetX=250;u.targetY=1200;}
-        game.enemyAI.phase=3; showAlert('敌方装甲部队来袭！'); AudioEngine.play('alert');
-    }
-    if(game.enemyAI.phase>=3&&game.enemyAI.timer>ds.aiInterval*3+10){
-        if(game.enemyAI.unitCount<ds.aiMaxUnits&&Math.random()<0.02){
-            const types=['enemy_rifleman','enemy_rifleman','enemy_bazooka','enemy_tank','enemy_tank'];
-            if(game.enemyAI.timer>90)types.push('enemy_heavytank');
-            const t=types[Math.floor(Math.random()*types.length)];
-            const u=spawnEntity(t,2080,380+Math.random()*60,true);
-            u.targetX=200+Math.random()*200;u.targetY=1000+Math.random()*200;
-        }
-    }
+    game.enemyAI.timer+=dt;const ds=game.diffSettings;
+    if(ds.aiBuild){game.enemyAI.buildTimer+=dt;if(game.enemyAI.buildTimer>15){game.enemyAI.buildTimer=0;const eb=game.entities.filter(e=>e.isEnemy&&e.def.isBuilding&&!e.dead);const hasRef=eb.some(e=>e.type==='enemy_refinery');const hasWar=eb.some(e=>e.type==='enemy_warfactory');const tc=eb.filter(e=>e.type==='enemy_mgtower').length;const ex=2100,ey=400;if(!hasRef&&game.enemyAI.ore>=500){spawnEntity('enemy_refinery',ex+130,ey+80,true).buildProgress=1;game.enemyAI.ore-=500;spawnEntity('enemy_harvester',ex-20,ey+20,true);}else if(!hasWar&&game.enemyAI.ore>=800){spawnEntity('enemy_warfactory',ex-130,ey-60,true).buildProgress=1;game.enemyAI.ore-=800;}else if(tc<6&&game.enemyAI.ore>=350){spawnEntity('enemy_mgtower',ex+Math.random()*200-100,ey+Math.random()*100-50,true).buildProgress=1;game.enemyAI.ore-=350;}}}
+    if(game.enemyAI.timer>ds.aiInterval&&game.enemyAI.phase===0){const c=Math.round(4*ds.aiScale);for(let i=0;i<c;i++){const u=spawnEntity('enemy_rifleman',2080+Math.random()*40,380+i*25,true);u.targetX=250;u.targetY=1200;}game.enemyAI.phase=1;showAlert('敌方步兵来袭！');AudioEngine.play('alert');}
+    if(game.enemyAI.timer>ds.aiInterval*2&&game.enemyAI.phase===1){const c=Math.round(2*ds.aiScale);for(let i=0;i<c;i++){const u=spawnEntity('enemy_bazooka',2080+Math.random()*30,400+i*30,true);u.targetX=250;u.targetY=1180;}game.enemyAI.phase=2;showAlert('敌方反装甲部队来袭！');AudioEngine.play('alert');}
+    if(game.enemyAI.timer>ds.aiInterval*3&&game.enemyAI.phase===2){const c=Math.round(2*ds.aiScale);for(let i=0;i<c;i++){const u=spawnEntity('enemy_tank',2080+Math.random()*30,380+i*40,true);u.targetX=250;u.targetY=1200;}game.enemyAI.phase=3;showAlert('敌方装甲部队来袭！');AudioEngine.play('alert');}
+    if(game.enemyAI.phase>=3&&game.enemyAI.timer>ds.aiInterval*3+10){if(game.enemyAI.unitCount<ds.aiMaxUnits&&Math.random()<0.02){const types=['enemy_rifleman','enemy_rifleman','enemy_bazooka','enemy_tank','enemy_tank'];if(game.enemyAI.timer>90)types.push('enemy_heavytank');const t=types[Math.floor(Math.random()*types.length)];const u=spawnEntity(t,2080,380+Math.random()*60,true);u.targetX=200+Math.random()*200;u.targetY=1000+Math.random()*200;}}}
 }
 
-// === 特效 ===
 function spawnEffect(type,x,y){game.effects.push({type,x,y,time:0,maxTime:type==='nukeFlash'?0.3:type==='nukeCloud'?3:type==='explosion'?0.6:type==='muzzleFlash'?0.1:type==='radiation'?2:0.4});}
 function spawnParticles(x,y,count,color){for(let i=0;i<count;i++){const a=Math.random()*Math.PI*2,s=30+Math.random()*60;game.particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:0.5+Math.random()*0.5,maxLife:1,color,size:2+Math.random()*2});}}
 function spawnBullet(fx,fy,tx,ty,color,type){game.bullets.push({x:fx,y:fy,tx,ty,color,type,progress:0,speed:type==='piercing'?800:600});}
 
-// === 战争迷雾 (P3) ===
 function updateFog(){
     const ft=CONFIG.FOG_TILE;
-    // 清空探索状态
-    // game.exploredGrid.fill(0); // 不清空——探索过的保持可见
-    // 标记玩家单位视野范围
-    game.entities.forEach(e=>{
-        if(e.isEnemy||e.dead)return;
-        const sight=e.def.sight||100;
-        const cx=Math.floor(e.x/ft), cy=Math.floor(e.y/ft);
-        const r=Math.ceil(sight/ft);
-        for(let dy=-r;dy<=r;dy++){
-            for(let dx=-r;dx<=r;dx++){
-                const tx=cx+dx, ty=cy+dy;
-                if(tx<0||tx>=game.fogCols||ty<0||ty>=game.fogRows)continue;
-                const d=Math.sqrt(dx*dx+dy*dy);
-                if(d<=r){
-                    const idx=ty*game.fogCols+tx;
-                    // 2=当前可见, 1=已探索但不在视野
-                    game.exploredGrid[idx]=Math.max(game.exploredGrid[idx],2);
-                }
-            }
-        }
-    });
-    // 雷达站全图探索
-    const hasRadar=game.entities.some(e=>e.type==='radar'&&!e.isEnemy&&!e.dead&&e.buildProgress>=1);
-    if(hasRadar){game.exploredGrid.fill(2);}
+    game.entities.forEach(e=>{if(e.isEnemy||e.dead)return;const sight=e.def.sight||100;const cx=Math.floor(e.x/ft),cy=Math.floor(e.y/ft);const r=Math.ceil(sight/ft);for(let dy=-r;dy<=r;dy++){for(let dx=-r;dx<=r;dx++){const tx=cx+dx,ty=cy+dy;if(tx<0||tx>=game.fogCols||ty<0||ty>=game.fogRows)continue;const d=Math.sqrt(dx*dx+dy*dy);if(d<=r){game.exploredGrid[ty*game.fogCols+tx]=Math.max(game.exploredGrid[ty*game.fogCols+tx],2);}}}});
+    const hr=game.entities.some(e=>e.type==='radar'&&!e.isEnemy&&!e.dead&&e.buildProgress>=1);
+    if(hr)game.exploredGrid.fill(2);
 }
-
 function renderFog(){
-    fogCanvas.width=canvas.width; fogCanvas.height=canvas.height;
-    const ft=CONFIG.FOG_TILE;
-    const zoom=game.camera.zoom;
-    const tileScreenSize=ft*zoom;
-
-    // 先全黑
-    fogCtx.fillStyle='rgba(0,0,0,0.65)';
-    fogCtx.fillRect(0,0,fogCanvas.width,fogCanvas.height);
-
-    // 已探索但不在视野=半暗
-    // 当前可见=全透明
-    const startX=Math.floor(game.camera.x/ft);
-    const startY=Math.floor(game.camera.y/ft);
-    const endX=Math.ceil((game.camera.x+canvas.width/zoom)/ft);
-    const endY=Math.ceil((game.camera.y+canvas.height/zoom)/ft);
-
-    for(let ty=startY;ty<=endY;ty++){
-        for(let tx=startX;tx<=endX;tx++){
-            if(tx<0||tx>=game.fogCols||ty<0||ty>=game.fogRows)continue;
-            const state=game.exploredGrid[ty*game.fogCols+tx];
-            const sx=(tx*ft-game.camera.x)*zoom;
-            const sy=(ty*ft-game.camera.y)*zoom;
-            if(state===2){
-                // 当前可见 — 全透明
-                fogCtx.clearRect(sx,sy,tileScreenSize+1,tileScreenSize+1);
-            }else if(state===1){
-                // 已探索但不在视野 — 半暗
-                fogCtx.clearRect(sx,sy,tileScreenSize+1,tileScreenSize+1);
-                fogCtx.fillStyle='rgba(0,0,0,0.4)';
-                fogCtx.fillRect(sx,sy,tileScreenSize+1,tileScreenSize+1);
-            }
-        }
+    fogCanvas.width=canvas.width;fogCanvas.height=canvas.height;
+    const ft=CONFIG.FOG_TILE,zoom=game.camera.zoom,ts=ft*zoom;
+    fogCtx.fillStyle='rgba(0,0,0,0.7)';fogCtx.fillRect(0,0,fogCanvas.width,fogCanvas.height);
+    for(let ty=0;ty<game.fogRows;ty++){for(let tx=0;tx<game.fogCols;tx++){const st=game.exploredGrid[ty*game.fogCols+tx];
+        if(st>0){const iso=worldToIsoScreen(tx*ft+ft/2,ty*ft+ft/2);const sx=iso.x*zoom-game.camera.x;const sy=iso.y*zoom-game.camera.y;
+        if(sx>-100&&sx<canvas.width+100&&sy>-100&&sy<canvas.height+100){
+            fogCtx.clearRect(sx-ts/2,sy-ts/2,ts+1,ts+1);
+            if(st===1)fogCtx.fillStyle='rgba(0,0,0,0.4)',fogCtx.fillRect(sx-ts/2,sy-ts/2,ts+1,ts+1);
+        }}}
     }
-    // 将视野外的旧2降级为1
-    for(let i=0;i<game.exploredGrid.length;i++){
-        if(game.exploredGrid[i]===2)game.exploredGrid[i]=1; // 下一帧会被重新标记为2
-    }
+    for(let i=0;i<game.exploredGrid.length;i++){if(game.exploredGrid[i]===2)game.exploredGrid[i]=1;}
 }
 
-// === 游戏循环 ===
-function gameLoop(ts){
-    const dt=Math.min((ts-lastTime)/1000,0.05);
-    lastTime=ts; game.time+=dt;
-    update(dt); render(); updateUI();
-    requestAnimationFrame(gameLoop);
-}
+let lastTime=0;
+function gameLoop(ts){const dt=Math.min((ts-lastTime)/1000,0.05);lastTime=ts;game.time+=dt;update(dt);render();updateUI();requestAnimationFrame(gameLoop);}
 
 function update(dt){
     game.entities.forEach(e=>updateUnit(e,dt));
-    // 清理死亡（等溶解动画结束）
-    game.entities=game.entities.filter(e=>{
-        if(e.dead){
-            if(e.deathTimer>0.8){
-                if(!e.isEnemy){if(e.def.power>0)game.powerSupply-=e.def.power;if(e.def.powerNeed>0)game.powerUsed-=e.def.powerNeed;}
-                else game.enemyAI.unitCount--;
-                const si=game.selected.indexOf(e);if(si>=0)game.selected.splice(si,1);
-                game.squads=game.squads.map(s=>s?s.filter(u=>u!==e):null);
-                return false;
-            }
-            return true; // 还在溶解，保留
-        }
-        return true;
-    });
+    game.entities=game.entities.filter(e=>{if(e.dead){if(e.deathTimer>0.8){if(!e.isEnemy){if(e.def.power>0)game.powerSupply-=e.def.power;if(e.def.powerNeed>0)game.powerUsed-=e.def.powerNeed;}else game.enemyAI.unitCount--;const si=game.selected.indexOf(e);if(si>=0)game.selected.splice(si,1);game.squads=game.squads.map(s=>s?s.filter(u=>u!==e):null);return false;}return true;}return true;});
     game.bullets.forEach(b=>{const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.sqrt(dx*dx+dy*dy+1);b.progress+=b.speed*dt/d;});
     game.bullets=game.bullets.filter(b=>b.progress<1);
-    game.effects.forEach(e=>e.time+=dt);
-    game.effects=game.effects.filter(e=>e.time<e.maxTime);
+    game.effects.forEach(e=>e.time+=dt);game.effects=game.effects.filter(e=>e.time<e.maxTime);
     game.particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=100*dt;p.life-=dt;});
     game.particles=game.particles.filter(p=>p.life>0);
-
-    updateEnemyAI(dt);
-    updateSuperWeapon();
-    updateFog();
-
+    updateEnemyAI(dt);updateSuperWeapon();updateFog();
     if(Math.floor(game.time*2)!==Math.floor((game.time-dt)*2))updateSquadBar();
-
     const pHQ=game.entities.find(e=>e.type==='hq'&&!e.isEnemy&&!e.dead);
     const eHQ=game.entities.find(e=>e.type==='enemy_hq'&&!e.dead);
     if(!pHQ&&!game.gameOver){game.gameOver=true;showGameOver(false);}
     if(!eHQ&&!game.gameOver){game.gameOver=true;game.victory=true;showGameOver(true);}
 }
+function showGameOver(v){const s=document.getElementById('gameOverScreen');const t=document.getElementById('goText');t.textContent=v?'🏆 胜利！':'💀 基地被摧毁';t.style.color=v?'#F2C14E':'#E74C3C';s.style.display='flex';}
 
-function showGameOver(victory){
-    const s=document.getElementById('gameOverScreen');
-    const t=document.getElementById('goText');
-    t.textContent=victory?'🏆 胜利！':'💀 基地被摧毁';
-    t.style.color=victory?'#F2C14E':'#E74C3C';
-    s.style.display='flex';
-}
-
-// === 渲染 ===
+// === 等距渲染 ===
 function render(){
-    ctx.fillStyle='#0d1117';
-    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#1a1a1a';ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.save();
     ctx.scale(game.camera.zoom,game.camera.zoom);
     ctx.translate(-game.camera.x,-game.camera.y);
 
-    drawTerrain();
-    drawObstacles();
-    game.mapData.oreNodes.forEach(n=>drawOreNode(n));
-    game.entities.filter(e=>e.def.isBuilding).forEach(e=>drawBuilding(e));
-    game.entities.filter(e=>!e.def.isBuilding).forEach(e=>drawUnit(e));
+    drawIsoTerrain();
+
+    // 按等距Y排序绘制（y越小越靠后先画）
+    const allEntities=game.entities.filter(e=>!e.dead||e.deathTimer<0.8);
+    allEntities.sort((a,b)=>{
+        const ia=worldToIsoScreen(a.x,a.y),ib=worldToIsoScreen(b.x,b.y);
+        return ia.y-ib.y; // 先画y小的（远的）
+    });
+
+    // 先画矿点
+    game.mapData.oreNodes.forEach(n=>drawIsoOre(n));
+
+    // 画障碍物
+    if(game.mapData.obstacles)game.mapData.obstacles.forEach(o=>drawIsoObstacle(o));
+
+    // 画实体（按深度排序）
+    allEntities.forEach(e=>drawIsoEntity(e));
+
+    // 画子弹/特效/粒子（世界空间）
     game.bullets.forEach(b=>drawBullet(b));
     game.effects.forEach(eff=>drawEffect(eff));
     game.particles.forEach(p=>drawParticle(p));
+
+    // 选中环
     game.selected.forEach(e=>drawSelectionRing(e));
 
+    // 建造预览
     if(game.buildSelection&&input.pointers.length>0){
         const wp=screenToWorld(input.pointers[0].x,input.pointers[0].y);
         drawBuildPreview(game.buildSelection,wp.x,wp.y);
     }
     if(input.isSuperWeaponTargeting&&input.pointers.length>0){
         const wp=screenToWorld(input.pointers[0].x,input.pointers[0].y);
+        const iso=worldToIsoScreen(wp.x,wp.y);
         ctx.strokeStyle='#E74C3C';ctx.lineWidth=2;ctx.setLineDash([6,4]);
-        ctx.beginPath();ctx.arc(wp.x,wp.y,140,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
-        ctx.fillStyle='rgba(231,76,60,0.1)';ctx.beginPath();ctx.arc(wp.x,wp.y,140,0,Math.PI*2);ctx.fill();
-    }
-    if(input.isRallyMode&&input.pointers.length>0){
-        const wp=screenToWorld(input.pointers[0].x,input.pointers[0].y);
-        ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.setLineDash([4,3]);
-        ctx.beginPath();ctx.arc(wp.x,wp.y,15,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+        ctx.beginPath();ctx.arc(iso.x,iso.y,80,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='rgba(231,76,60,0.1)';ctx.beginPath();ctx.arc(iso.x,iso.y,80,0,Math.PI*2);ctx.fill();
     }
 
     ctx.restore();
@@ -1012,168 +670,193 @@ function render(){
         ctx.fillRect(x,y,w,h);ctx.strokeRect(x,y,w,h);
     }
 
-    // 战争迷雾
     renderFog();
-
     drawMiniMap();
 }
 
-function drawTerrain(){
-    const t=game.mapData.terrain;
-    const colors={grass:'#1a2d1a',urban:'#212028',mixed:'#1e2520'};
-    ctx.fillStyle=colors[t]||'#1a2d1a';
-    ctx.fillRect(0,0,CONFIG.WORLD_W,CONFIG.WORLD_H);
-    ctx.strokeStyle=t==='urban'?'rgba(60,60,70,0.15)':'rgba(40,60,40,0.1)';
-    ctx.lineWidth=1;
-    const s=CONFIG.TILE;
-    const sx=Math.floor(game.camera.x/s)*s,sy=Math.floor(game.camera.y/s)*s;
-    const ex=game.camera.x+canvas.width/game.camera.zoom,ey=game.camera.y+canvas.height/game.camera.zoom;
-    for(let x=sx;x<ex;x+=s){ctx.beginPath();ctx.moveTo(x,sy);ctx.lineTo(x,ey);ctx.stroke();}
-    for(let y=sy;y<ey;y+=s){ctx.beginPath();ctx.moveTo(sx,y);ctx.lineTo(ex,y);ctx.stroke();}
-    if(t==='urban'){ctx.fillStyle='rgba(50,50,55,0.5)';ctx.fillRect(0,700,CONFIG.WORLD_W,90);ctx.fillRect(1100,0,90,CONFIG.WORLD_H);}
-    if(t==='mixed'){ctx.fillStyle='rgba(50,45,35,0.3)';ctx.fillRect(0,760,CONFIG.WORLD_W,70);ctx.fillRect(1160,0,70,CONFIG.WORLD_H);}
-    ctx.strokeStyle='rgba(80,60,30,0.4)';ctx.lineWidth=3;ctx.strokeRect(0,0,CONFIG.WORLD_W,CONFIG.WORLD_H);
+function drawIsoTerrain(){
+    // 画等距网格地面
+    const tw=CONFIG.ISO_TILE_W,th=CONFIG.ISO_TILE_H;
+    const tilesX=CONFIG.WORLD_W/tw,tilesY=CONFIG.WORLD_H/th;
+
+    // 地面菱形网格
+    ctx.strokeStyle='rgba(40,50,40,0.15)';ctx.lineWidth=0.5;
+    for(let ix=0;ix<=tilesX;ix+=2){
+        const p1=isoToScreen(ix,0),p2=isoToScreen(ix,tilesY);
+        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
+    for(let iy=0;iy<=tilesY;iy+=2){
+        const p1=isoToScreen(0,iy),p2=isoToScreen(tilesX,iy);
+        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
+
+    // 地面填充（绿色草地底色）
+    const corners=[isoToScreen(0,0),isoToScreen(tilesX,0),isoToScreen(tilesX,tilesY),isoToScreen(0,tilesY)];
+    ctx.fillStyle='#1a2412';
+    ctx.beginPath();
+    ctx.moveTo(corners[0].x,corners[0].y);
+    corners.forEach(c=>ctx.lineTo(c.x,c.y));
+    ctx.closePath();ctx.fill();
+
+    // 地面边界
+    ctx.strokeStyle='rgba(80,60,30,0.4)';ctx.lineWidth=3;
+    ctx.stroke();
+
+    // 重新画网格（在填充之上）
+    ctx.strokeStyle='rgba(50,60,40,0.12)';ctx.lineWidth=0.5;
+    for(let ix=0;ix<=tilesX;ix+=4){
+        const p1=isoToScreen(ix,0),p2=isoToScreen(ix,tilesY);
+        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
+    for(let iy=0;iy<=tilesY;iy+=4){
+        const p1=isoToScreen(0,iy),p2=isoToScreen(tilesX,iy);
+        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
 }
 
-function drawObstacles(){
-    if(!game.mapData.obstacles)return;
-    game.mapData.obstacles.forEach(o=>{
-        ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(o.x-o.w/2+3,o.y-o.h/2+3,o.w,o.h);
-        ctx.fillStyle='#2d2d35';ctx.fillRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);
-        ctx.strokeStyle='#404048';ctx.lineWidth=2;ctx.strokeRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);
-        ctx.fillStyle='#383840';ctx.fillRect(o.x-o.w/2+4,o.y-o.h/2+4,o.w-8,6);
-        // 窗户
-        ctx.fillStyle='#1a1a20';
-        ctx.fillRect(o.x-o.w/4,o.y-o.h/4,8,8);
-        ctx.fillRect(o.x+o.w/4-8,o.y-o.h/4,8,8);
-    });
-}
-
-function drawOreNode(n){
-    ctx.fillStyle='#5a4a2a';ctx.beginPath();ctx.arc(n.x,n.y,(n.r||25)+2,0,Math.PI*2);ctx.fill();
-    ctx.fillStyle='#C4A96A';ctx.beginPath();ctx.arc(n.x,n.y,(n.r||25)*0.7,0,Math.PI*2);ctx.fill();
+function drawIsoOre(n){
+    const iso=worldToIsoScreen(n.x,n.y);
+    const r=n.r||25;
+    // 矿堆
+    ctx.fillStyle='#5a4a2a';
+    ctx.beginPath();ctx.ellipse(iso.x,iso.y,r,r*0.5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#C4A96A';
+    ctx.beginPath();ctx.ellipse(iso.x,iso.y,r*0.6,r*0.3,0,0,Math.PI*2);ctx.fill();
+    // 闪烁
     const p=Math.sin(game.time*2)*0.3+0.7;
     ctx.strokeStyle=`rgba(196,169,106,${p*0.3})`;ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(n.x,n.y,(n.r||25)+5+p*3,0,Math.PI*2);ctx.stroke();
-    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+game.time*0.2;const r=(n.r||25)*0.4;ctx.fillStyle='#D4B97A';ctx.beginPath();ctx.arc(n.x+Math.cos(a)*r,n.y+Math.sin(a)*r,2,0,Math.PI*2);ctx.fill();}
+    ctx.beginPath();ctx.ellipse(iso.x,iso.y,r+3,(r+3)*0.5,0,0,Math.PI*2);ctx.stroke();
 }
 
-function drawBuilding(e){
-    const d=e.def;ctx.save();ctx.translate(e.x,e.y);
-    if(e.constructing){
-        const h=d.h*e.buildProgress;
-        ctx.fillStyle=e.isEnemy?'rgba(231,76,60,0.4)':'rgba(63,167,214,0.4)';
-        ctx.fillRect(-d.w/2,d.h/2-h,d.w,h);
-        ctx.fillStyle='#F2C14E';ctx.fillRect(-d.w/2,-d.h/2-8,d.w*e.buildProgress,4);
-        ctx.restore();return;
-    }
-    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.fillRect(-d.w/2+3,-d.h/2+3,d.w,d.h);
-    const fl=e.flashTime>0;
-    ctx.fillStyle=fl?'#fff':(e.isEnemy?'#3d2020':'#1a2a3a');
-    ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);
-    ctx.strokeStyle=e.isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=2;
-    ctx.strokeRect(-d.w/2,-d.h/2,d.w,d.h);
-    ctx.fillStyle=e.isEnemy?'rgba(231,76,60,0.3)':'rgba(63,167,214,0.3)';
-    ctx.fillRect(-d.w/2,-d.h/2,d.w,4);
-    ctx.font='18px serif';ctx.textAlign='center';ctx.textBaseline='middle';
-    const icons={hq:'🏰',powerplant:'⚡',refinery:'⛏',barracks:'🪖',warfactory:'🏗',radar:'📡',mgtower:'🔫',atcannon:'💥',
-        enemy_hq:'🏰',enemy_powerplant:'⚡',enemy_refinery:'⛏',enemy_barracks:'🪖',enemy_warfactory:'🏗',enemy_radar:'📡',enemy_mgtower:'🔫',enemy_atcannon:'💥'};
-    ctx.fillText(icons[e.type]||'?',0,0);
-    if(d.dmg&&d.range){ctx.strokeStyle='#555';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(e.facing||0)*d.w*0.4,Math.sin(e.facing||0)*d.h*0.4);ctx.stroke();}
-    // 雷达旋转动画
-    if(e.type==='radar'||e.type==='enemy_radar'){ctx.strokeStyle='#3FA7D6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(e.animTime*2)*12,Math.sin(e.animTime*2)*12);ctx.stroke();}
-    ctx.restore();
-    if(e.hp<e.maxHp)drawHPBar(e);
+function drawIsoObstacle(o){
+    const iso=worldToIsoScreen(o.x,o.y);
+    // 阴影
+    ctx.fillStyle='rgba(0,0,0,0.3)';
+    ctx.beginPath();ctx.ellipse(iso.x+3,iso.y+3,o.w/2,o.w/4,0,0,Math.PI*2);ctx.fill();
+    // 建筑体
+    ctx.fillStyle='#2d2d35';
+    ctx.fillRect(iso.x-o.w/2,iso.y-o.h/2,o.w,o.h);
+    ctx.strokeStyle='#404048';ctx.lineWidth=2;
+    ctx.strokeRect(iso.x-o.w/2,iso.y-o.h/2,o.w,o.h);
+    // 窗户
+    ctx.fillStyle='#1a1a20';
+    ctx.fillRect(iso.x-o.w/4,iso.y-o.h/4,8,8);
+    ctx.fillRect(iso.x+o.w/4-8,iso.y-o.h/4,8,8);
 }
 
-function drawUnit(e){
+function drawIsoEntity(e){
+    const iso=worldToIsoScreen(e.x,e.y);
     const d=e.def;
+    const spriteName=e.baseType||e.type.replace('enemy_','');
+    const sprite=SPRITES[spriteName];
+
     // 死亡溶解
     if(e.dead){
         const t=e.deathTimer/0.8;
-        ctx.save();ctx.translate(e.x,e.y);
-        ctx.globalAlpha=1-t;
-        ctx.fillStyle=e.isEnemy?'#E74C3C':'#3FA7D6';
-        if(d.isInfantry){ctx.beginPath();ctx.arc(0,0,d.r,0,Math.PI*2);ctx.fill();}
-        else if(d.isVehicle){ctx.fillRect(-d.r,-d.r*0.7,d.r*2,d.r*1.4);}
-        else{ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*Math.PI*2;if(i===0)ctx.moveTo(Math.cos(a)*d.r,Math.sin(a)*d.r);else ctx.lineTo(Math.cos(a)*d.r,Math.sin(a)*d.r);}ctx.closePath();ctx.fill();}
-        // 溶解粒子
-        if(t<0.5&&Math.random()<0.1){const a=Math.random()*Math.PI*2;spawnParticles(e.x+Math.cos(a)*d.r,e.y+Math.sin(a)*d.r,1,'#888');}
-        ctx.globalAlpha=1;ctx.restore();return;
-    }
-
-    ctx.save();ctx.translate(e.x,e.y);
-    // 底座圆环
-    ctx.strokeStyle=e.isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(0,0,d.r+3,0,Math.PI*2);ctx.stroke();
-    // 阴影
-    ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(2,2,d.r,d.r*0.6,0,0,Math.PI*2);ctx.fill();
-
-    const fl=e.flashTime>0;
-    // 后坐偏移
-    const recoilOff=e.recoil>0?-e.recoil*8:0;
-    const rx=Math.cos(e.facing)*recoilOff, ry=Math.sin(e.facing)*recoilOff;
-
-    if(d.isInfantry){
-        // 行走浮动
-        let bob=0;
-        if(e.targetX!==null||e.target)bob=Math.sin(e.animTime*10)*1.5;
-        ctx.translate(rx,bob+ry);
-        // 身体
-        ctx.fillStyle=fl?'#fff':(e.isEnemy?'#8B1E1E':'#1F4E8C');
-        ctx.beginPath();ctx.arc(0,0,d.r,0,Math.PI*2);ctx.fill();
-        // 头部
-        ctx.fillStyle=fl?'#fff':'#c9d1d9';
-        ctx.beginPath();ctx.arc(0,-d.r*0.3,d.r*0.45,0,Math.PI*2);ctx.fill();
-        // 枪管
-        const a=e.facing||0;
-        ctx.strokeStyle='#222';ctx.lineWidth=2.5;
-        ctx.beginPath();ctx.moveTo(Math.cos(a)*d.r*0.5,Math.sin(a)*d.r*0.5);ctx.lineTo(Math.cos(a)*d.r*1.5,Math.sin(a)*d.r*1.5);ctx.stroke();
-        // 开火枪口闪光
-        if(e.recoil>0.1){ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(Math.cos(a)*d.r*1.5,Math.sin(a)*d.r*1.5,3,0,Math.PI*2);ctx.fill();}
-    }else if(d.isVehicle){
-        const isHeavy=d.r>15;
-        ctx.translate(rx,ry);
-        // 履带
-        ctx.fillStyle='#222';ctx.fillRect(-d.r,-d.r*0.8,d.r*2,d.r*0.3);ctx.fillRect(-d.r,d.r*0.5,d.r*2,d.r*0.3);
-        // 履带纹路（移动时滚动）
-        if(e.targetX!==null||e.target){
-            const offset=(e.animTime*20)%8;
-            ctx.fillStyle='#333';
-            for(let i=-d.r;i<d.r;i+=8){ctx.fillRect(i+offset,-d.r*0.8,3,d.r*0.3);ctx.fillRect(i+offset,d.r*0.5,3,d.r*0.3);}
+        ctx.save();ctx.globalAlpha=1-t;
+        if(sprite){
+            const sz=d.isBuilding?d.w*1.5:d.r*3;
+            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2,sz,sz);
+        }else{
+            ctx.fillStyle=e.isEnemy?'#E74C3C':'#3FA7D6';
+            ctx.beginPath();ctx.arc(iso.x,iso.y,d.r,0,Math.PI*2);ctx.fill();
         }
-        // 车身
-        ctx.fillStyle=fl?'#fff':(e.isEnemy?'#5C2C2C':'#2C4C7E');
-        ctx.fillRect(-d.r*0.9,-d.r*0.5,d.r*1.8,d.r);
-        ctx.fillStyle=fl?'#fff':(e.isEnemy?'#7C3C3C':'#4C6C9E');
-        ctx.fillRect(-d.r*0.9,-d.r*0.5,d.r*1.8,d.r*0.25);
-        // 炮塔
-        ctx.fillStyle=fl?'#fff':(e.isEnemy?'#6C2C2C':'#3C5C8E');
-        ctx.beginPath();ctx.arc(0,0,d.r*0.45,0,Math.PI*2);ctx.fill();
-        // 炮管（后坐偏移）
-        const a=e.facing||0;
-        const br=d.r*1.6-(e.recoil>0?e.recoil*4:0);
-        ctx.strokeStyle='#333';ctx.lineWidth=isHeavy?5:3;
-        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(Math.cos(a)*br,Math.sin(a)*br);ctx.stroke();
-        ctx.fillStyle='#555';ctx.beginPath();ctx.arc(Math.cos(a)*br,Math.sin(a)*br,2,0,Math.PI*2);ctx.fill();
-        // 开火闪光
-        if(e.recoil>0.1){ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(Math.cos(a)*br,Math.sin(a)*br,5,0,Math.PI*2);ctx.fill();}
-    }else if(d.isHarvester){
-        ctx.fillStyle=fl?'#fff':'#8B7355';
-        ctx.beginPath();
-        for(let i=0;i<6;i++){const a=i/6*Math.PI*2;const px=Math.cos(a)*d.r,py=Math.sin(a)*d.r;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
-        ctx.closePath();ctx.fill();
-        ctx.strokeStyle='#A0855A';ctx.lineWidth=1.5;ctx.stroke();
-        if(e.oreCarried>0){ctx.fillStyle='#C4A96A';ctx.beginPath();ctx.arc(0,0,d.r*0.45,0,Math.PI*2);ctx.fill();}
-        if(e.harvestState==='harvesting'){ctx.strokeStyle='#F2C14E';ctx.lineWidth=1;ctx.beginPath();ctx.arc(0,0,d.r+4,e.animTime*3,e.animTime*3+Math.PI);ctx.stroke();}
+        ctx.restore();return;
     }
-    ctx.restore();
-    if(e.hp<e.maxHp)drawHPBar(e);
+
+    // 阴影
+    ctx.fillStyle='rgba(0,0,0,0.35)';
+    ctx.beginPath();ctx.ellipse(iso.x+2,iso.y+2,d.r||d.w/2,(d.r||d.w/2)*0.4,0,0,Math.PI*2);ctx.fill();
+
+    // 选中底环（在实体下方）
+    if(game.selected.includes(e)){
+        ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.setLineDash([5,3]);
+        ctx.beginPath();ctx.ellipse(iso.x,iso.y+2,d.r+5||d.w/2+5,(d.r+5||d.w/2+5)*0.5,0,0,Math.PI*2);ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // 阵营色底环
+    ctx.strokeStyle=e.isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(iso.x,iso.y,d.r+3||d.w/2+3,(d.r+3||d.w/2+3)*0.5,0,0,Math.PI*2);ctx.stroke();
+
+    // 闪烁覆盖（受击）
+    if(e.flashTime>0){ctx.globalAlpha=0.5;ctx.fillStyle='#fff';}
+
+    // 建造进度
+    if(e.def.isBuilding&&e.constructing){
+        const p=e.buildProgress;
+        if(sprite){
+            // 从下往上生长（裁剪）
+            const sz=d.w*1.8;
+            const clipH=sz*p;
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(iso.x-sz/2,iso.y-sz/2+sz-clipH,sz,clipH);
+            ctx.clip();
+            ctx.globalAlpha=0.6;
+            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2,sz,sz);
+            ctx.restore();
+            ctx.globalAlpha=1;
+        }
+        // 进度条
+        ctx.fillStyle='#F2C14E';
+        ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2-12,d.w*p,4);
+        ctx.fillStyle='rgba(0,0,0,0.5)';
+        ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2-12,d.w,4);
+        ctx.fillStyle='#F2C14E';
+        ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2-12,d.w*p,4);
+        ctx.globalAlpha=1;return;
+    }
+
+    // 用 sprite 图片绘制
+    if(sprite){
+        const sz=d.isBuilding?d.w*1.8:d.r*4;
+        // 敌方单位色调偏红（通过 filter）
+        if(e.isEnemy){
+            ctx.save();
+            ctx.filter='hue-rotate(180deg) saturate(1.3)';
+            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2-d.r,sz,sz);
+            ctx.filter='none';
+            ctx.restore();
+        }else{
+            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2-d.r,sz,sz);
+        }
+    }else{
+        // 回退：用形状绘制
+        const fl=e.flashTime>0;
+        if(d.isInfantry){
+            ctx.fillStyle=fl?'#fff':(e.isEnemy?'#8B1E1E':'#1F4E8C');
+            ctx.beginPath();ctx.arc(iso.x,iso.y-d.r,d.r,0,Math.PI*2);ctx.fill();
+        }else if(d.isVehicle){
+            ctx.fillStyle=fl?'#fff':(e.isEnemy?'#5C2C2C':'#2C4C7E');
+            ctx.fillRect(iso.x-d.r,iso.y-d.r*0.7,d.r*2,d.r*1.4);
+        }else if(d.isHarvester){
+            ctx.fillStyle=fl?'#fff':'#8B7355';
+            ctx.beginPath();
+            for(let i=0;i<6;i++){const a=i/6*Math.PI*2;if(i===0)ctx.moveTo(iso.x+Math.cos(a)*d.r,iso.y+Math.sin(a)*d.r);else ctx.lineTo(iso.x+Math.cos(a)*d.r,iso.y+Math.sin(a)*d.r);}
+            ctx.closePath();ctx.fill();
+        }else{
+            ctx.fillStyle=fl?'#fff':(e.isEnemy?'#3d2020':'#1a2a3a');
+            ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2,d.w,d.h);
+        }
+    }
+    ctx.globalAlpha=1;
+
+    // HP 条
+    if(e.hp<e.maxHp)drawIsoHPBar(e,iso);
+
+    // 集结点指示
+    if(e.def.isBuilding&&e.rallyX!==null){
+        const rallyIso=worldToIsoScreen(e.rallyX,e.rallyY);
+        ctx.strokeStyle='#F2C14E';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+        ctx.beginPath();ctx.moveTo(iso.x,iso.y);ctx.lineTo(rallyIso.x,rallyIso.y);ctx.stroke();ctx.setLineDash([]);
+        ctx.fillStyle='#F2C14E';ctx.beginPath();ctx.arc(rallyIso.x,rallyIso.y,5,0,Math.PI*2);ctx.fill();
+    }
 }
 
-function drawHPBar(e){
+function drawIsoHPBar(e,iso){
     const w=e.def.isBuilding?e.def.w:e.def.r*2.5;
-    const x=e.x-w/2, y=e.def.isBuilding?e.y-e.def.h/2-8:e.y-e.def.r-8;
+    const x=iso.x-w/2,y=iso.y-(e.def.isBuilding?e.def.h/2+10:e.def.r+10);
     ctx.fillStyle='rgba(0,0,0,0.6)';ctx.fillRect(x-1,y-1,w+2,6);
     ctx.fillStyle='#21262d';ctx.fillRect(x,y,w,4);
     const r=Math.max(0,e.hp/e.maxHp);
@@ -1182,84 +865,66 @@ function drawHPBar(e){
 }
 
 function drawSelectionRing(e){
-    const r=e.def.isBuilding?Math.max(e.def.w,e.def.h)/2+6:e.def.r+6;
-    ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.setLineDash([5,3]);
-    ctx.beginPath();ctx.arc(e.x,e.y,r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
-    // 集结点指示
-    if(e.def.isBuilding&&e.rallyX!==null){
-        ctx.strokeStyle='#F2C14E';ctx.lineWidth=1;ctx.setLineDash([3,3]);
-        ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.rallyX,e.rallyY);ctx.stroke();ctx.setLineDash([]);
-        ctx.fillStyle='#F2C14E';ctx.beginPath();ctx.arc(e.rallyX,e.rallyY,5,0,Math.PI*2);ctx.fill();
-    }
+    // 已在 drawIsoEntity 中绘制底环
 }
 
 function drawBullet(b){
-    const x=b.x+(b.tx-b.x)*b.progress, y=b.y+(b.ty-b.y)*b.progress;
+    const iso1=worldToIsoScreen(b.x,b.y);
+    const iso2=worldToIsoScreen(b.tx,b.ty);
+    const x=iso1.x+(iso2.x-iso1.x)*b.progress;
+    const y=iso1.y+(iso2.y-iso1.y)*b.progress;
     ctx.strokeStyle=b.color+'60';ctx.lineWidth=1;
-    const dx=b.tx-b.x,dy=b.ty-b.y,d=Math.sqrt(dx*dx+dy*dy+1);
+    const dx=iso2.x-iso1.x,dy=iso2.y-iso1.y,d=Math.sqrt(dx*dx+dy*dy+1);
     ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-dx/d*8,y-dy/d*8);ctx.stroke();
     ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(x,y,b.type==='piercing'?3:2,0,Math.PI*2);ctx.fill();
 }
 
 function drawEffect(eff){
+    const iso=worldToIsoScreen(eff.x,eff.y);
     const t=eff.time/eff.maxTime;
     if(eff.type==='explosion'){
         const r=25*(1-(1-t)**2),a=1-t;
-        ctx.fillStyle=`rgba(255,150,30,${a*0.7})`;ctx.beginPath();ctx.arc(eff.x,eff.y,r,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=`rgba(255,220,100,${a*0.5})`;ctx.beginPath();ctx.arc(eff.x,eff.y,r*0.5,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=`rgba(255,255,255,${a*0.3})`;ctx.beginPath();ctx.arc(eff.x,eff.y,r*0.2,0,Math.PI*2);ctx.fill();
-    }else if(eff.type==='muzzleFlash'){
-        const a=1-t;ctx.fillStyle=`rgba(255,220,80,${a*0.8})`;ctx.beginPath();ctx.arc(eff.x,eff.y,4*(1-t*0.5),0,Math.PI*2);ctx.fill();
-    }else if(eff.type==='moveIndicator'){
-        const r=12+t*18,a=(1-t)*0.5;
-        ctx.strokeStyle=`rgba(63,167,214,${a})`;ctx.lineWidth=3;
-        ctx.beginPath();ctx.arc(eff.x,eff.y,r,0,Math.PI*2);ctx.stroke();
-        ctx.fillStyle=`rgba(63,167,214,${a*0.6})`;ctx.beginPath();ctx.arc(eff.x,eff.y,3,0,Math.PI*2);ctx.fill();
-    }else if(eff.type==='attackIndicator'){
-        const r=10+t*15,a=(1-t)*0.6;
-        ctx.strokeStyle=`rgba(231,76,60,${a})`;ctx.lineWidth=2;
-        ctx.beginPath();ctx.moveTo(eff.x-r,eff.y);ctx.lineTo(eff.x+r,eff.y);ctx.moveTo(eff.x,eff.y-r);ctx.lineTo(eff.x,eff.y+r);ctx.stroke();
-        ctx.beginPath();ctx.arc(eff.x,eff.y,r*0.6,0,Math.PI*2);ctx.stroke();
-    }else if(eff.type==='spawn'){
-        const r=20*t,a=1-t;ctx.strokeStyle=`rgba(63,167,214,${a*0.6})`;ctx.lineWidth=2;
-        ctx.beginPath();ctx.arc(eff.x,eff.y,r,0,Math.PI*2);ctx.stroke();
-    }else if(eff.type==='nukeFlash'){
-        const a=(1-t)*0.8;
-        ctx.fillStyle=`rgba(255,255,255,${a})`;
-        ctx.fillRect(game.camera.x,game.camera.y,canvas.width/game.camera.zoom,canvas.height/game.camera.zoom);
-    }else if(eff.type==='nukeCloud'){
-        const r=30+t*90,a=(1-t*0.5)*0.7;
-        ctx.fillStyle=`rgba(80,60,40,${a*0.5})`;ctx.fillRect(eff.x-15,eff.y,30,40*(1-t));
-        ctx.fillStyle=`rgba(255,120,40,${a*0.6})`;ctx.beginPath();ctx.arc(eff.x,eff.y-10,r*0.7,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=`rgba(200,100,50,${a*0.7})`;ctx.beginPath();ctx.arc(eff.x,eff.y-10,r*0.5,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=`rgba(100,80,60,${a*0.5})`;ctx.beginPath();ctx.arc(eff.x,eff.y-10,r,0,Math.PI*2);ctx.fill();
-    }else if(eff.type==='radiation'){
-        const a=(1-t)*0.4;ctx.fillStyle=`rgba(155,89,182,${a})`;
-        ctx.beginPath();ctx.arc(eff.x,eff.y,8*(1+t*2),0,Math.PI*2);ctx.fill();
-    }
+        ctx.fillStyle=`rgba(255,150,30,${a*0.7})`;ctx.beginPath();ctx.arc(iso.x,iso.y,r,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=`rgba(255,220,100,${a*0.5})`;ctx.beginPath();ctx.arc(iso.x,iso.y,r*0.5,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=`rgba(255,255,255,${a*0.3})`;ctx.beginPath();ctx.arc(iso.x,iso.y,r*0.2,0,Math.PI*2);ctx.fill();
+    }else if(eff.type==='muzzleFlash'){const a=1-t;ctx.fillStyle=`rgba(255,220,80,${a*0.8})`;ctx.beginPath();ctx.arc(iso.x,iso.y,4*(1-t*0.5),0,Math.PI*2);ctx.fill();}
+    else if(eff.type==='moveIndicator'){const r=12+t*18,a=(1-t)*0.5;ctx.strokeStyle=`rgba(63,167,214,${a})`;ctx.lineWidth=3;ctx.beginPath();ctx.arc(iso.x,iso.y,r,0,Math.PI*2);ctx.stroke();ctx.fillStyle=`rgba(63,167,214,${a*0.6})`;ctx.beginPath();ctx.arc(iso.x,iso.y,3,0,Math.PI*2);ctx.fill();}
+    else if(eff.type==='attackIndicator'){const r=10+t*15,a=(1-t)*0.6;ctx.strokeStyle=`rgba(231,76,60,${a})`;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(iso.x-r,iso.y);ctx.lineTo(iso.x+r,iso.y);ctx.moveTo(iso.x,iso.y-r);ctx.lineTo(iso.x,iso.y+r);ctx.stroke();ctx.beginPath();ctx.arc(iso.x,iso.y,r*0.6,0,Math.PI*2);ctx.stroke();}
+    else if(eff.type==='spawn'){const r=20*t,a=1-t;ctx.strokeStyle=`rgba(63,167,214,${a*0.6})`;ctx.lineWidth=2;ctx.beginPath();ctx.arc(iso.x,iso.y,r,0,Math.PI*2);ctx.stroke();}
+    else if(eff.type==='nukeFlash'){const a=(1-t)*0.8;ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fillRect(game.camera.x,game.camera.y,canvas.width/game.camera.zoom,canvas.height/game.camera.zoom);}
+    else if(eff.type==='nukeCloud'){const r=30+t*90,a=(1-t*0.5)*0.7;ctx.fillStyle=`rgba(80,60,40,${a*0.5})`;ctx.fillRect(iso.x-15,iso.y,30,40*(1-t));ctx.fillStyle=`rgba(255,120,40,${a*0.6})`;ctx.beginPath();ctx.arc(iso.x,iso.y-10,r*0.7,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(200,100,50,${a*0.7})`;ctx.beginPath();ctx.arc(iso.x,iso.y-10,r*0.5,0,Math.PI*2);ctx.fill();ctx.fillStyle=`rgba(100,80,60,${a*0.5})`;ctx.beginPath();ctx.arc(iso.x,iso.y-10,r,0,Math.PI*2);ctx.fill();}
+    else if(eff.type==='radiation'){const a=(1-t)*0.4;ctx.fillStyle=`rgba(155,89,182,${a})`;ctx.beginPath();ctx.arc(iso.x,iso.y,8*(1+t*2),0,Math.PI*2);ctx.fill();}
 }
 
 function drawParticle(p){
+    const iso=worldToIsoScreen(p.x,p.y);
     const a=p.life/p.maxLife;ctx.globalAlpha=a;ctx.fillStyle=p.color;
-    ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+    ctx.beginPath();ctx.arc(iso.x,iso.y,p.size,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
 }
 
-function drawBuildPreview(typeId,x,y){
+function drawBuildPreview(typeId,wx,wy){
     const def=BASE_DEFS[typeId];if(!def)return;
+    const iso=worldToIsoScreen(wx,wy);
     let cb=game.ore>=def.cost;
-    game.entities.forEach(e=>{if(e.def.isBuilding){const dx=e.x-x,dy=e.y-y;if(Math.sqrt(dx*dx+dy*dy)<36)cb=false;}});
+    game.entities.forEach(e=>{if(e.def.isBuilding){const dx=e.x-wx,dy=e.y-wy;if(Math.sqrt(dx*dx+dy*dy)<36)cb=false;}});
     ctx.strokeStyle=cb?'#3FA7D6':'#E74C3C';ctx.fillStyle=cb?'rgba(63,167,214,0.15)':'rgba(231,76,60,0.15)';
-    ctx.lineWidth=2;ctx.fillRect(x-def.w/2,y-def.h/2,def.w,def.h);ctx.strokeRect(x-def.w/2,y-def.h/2,def.w,def.h);
-    ctx.setLineDash([4,2]);ctx.strokeRect(x-def.w/2-4,y-def.h/2-4,def.w+8,def.h+8);ctx.setLineDash([]);
+    ctx.lineWidth=2;
+    // 等距菱形预览
+    const w=def.w,h=def.h;
+    ctx.beginPath();
+    ctx.moveTo(iso.x,iso.y-h/2);
+    ctx.lineTo(iso.x+w/2,iso.y);
+    ctx.lineTo(iso.x,iso.y+h/2);
+    ctx.lineTo(iso.x-w/2,iso.y);
+    ctx.closePath();ctx.fill();ctx.stroke();
 }
 
 function drawMiniMap(){
-    const mw=miniCanvas.width,mh=miniCanvas.height,sx=mw/CONFIG.WORLD_W,sy=mh/CONFIG.WORLD_H;
+    const mw=miniCanvas.width,mh=miniCanvas.height;
     miniCtx.fillStyle='#0d1117';miniCtx.fillRect(0,0,mw,mh);
-    miniCtx.fillStyle=game.mapData.terrain==='urban'?'#212028':'#1a2d1a';miniCtx.fillRect(0,0,mw,mh);
-    if(game.mapData.obstacles){miniCtx.fillStyle='#2d2d35';game.mapData.obstacles.forEach(o=>miniCtx.fillRect(o.x*sx-o.w*sx/2,o.y*sy-o.h*sy/2,o.w*sx,o.h*sy));}
-    // 迷雾覆盖在小地图
-    const ft=CONFIG.FOG_TILE;
+    miniCtx.fillStyle='#1a2412';miniCtx.fillRect(0,0,mw,mh);
+    // 迷雾
+    const ft=CONFIG.FOG_TILE,sx=mw/CONFIG.WORLD_W,sy=mh/CONFIG.WORLD_H;
     for(let ty=0;ty<game.fogRows;ty++){
         for(let tx=0;tx<game.fogCols;tx++){
             const st=game.exploredGrid[ty*game.fogCols+tx];
@@ -1268,23 +933,14 @@ function drawMiniMap(){
         }
     }
     miniCtx.fillStyle='#C4A96A';game.mapData.oreNodes.forEach(n=>miniCtx.fillRect(n.x*sx-2,n.y*sy-2,4,4));
-    game.entities.forEach(e=>{
-        if(e.dead)return;
-        // 只显示探索过的
-        const tx=Math.floor(e.x/ft),ty=Math.floor(e.y/ft);
-        if(tx>=0&&tx<game.fogCols&&ty>=0&&ty<game.fogRows){
-            const st=game.exploredGrid[ty*game.fogCols+tx];
-            if(st===0)return; // 未探索不显示
-        }
-        miniCtx.fillStyle=e.isEnemy?'#E74C3C':(e.def.isBuilding?'#555':'#3FA7D6');
-        const s=e.def.isBuilding?3:2;
-        miniCtx.fillRect(e.x*sx-s/2,e.y*sy-s/2,s,s);
-    });
+    game.entities.forEach(e=>{if(e.dead)return;const tx=Math.floor(e.x/ft),ty=Math.floor(e.y/ft);if(tx>=0&&tx<game.fogCols&&ty>=0&&ty<game.fogRows){const st=game.exploredGrid[ty*game.fogCols+tx];if(st===0)return;}miniCtx.fillStyle=e.isEnemy?'#E74C3C':(e.def.isBuilding?'#555':'#3FA7D6');const s=e.def.isBuilding?3:2;miniCtx.fillRect(e.x*sx-s/2,e.y*sy-s/2,s,s);});
+    // 摄像机框
+    const camCenterX=(game.camera.x+canvas.width/game.camera.zoom/2)/0.7;
+    const camCenterY=(game.camera.y+canvas.height/game.camera.zoom/2)/0.5;
     miniCtx.strokeStyle='#F2C14E';miniCtx.lineWidth=1;
-    miniCtx.strokeRect(game.camera.x*sx,game.camera.y*sy,(canvas.width/game.camera.zoom)*sx,(canvas.height/game.camera.zoom)*sy);
+    miniCtx.strokeRect(camCenterX*sx-20,camCenterY*sy-15,40,30);
 }
 
-// === UI ===
 function updateUI(){
     const oe=document.getElementById('resOre');oe.textContent=Math.floor(game.ore);oe.classList.toggle('low',game.ore<200);
     const pe=document.getElementById('resPower');const pd=game.powerSupply-game.powerUsed;
@@ -1297,19 +953,15 @@ function updateUI(){
     });
     if(game.selected.length>0)showUnitInfo(game.selected[0]);
 }
-
 function showUnitInfo(e){
     const p=document.getElementById('unitInfo');p.style.display='block';
     document.getElementById('uiTitle').textContent=e.def.name+(e.isEnemy?' (敌)':'');
     document.getElementById('uiCount').textContent=game.selected.length>1?'×'+game.selected.length:'';
-    const h=document.getElementById('uiHP');
-    h.style.width=Math.max(0,e.hp/e.maxHp*100)+'%';
+    const h=document.getElementById('uiHP');h.style.width=Math.max(0,e.hp/e.maxHp*100)+'%';
     h.style.background=e.isEnemy?'#E74C3C':(e.hp/e.maxHp>0.5?'#3FA7D6':e.hp/e.maxHp>0.25?'#F2C14E':'#C0392B');
     document.getElementById('uiHPVal').textContent=Math.ceil(Math.max(0,e.hp))+'/'+e.maxHp;
     document.getElementById('uiDmg').textContent=e.def.dmg||0;
     document.getElementById('uiRange').textContent=e.def.range||0;
-    const a=getArmorType(e),an={infantry:'轻甲',vehicle:'中甲',heavy:'重甲',building:'建筑'};
-    document.getElementById('uiArmor').innerHTML=`<span class="armor-tag armor-${a}">${an[a]}</span>`;
 }
 function hideUnitInfo(){document.getElementById('unitInfo').style.display='none';}
 function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';clearTimeout(t._timer);t._timer=setTimeout(()=>t.style.opacity='0',2200);}
@@ -1322,7 +974,10 @@ function setupMenu(){
     document.getElementById('startBtn').onclick=startGame;
 }
 
-function init(){resizeCanvas();window.addEventListener('resize',resizeCanvas);setupInput();setupMenu();}
+function init(){resizeCanvas();window.addEventListener('resize',resizeCanvas);setupInput();setupMenu();
+    // 先加载素材，加载完后隐藏加载界面
+    loadSprites(()=>{document.getElementById('loadingScreen').style.display='none';});
+}
 function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
 init();
 </script>
