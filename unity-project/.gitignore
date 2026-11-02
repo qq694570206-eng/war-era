@@ -1,0 +1,37 @@
+# Unity 生成的缓存目录
+Library/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Unity Crashlytics
+crashlytics-build.properties
+
+# 备注
+# Assets/_Project/Data/ 下的 ScriptableObject 资产应该进版本控制
+# Assets/_Project/Art/ 和 Audio/ 下的资产应该进版本控制
+# 只有 Library/ Temp/ 等缓存不进
