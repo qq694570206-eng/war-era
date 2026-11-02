@@ -213,25 +213,13 @@ function loadSprites(callback){
     });
 }
 
-// === 等距投影坐标转换 ===
-function isoToScreen(ix,iy){
-    // 等距投影：x'=(ix-iy)*tileW/2, y'=(ix+iy)*tileH/2
-    return{
-        x:(ix-iy)*CONFIG.ISO_TILE_W/2,
-        y:(ix+iy)*CONFIG.ISO_TILE_H/2
-    };
-}
-function screenToIso(sx,sy){
-    return{
-        x:(sx/(CONFIG.ISO_TILE_W/2)+sy/(CONFIG.ISO_TILE_H/2))/2,
-        y:(sy/(CONFIG.ISO_TILE_H/2)-sx/(CONFIG.ISO_TILE_W/2))/2
-    };
-}
-// 世界坐标→等距屏幕坐标
+// === 伪等距：单位用屏幕坐标移动，渲染时只对建筑加等距偏移 ===
+// 单位的 x,y 直接是屏幕空间坐标，移动方向=视觉方向
+// 建筑和地形画等距菱形地面，单位"站"在地面上
 function worldToIsoScreen(wx,wy){
-    const ix=wx/CONFIG.ISO_TILE_W;
-    const iy=wy/CONFIG.ISO_TILE_H;
-    return isoToScreen(ix,iy);
+    // 伪等距：不做坐标变换，直接返回原坐标
+    // 等距效果通过地面的菱形网格+建筑的立体绘制来体现
+    return{x:wx,y:wy};
 }
 
 // === 音效引擎 ===
@@ -358,9 +346,8 @@ function startGame(){
 }
 
 function centerCameraOn(wx,wy){
-    const iso=worldToIsoScreen(wx,wy);
-    game.camera.x=iso.x-canvas.width/2/game.camera.zoom;
-    game.camera.y=iso.y-canvas.height/2/game.camera.zoom;
+    game.camera.x=wx-canvas.width/2/game.camera.zoom;
+    game.camera.y=wy-canvas.height/2/game.camera.zoom;
     clampCamera();
 }
 
@@ -384,23 +371,18 @@ function spawnEntity(typeId,x,y,isEnemy){
 
 function removeEntity(e){const i=game.entities.indexOf(e);if(i>=0)game.entities.splice(i,1);if(!e.isEnemy){if(e.def.power>0)game.powerSupply-=e.def.power;if(e.def.powerNeed>0)game.powerUsed-=e.def.powerNeed;}else game.enemyAI.unitCount--;const si=game.selected.indexOf(e);if(si>=0)game.selected.splice(si,1);game.squads=game.squads.map(s=>s?s.filter(u=>u!==e):null);game.entities.forEach(u=>{if(u.target===e)u.target=null;});}
 
-// 等距坐标转换用于输入
+// 屏幕坐标→世界坐标（伪等距，直接线性映射）
 function screenToWorld(sx,sy){
-    // 反向等距投影
-    const isoX=(sx/game.camera.zoom+game.camera.x);
-    const isoY=(sy/game.camera.zoom+game.camera.y);
-    // iso→world
-    const wx=(isoX/(CONFIG.ISO_TILE_W/2)+isoY/(CONFIG.ISO_TILE_H/2))/2*CONFIG.ISO_TILE_W;
-    const wy=(isoY/(CONFIG.ISO_TILE_H/2)-isoX/(CONFIG.ISO_TILE_W/2))/2*CONFIG.ISO_TILE_H;
-    return{x:wx,y:wy};
+    return{
+        x:sx/game.camera.zoom+game.camera.x,
+        y:sy/game.camera.zoom+game.camera.y
+    };
 }
 
 function clampCamera(){
-    const margin=200;
-    const isoW=CONFIG.WORLD_W*0.7;
-    const isoH=CONFIG.WORLD_H*0.5;
-    game.camera.x=Math.max(-margin,Math.min(isoW-canvas.width/game.camera.zoom+margin,game.camera.x));
-    game.camera.y=Math.max(-margin,Math.min(isoH-canvas.height/game.camera.zoom+margin,game.camera.y));
+    const margin=100;
+    game.camera.x=Math.max(-margin,Math.min(CONFIG.WORLD_W-canvas.width/game.camera.zoom+margin,game.camera.x));
+    game.camera.y=Math.max(-margin,Math.min(CONFIG.WORLD_H-canvas.height/game.camera.zoom+margin,game.camera.y));
 }
 
 function setupInput(){
@@ -585,7 +567,7 @@ function renderFog(){
     const ft=CONFIG.FOG_TILE,zoom=game.camera.zoom,ts=ft*zoom;
     fogCtx.fillStyle='rgba(0,0,0,0.7)';fogCtx.fillRect(0,0,fogCanvas.width,fogCanvas.height);
     for(let ty=0;ty<game.fogRows;ty++){for(let tx=0;tx<game.fogCols;tx++){const st=game.exploredGrid[ty*game.fogCols+tx];
-        if(st>0){const iso=worldToIsoScreen(tx*ft+ft/2,ty*ft+ft/2);const sx=iso.x*zoom-game.camera.x;const sy=iso.y*zoom-game.camera.y;
+        if(st>0){const wx=tx*ft+ft/2,wy=ty*ft+ft/2;const sx=wx*zoom-game.camera.x;const sy=wy*zoom-game.camera.y;
         if(sx>-100&&sx<canvas.width+100&&sy>-100&&sy<canvas.height+100){
             fogCtx.clearRect(sx-ts/2,sy-ts/2,ts+1,ts+1);
             if(st===1)fogCtx.fillStyle='rgba(0,0,0,0.4)',fogCtx.fillRect(sx-ts/2,sy-ts/2,ts+1,ts+1);
@@ -674,57 +656,39 @@ function render(){
 }
 
 function drawIsoTerrain(){
-    // 画等距网格地面
-    const tw=CONFIG.ISO_TILE_W,th=CONFIG.ISO_TILE_H;
-    const tilesX=CONFIG.WORLD_W/tw,tilesY=CONFIG.WORLD_H/th;
-
-    // 地面菱形网格
-    ctx.strokeStyle='rgba(40,50,40,0.15)';ctx.lineWidth=0.5;
-    for(let ix=0;ix<=tilesX;ix+=2){
-        const p1=isoToScreen(ix,0),p2=isoToScreen(ix,tilesY);
-        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
-    }
-    for(let iy=0;iy<=tilesY;iy+=2){
-        const p1=isoToScreen(0,iy),p2=isoToScreen(tilesX,iy);
-        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
-    }
-
-    // 地面填充（绿色草地底色）
-    const corners=[isoToScreen(0,0),isoToScreen(tilesX,0),isoToScreen(tilesX,tilesY),isoToScreen(0,tilesY)];
+    // 正交网格地面（伪等距：网格是正交的，但建筑图片本身是等距视角的）
+    const s=CONFIG.TILE;
+    // 地面填充
     ctx.fillStyle='#1a2412';
-    ctx.beginPath();
-    ctx.moveTo(corners[0].x,corners[0].y);
-    corners.forEach(c=>ctx.lineTo(c.x,c.y));
-    ctx.closePath();ctx.fill();
+    ctx.fillRect(0,0,CONFIG.WORLD_W,CONFIG.WORLD_H);
 
-    // 地面边界
-    ctx.strokeStyle='rgba(80,60,30,0.4)';ctx.lineWidth=3;
-    ctx.stroke();
-
-    // 重新画网格（在填充之上）
+    // 网格线
     ctx.strokeStyle='rgba(50,60,40,0.12)';ctx.lineWidth=0.5;
-    for(let ix=0;ix<=tilesX;ix+=4){
-        const p1=isoToScreen(ix,0),p2=isoToScreen(ix,tilesY);
-        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
-    }
-    for(let iy=0;iy<=tilesY;iy+=4){
-        const p1=isoToScreen(0,iy),p2=isoToScreen(tilesX,iy);
-        ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
-    }
+    const sx=Math.floor(game.camera.x/s)*s,sy=Math.floor(game.camera.y/s)*s;
+    const ex=game.camera.x+canvas.width/game.camera.zoom,ey=game.camera.y+canvas.height/game.camera.zoom;
+    for(let x=sx;x<ex;x+=s){ctx.beginPath();ctx.moveTo(x,sy);ctx.lineTo(x,ey);ctx.stroke();}
+    for(let y=sy;y<ey;y+=s){ctx.beginPath();ctx.moveTo(sx,y);ctx.lineTo(ex,y);ctx.stroke();}
+
+    // 城市地图路面
+    if(game.mapData.terrain==='urban'){ctx.fillStyle='rgba(50,50,55,0.5)';ctx.fillRect(0,700,CONFIG.WORLD_W,90);ctx.fillRect(1100,0,90,CONFIG.WORLD_H);}
+    if(game.mapData.terrain==='mixed'){ctx.fillStyle='rgba(50,45,35,0.3)';ctx.fillRect(0,760,CONFIG.WORLD_W,70);ctx.fillRect(1160,0,70,CONFIG.WORLD_H);}
+
+    // 世界边界
+    ctx.strokeStyle='rgba(80,60,30,0.4)';ctx.lineWidth=3;
+    ctx.strokeRect(0,0,CONFIG.WORLD_W,CONFIG.WORLD_H);
 }
 
 function drawIsoOre(n){
-    const iso=worldToIsoScreen(n.x,n.y);
     const r=n.r||25;
-    // 矿堆
+    // 矿堆（正圆）
     ctx.fillStyle='#5a4a2a';
-    ctx.beginPath();ctx.ellipse(iso.x,iso.y,r,r*0.5,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(n.x,n.y,r+2,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='#C4A96A';
-    ctx.beginPath();ctx.ellipse(iso.x,iso.y,r*0.6,r*0.3,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(n.x,n.y,r*0.7,0,Math.PI*2);ctx.fill();
     // 闪烁
     const p=Math.sin(game.time*2)*0.3+0.7;
     ctx.strokeStyle=`rgba(196,169,106,${p*0.3})`;ctx.lineWidth=2;
-    ctx.beginPath();ctx.ellipse(iso.x,iso.y,r+3,(r+3)*0.5,0,0,Math.PI*2);ctx.stroke();
+    ctx.beginPath();ctx.arc(n.x,n.y,r+5+p*3,0,Math.PI*2);ctx.stroke();
 }
 
 function drawIsoObstacle(o){
@@ -810,15 +774,16 @@ function drawIsoEntity(e){
     // 用 sprite 图片绘制
     if(sprite){
         const sz=d.isBuilding?d.w*1.8:d.r*4;
-        // 敌方单位色调偏红（通过 filter）
+        // 单位图片往上偏移半个图片高度，让"脚"对准坐标点；建筑居中
+        const yOffset=d.isBuilding?-sz/2:-sz*0.6;
         if(e.isEnemy){
             ctx.save();
             ctx.filter='hue-rotate(180deg) saturate(1.3)';
-            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2-d.r,sz,sz);
+            ctx.drawImage(sprite,iso.x-sz/2,iso.y+yOffset,sz,sz);
             ctx.filter='none';
             ctx.restore();
         }else{
-            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2-d.r,sz,sz);
+            ctx.drawImage(sprite,iso.x-sz/2,iso.y+yOffset,sz,sz);
         }
     }else{
         // 回退：用形状绘制
@@ -903,19 +868,14 @@ function drawParticle(p){
 
 function drawBuildPreview(typeId,wx,wy){
     const def=BASE_DEFS[typeId];if(!def)return;
-    const iso=worldToIsoScreen(wx,wy);
     let cb=game.ore>=def.cost;
     game.entities.forEach(e=>{if(e.def.isBuilding){const dx=e.x-wx,dy=e.y-wy;if(Math.sqrt(dx*dx+dy*dy)<36)cb=false;}});
     ctx.strokeStyle=cb?'#3FA7D6':'#E74C3C';ctx.fillStyle=cb?'rgba(63,167,214,0.15)':'rgba(231,76,60,0.15)';
     ctx.lineWidth=2;
-    // 等距菱形预览
+    // 正交矩形预览
     const w=def.w,h=def.h;
-    ctx.beginPath();
-    ctx.moveTo(iso.x,iso.y-h/2);
-    ctx.lineTo(iso.x+w/2,iso.y);
-    ctx.lineTo(iso.x,iso.y+h/2);
-    ctx.lineTo(iso.x-w/2,iso.y);
-    ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillRect(wx-w/2,wy-h/2,w,h);
+    ctx.strokeRect(wx-w/2,wy-h/2,w,h);
 }
 
 function drawMiniMap(){
@@ -934,10 +894,9 @@ function drawMiniMap(){
     miniCtx.fillStyle='#C4A96A';game.mapData.oreNodes.forEach(n=>miniCtx.fillRect(n.x*sx-2,n.y*sy-2,4,4));
     game.entities.forEach(e=>{if(e.dead)return;const tx=Math.floor(e.x/ft),ty=Math.floor(e.y/ft);if(tx>=0&&tx<game.fogCols&&ty>=0&&ty<game.fogRows){const st=game.exploredGrid[ty*game.fogCols+tx];if(st===0)return;}miniCtx.fillStyle=e.isEnemy?'#E74C3C':(e.def.isBuilding?'#555':'#3FA7D6');const s=e.def.isBuilding?3:2;miniCtx.fillRect(e.x*sx-s/2,e.y*sy-s/2,s,s);});
     // 摄像机框
-    const camCenterX=(game.camera.x+canvas.width/game.camera.zoom/2)/0.7;
-    const camCenterY=(game.camera.y+canvas.height/game.camera.zoom/2)/0.5;
+    // 摄像机框（正交坐标直接映射）
     miniCtx.strokeStyle='#F2C14E';miniCtx.lineWidth=1;
-    miniCtx.strokeRect(camCenterX*sx-20,camCenterY*sy-15,40,30);
+    miniCtx.strokeRect(game.camera.x*sx,game.camera.y*sy,(canvas.width/game.camera.zoom)*sx,(canvas.height/game.camera.zoom)*sy);
 }
 
 function updateUI(){
