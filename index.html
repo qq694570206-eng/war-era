@@ -410,18 +410,18 @@ function onPointerDown(e){
     if(input.pointers.length===1){
         const wp=screenToWorld(e.clientX,e.clientY);
         if(input.isSuperWeaponTargeting){fireSuperWeapon(wp.x,wp.y);input.isSuperWeaponTargeting=false;document.getElementById('superWeaponBtn').classList.remove('ready');document.getElementById('superWeaponBtn').textContent='☢ 充能中...';return;}
-        if(input.isRallyMode){game.selected.forEach(u=>{if(u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory')){u.rallyX=wp.x;u.rallyY=wp.y;}});input.isRallyMode=false;showToast('集结点已设置');spawnEffect('moveIndicator',wp.x,wp.y);return;}
+        if(input.isRallyMode){const buildings=game.selected.filter(u=>u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory'));game.selected.forEach(u=>{if(u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory')){u.rallyX=wp.x;u.rallyY=wp.y;}});input.isRallyMode=false;showToast('集结点已设置');spawnEffect('moveIndicator',wp.x,wp.y);opLog('集结点', `${buildings.length}个建筑 → (${Math.round(wp.x)},${Math.round(wp.y)})`);return;}
         if(game.buildSelection){tryBuild(game.buildSelection,wp.x,wp.y);return;}
         const clicked=pickEntity(wp.x,wp.y);
         if(clicked){
             if(!clicked.isEnemy){if(!e.shiftKey)clearSelection();if(!game.selected.includes(clicked))game.selected.push(clicked);showUnitInfo(clicked);AudioEngine.play('select');}
-            else{if(game.selected.length>0){game.selected.forEach(u=>{if(!u.def.isBuilding&&!u.def.isHarvester){u.target=clicked;u.targetX=clicked.x;u.targetY=clicked.y;u.holdPosition=false;}});spawnEffect('attackIndicator',clicked.x,clicked.y);AudioEngine.play('move');}}
+            else{if(game.selected.length>0){game.selected.forEach(u=>{if(!u.def.isBuilding&&!u.def.isHarvester){u.target=clicked;u.targetX=clicked.x;u.targetY=clicked.y;u.holdPosition=false;}});spawnEffect('attackIndicator',clicked.x,clicked.y);AudioEngine.play('move');opLog('攻击', `${game.selected.length}个单位 → ${clicked.def.name} at (${Math.round(clicked.x)},${Math.round(clicked.y)})`);}}
             return;
         }
         if(game.selected.length>0){
             const hm=game.selected.some(u=>!u.def.isBuilding&&!u.def.isHarvester);
             const hh=game.selected.some(u=>u.def.isHarvester);
-            if(hm){game.selected.forEach(u=>{if(!u.def.isBuilding&&!u.def.isHarvester){u.targetX=wp.x;u.targetY=wp.y;u.target=null;u.holdPosition=false;}});spawnEffect('moveIndicator',wp.x,wp.y);AudioEngine.play('move');}
+            if(hm){game.selected.forEach(u=>{if(!u.def.isBuilding&&!u.def.isHarvester){u.targetX=wp.x;u.targetY=wp.y;u.target=null;u.holdPosition=false;}});spawnEffect('moveIndicator',wp.x,wp.y);AudioEngine.play('move');opLog('移动', `${game.selected.length}个单位 → (${Math.round(wp.x)},${Math.round(wp.y)})`);}
             if(hh){game.selected.filter(u=>u.def.isHarvester).forEach(u=>{const n=findNearestOreNode(wp.x,wp.y);if(n){u.harvestTarget=n;u.harvestState='moving';}});}
             return;
         }
@@ -477,11 +477,18 @@ function setupBuildPanel(){
         };
     });
 }
+// 操作日志
+function opLog(action, detail){
+    const t = game ? game.time.toFixed(1) : '0.0';
+    console.log(`[RTS ${t}s] ${action}: ${detail}`);
+}
+
 function tryBuild(typeId,x,y){
     const def=BASE_DEFS[typeId];if(game.ore<def.cost){showToast('矿石不足！');AudioEngine.play('error');return;}
     for(const e of game.entities){if(e.def.isBuilding){const dx=e.x-x,dy=e.y-y;if(Math.sqrt(dx*dx+dy*dy)<36){showToast('离其他建筑太近！');AudioEngine.play('error');return;}}}
     if(game.mapData.obstacles){for(const o of game.mapData.obstacles){if(x>o.x-o.w/2-def.w/2&&x<o.x+o.w/2+def.w/2&&y>o.y-o.h/2-def.h/2&&y<o.y+o.h/2+def.h/2){showToast('地形阻挡！');AudioEngine.play('error');return;}}}
     game.ore-=def.cost;spawnEntity(typeId,x,y,false);game.buildSelection=null;document.querySelectorAll('.build-btn').forEach(b=>b.classList.remove('selected'));AudioEngine.play('build');
+    opLog('建造', `${def.name} at (${Math.round(x)},${Math.round(y)}) 花费${def.cost}💰 剩余${Math.floor(game.ore)}💰`);
 }
 function tryProduceUnit(typeId){
     const def=BASE_DEFS[typeId];if(def.techLevel&&game.techLevel<def.techLevel){showToast('需要科技 T'+def.techLevel+'！');AudioEngine.play('error');return;}
@@ -492,11 +499,12 @@ function tryProduceUnit(typeId){
     game.ore-=cost;const ox=def.isInfantry?28:36;const u=spawnEntity(typeId,prod.x+ox,prod.y+prod.def.h/2+12,false);
     if(prod.rallyX!==null){u.targetX=prod.rallyX;u.targetY=prod.rallyY;}
     spawnEffect('spawn',prod.x+ox,prod.y+prod.def.h/2+12);AudioEngine.play('build');showToast(def.name+' 已生产');
+    opLog('生产', `${def.name} 花费${cost}💰 剩余${Math.floor(game.ore)}💰 从${prod.def.name}产出`);
 }
 function setupCommandButtons(){
-    document.getElementById('cmdStop').onclick=()=>{game.selected.forEach(u=>{u.holdPosition=true;u.target=null;u.targetX=u.x;u.targetY=u.y;});showToast('坚守位置');AudioEngine.play('move');};
-    document.getElementById('cmdRally').onclick=()=>{const b=game.selected.filter(u=>u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory'));if(b.length===0){showToast('选中兵营或车厂才能设集结点');return;}input.isRallyMode=true;showToast('点击地面设置集结点');};
-    document.getElementById('cmdDelete').onclick=()=>{game.selected.forEach(u=>{if(u.type!=='hq'&&u.type!=='enemy_hq'){u.dead=true;u.deathTimer=0;spawnEffect('explosion',u.x,u.y);AudioEngine.play('explosion');}});clearSelection();showToast('已解散');};
+    document.getElementById('cmdStop').onclick=()=>{game.selected.forEach(u=>{u.holdPosition=true;u.target=null;u.targetX=u.x;u.targetY=u.y;});showToast('坚守位置');AudioEngine.play('move');opLog('坚守', `${game.selected.length}个单位`);};
+    document.getElementById('cmdRally').onclick=()=>{const b=game.selected.filter(u=>u.def.isBuilding&&(u.type==='barracks'||u.type==='warfactory'));if(b.length===0){showToast('选中兵营或车厂才能设集结点');return;}input.isRallyMode=true;showToast('点击地面设置集结点');opLog('集结点', '进入设置模式');};
+    document.getElementById('cmdDelete').onclick=()=>{const count=game.selected.filter(u=>u.type!=='hq'&&u.type!=='enemy_hq').length;game.selected.forEach(u=>{if(u.type!=='hq'&&u.type!=='enemy_hq'){u.dead=true;u.deathTimer=0;spawnEffect('explosion',u.x,u.y);AudioEngine.play('explosion');}});clearSelection();showToast('已解散');opLog('解散', `${count}个单位/建筑`);};
 }
 
 function setupSquadBar(){updateSquadBar();}
@@ -515,16 +523,16 @@ function updateSquadBar(){
         bar.appendChild(btn);
     }
 }
-function assignSquad(slot){const m=game.selected.filter(u=>!u.def.isBuilding&&!u.def.isHarvester&&!u.dead);if(m.length===0){showToast('没有可编入的战斗单位');input.squadAssignSlot=-1;updateSquadBar();return;}game.squads[slot]=[...m];input.squadAssignSlot=-1;updateSquadBar();AudioEngine.play('select');showToast('已编入编队 '+(slot+1)+'（'+m.length+'个单位）');}
+function assignSquad(slot){const m=game.selected.filter(u=>!u.def.isBuilding&&!u.def.isHarvester&&!u.dead);if(m.length===0){showToast('没有可编入的战斗单位');input.squadAssignSlot=-1;updateSquadBar();return;}game.squads[slot]=[...m];input.squadAssignSlot=-1;updateSquadBar();AudioEngine.play('select');showToast('已编入编队 '+(slot+1)+'（'+m.length+'个单位）');opLog('编队', `编入${m.length}个单位到编队${slot+1}`);}
 
 const TECH_UPGRADES=[{id:'t2',name:'T2 科技解锁',desc:'解锁狙击手/重坦/火炮',cost:3,techLevel:2},{id:'armor',name:'装甲强化',desc:'全军 HP +15%',cost:5,techLevel:2,effect:{hpMul:1.15}},{id:'firepower',name:'火力升级',desc:'全军伤害 +20%',cost:5,techLevel:2,effect:{dmgMul:1.2}},{id:'speed',name:'机动强化',desc:'全军速度 +10%',cost:4,techLevel:2,effect:{speedMul:1.1}}];
 function updateTechPanel(){const c=document.getElementById('techItems');c.innerHTML='';TECH_UPGRADES.forEach(t=>{const p=game.purchasedTechs.includes(t.id);const cb=!p&&game.techPoints>=t.cost&&game.techLevel>=(t.techLevel-1);const it=document.createElement('div');it.className='tech-item'+(p?' maxed':'');it.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-desc">${t.desc} · 🔬${t.cost}</div></div><button class="ti-btn" ${(!cb||p)?'disabled':''}>${p?'✓':'升级'}</button>`;it.querySelector('.ti-btn').onclick=()=>purchaseTech(t);c.appendChild(it);});}
-function purchaseTech(t){if(game.purchasedTechs.includes(t.id))return;if(game.techPoints<t.cost){showToast('科技点不足');AudioEngine.play('error');return;}game.techPoints-=t.cost;game.purchasedTechs.push(t.id);if(t.id==='t2')game.techLevel=2;if(t.effect){if(t.effect.hpMul)techEffects.hpMul*=t.effect.hpMul;if(t.effect.dmgMul)techEffects.dmgMul*=t.effect.dmgMul;if(t.effect.speedMul)techEffects.speedMul*=t.effect.speedMul;game.entities.forEach(e=>{if(!e.isEnemy&&!e.dead){if(t.effect.hpMul){e.maxHp=Math.round(e.maxHp*t.effect.hpMul);e.hp=Math.round(e.hp*t.effect.hpMul);}if(t.effect.dmgMul)e.def={...e.def,dmg:Math.round((e.def.dmg||0)*t.effect.dmgMul)};if(t.effect.speedMul)e.def={...e.def,speed:(e.def.speed||0)*t.effect.speedMul};}});}updateTechPanel();AudioEngine.play('build');showToast(t.name+' 已升级！');}
+function purchaseTech(t){if(game.purchasedTechs.includes(t.id))return;if(game.techPoints<t.cost){showToast('科技点不足');AudioEngine.play('error');return;}game.techPoints-=t.cost;game.purchasedTechs.push(t.id);if(t.id==='t2')game.techLevel=2;if(t.effect){if(t.effect.hpMul)techEffects.hpMul*=t.effect.hpMul;if(t.effect.dmgMul)techEffects.dmgMul*=t.effect.dmgMul;if(t.effect.speedMul)techEffects.speedMul*=t.effect.speedMul;game.entities.forEach(e=>{if(!e.isEnemy&&!e.dead){if(t.effect.hpMul){e.maxHp=Math.round(e.maxHp*t.effect.hpMul);e.hp=Math.round(e.hp*t.effect.hpMul);}if(t.effect.dmgMul)e.def={...e.def,dmg:Math.round((e.def.dmg||0)*t.effect.dmgMul)};if(t.effect.speedMul)e.def={...e.def,speed:(e.def.speed||0)*t.effect.speedMul};}});}updateTechPanel();AudioEngine.play('build');showToast(t.name+' 已升级！');opLog('科技', `${t.name} 花费${t.cost}🔬 剩余${game.techPoints}🔬`);}
 function toggleTechPanel(){const p=document.getElementById('techPanel');if(p.style.display==='block'){p.style.display='none';}else{p.style.display='block';updateTechPanel();}}
 
 function updateSuperWeapon(){const hr=game.entities.some(e=>e.type==='radar'&&!e.isEnemy&&!e.dead&&e.buildProgress>=1);if(!hr)return;if(!game.superWeapon.ready){game.superWeapon.charge+=1/60;if(game.superWeapon.charge>=60){game.superWeapon.ready=true;document.getElementById('superWeaponBtn').classList.add('ready');document.getElementById('superWeaponBtn').textContent='☢ 超武就绪 — 点击目标';showAlert('终极武器就绪！');AudioEngine.play('alert');}}}
 function activateSuperWeapon(){if(!game.superWeapon||!game.superWeapon.ready)return;input.isSuperWeaponTargeting=true;showToast('选择打击目标');}
-function fireSuperWeapon(x,y){game.superWeapon.ready=false;game.superWeapon.charge=0;spawnEffect('nukeFlash',x,y);spawnEffect('nukeCloud',x,y);AudioEngine.play('nuke');setTimeout(()=>{const R=140,D=600;game.entities.forEach(e=>{if(!e.dead){const dx=e.x-x,dy=e.y-y,d=Math.sqrt(dx*dx+dy*dy);if(d<R){const f=1-d/R;e.hp-=D*f;e.flashTime=0.3;if(e.hp<=0){e.dead=true;e.deathTimer=0;spawnEffect('explosion',e.x,e.y);AudioEngine.play('explosion');}}}});for(let i=0;i<30;i++){const a=Math.random()*Math.PI*2,r=Math.random()*R;spawnEffect('radiation',x+Math.cos(a)*r,y+Math.sin(a)*r);}},500);showToast('核弹已发射！');}
+function fireSuperWeapon(x,y){game.superWeapon.ready=false;game.superWeapon.charge=0;spawnEffect('nukeFlash',x,y);spawnEffect('nukeCloud',x,y);AudioEngine.play('nuke');opLog('超武', `核弹打击 at (${Math.round(x)},${Math.round(y)}) 半径140 伤害600`);setTimeout(()=>{const R=140,D=600;let killed=0;game.entities.forEach(e=>{if(!e.dead){const dx=e.x-x,dy=e.y-y,d=Math.sqrt(dx*dx+dy*dy);if(d<R){const f=1-d/R;e.hp-=D*f;e.flashTime=0.3;if(e.hp<=0){e.dead=true;e.deathTimer=0;spawnEffect('explosion',e.x,e.y);AudioEngine.play('explosion');killed++;}}}});opLog('超武结算', `击杀${killed}个单位`);for(let i=0;i<30;i++){const a=Math.random()*Math.PI*2,r=Math.random()*R;spawnEffect('radiation',x+Math.cos(a)*r,y+Math.sin(a)*r);}},500);showToast('核弹已发射！');}
 
 function updateUnit(e,dt){
     if(e.dead){e.deathTimer+=dt;return;}
@@ -708,101 +716,171 @@ function drawIsoObstacle(o){
 }
 
 function drawIsoEntity(e){
-    const iso=worldToIsoScreen(e.x,e.y);
     const d=e.def;
     const spriteName=e.baseType||e.type.replace('enemy_','');
     const sprite=SPRITES[spriteName];
+    const x=e.x, y=e.y;
 
-    // 死亡溶解
+    // 死亡溶解 + 倒地旋转
     if(e.dead){
         const t=e.deathTimer/0.8;
-        ctx.save();ctx.globalAlpha=1-t;
+        ctx.save();
+        ctx.globalAlpha=Math.max(0,1-t);
+        ctx.translate(x,y);
+        ctx.rotate(t*Math.PI*0.3); // 死亡时轻微旋转倒地
         if(sprite){
             const sz=d.isBuilding?d.w*1.5:d.r*3;
-            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2,sz,sz);
+            ctx.drawImage(sprite,-sz/2,-sz/2,sz,sz);
         }else{
             ctx.fillStyle=e.isEnemy?'#E74C3C':'#3FA7D6';
-            ctx.beginPath();ctx.arc(iso.x,iso.y,d.r,0,Math.PI*2);ctx.fill();
+            ctx.beginPath();ctx.arc(0,0,d.r,0,Math.PI*2);ctx.fill();
         }
+        // 溶解粒子
+        if(t<0.5&&Math.random()<0.15){const a=Math.random()*Math.PI*2;spawnParticles(x+Math.cos(a)*d.r,y+Math.sin(a)*d.r,1,'#666');}
         ctx.restore();return;
     }
 
-    // 阴影
+    // 阴影（移动时影子稍微偏移）
+    const shadowOffset=e.targetX!==null||e.target?3:2;
     ctx.fillStyle='rgba(0,0,0,0.35)';
-    ctx.beginPath();ctx.ellipse(iso.x+2,iso.y+2,d.r||d.w/2,(d.r||d.w/2)*0.4,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(x+shadowOffset,y+shadowOffset,d.r||d.w/2,(d.r||d.w/2)*0.4,0,0,Math.PI*2);ctx.fill();
 
-    // 选中底环（在实体下方）
+    // 选中底环
     if(game.selected.includes(e)){
         ctx.strokeStyle='#F2C14E';ctx.lineWidth=2;ctx.setLineDash([5,3]);
-        ctx.beginPath();ctx.ellipse(iso.x,iso.y+2,d.r+5||d.w/2+5,(d.r+5||d.w/2+5)*0.5,0,0,Math.PI*2);ctx.stroke();
+        ctx.beginPath();ctx.arc(x,y+2,(d.r||d.w/2)+5,0,Math.PI*2);ctx.stroke();
         ctx.setLineDash([]);
     }
 
     // 阵营色底环
     ctx.strokeStyle=e.isEnemy?'#E74C3C':'#3FA7D6';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.ellipse(iso.x,iso.y,d.r+3||d.w/2+3,(d.r+3||d.w/2+3)*0.5,0,0,Math.PI*2);ctx.stroke();
-
-    // 闪烁覆盖（受击）
-    if(e.flashTime>0){ctx.globalAlpha=0.5;ctx.fillStyle='#fff';}
+    ctx.beginPath();ctx.arc(x,y,(d.r||d.w/2)+3,0,Math.PI*2);ctx.stroke();
 
     // 建造进度
     if(e.def.isBuilding&&e.constructing){
         const p=e.buildProgress;
         if(sprite){
-            // 从下往上生长（裁剪）
             const sz=d.w*1.8;
             const clipH=sz*p;
             ctx.save();
             ctx.beginPath();
-            ctx.rect(iso.x-sz/2,iso.y-sz/2+sz-clipH,sz,clipH);
+            ctx.rect(x-sz/2,y-sz/2+sz-clipH,sz,clipH);
             ctx.clip();
             ctx.globalAlpha=0.6;
-            ctx.drawImage(sprite,iso.x-sz/2,iso.y-sz/2,sz,sz);
-            ctx.restore();
-            ctx.globalAlpha=1;
+            ctx.drawImage(sprite,x-sz/2,y-sz/2,sz,sz);
+            ctx.restore();ctx.globalAlpha=1;
         }
-        // 进度条
-        ctx.fillStyle='#F2C14E';
-        ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2-12,d.w*p,4);
-        ctx.fillStyle='rgba(0,0,0,0.5)';
-        ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2-12,d.w,4);
-        ctx.fillStyle='#F2C14E';
-        ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2-12,d.w*p,4);
-        ctx.globalAlpha=1;return;
+        ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(x-d.w/2,y-d.h/2-12,d.w,4);
+        ctx.fillStyle='#F2C14E';ctx.fillRect(x-d.w/2,y-d.h/2-12,d.w*p,4);
+        return;
     }
 
-    // 用 sprite 图片绘制
+    // === 动态绘制（核心动画） ===
+    const isMoving=(e.targetX!==null||e.target)&&!e.holdPosition;
+    const isFiring=e.recoil>0;
+
     if(sprite){
         const sz=d.isBuilding?d.w*1.8:d.r*4;
-        // 单位图片往上偏移半个图片高度，让"脚"对准坐标点；建筑居中
-        const yOffset=d.isBuilding?-sz/2:-sz*0.6;
-        if(e.isEnemy){
+
+        if(d.isBuilding){
+            // 建筑：不旋转，但防御建筑整体微摇（开火时）
+            let shakeX=0,shakeY=0;
+            if(isFiring){shakeX=(Math.random()-0.5)*2;shakeY=(Math.random()-0.5)*2;}
             ctx.save();
-            ctx.filter='hue-rotate(180deg) saturate(1.3)';
-            ctx.drawImage(sprite,iso.x-sz/2,iso.y+yOffset,sz,sz);
-            ctx.filter='none';
+            if(e.isEnemy){ctx.filter='hue-rotate(180deg) saturate(1.3)';}
+            ctx.drawImage(sprite,x-sz/2+shakeX,y-sz/2+shakeY,sz,sz);
+            if(e.isEnemy){ctx.filter='none';}
             ctx.restore();
+            // 防御建筑画炮管指示线
+            if(d.dmg&&d.range&&e.target){
+                ctx.strokeStyle='rgba(255,200,50,0.3)';ctx.lineWidth=1;
+                ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(e.target.x,e.target.y);ctx.stroke();
+            }
         }else{
-            ctx.drawImage(sprite,iso.x-sz/2,iso.y+yOffset,sz,sz);
+            // 单位：旋转朝向 + 行走弹跳 + 后坐偏移
+            ctx.save();
+            ctx.translate(x,y);
+
+            // 行走弹跳（上下浮动）
+            let bobY=0;
+            if(isMoving){
+                bobY=Math.sin(e.animTime*(d.isInfantry?12:8))*1.5;
+                // 载具行走时轻微左右摇摆
+                if(d.isVehicle){ctx.rotate(Math.sin(e.animTime*6)*0.03);}
+            }
+
+            // 后坐偏移（沿朝向反方向偏移）
+            let recoilX=0,recoilY=0;
+            if(isFiring){
+                const r=e.recoil*6;
+                recoilX=-Math.cos(e.facing)*r;
+                recoilY=-Math.sin(e.facing)*r;
+            }
+
+            // 旋转图片朝向（载具旋转整体，步兵只旋转不翻转）
+            if(d.isVehicle){
+                // 载具：整体旋转到朝向（+90度偏移因为图片默认朝上）
+                ctx.rotate(e.facing+Math.PI/2);
+            }else if(d.isInfantry){
+                // 步兵：8方向量化，水平翻转处理
+                const angle=e.facing;
+                if(angle>Math.PI/2||angle<-Math.PI/2){
+                    ctx.scale(-1,1); // 面向左时水平翻转
+                }
+            }
+
+            // 敌方色调
+            if(e.isEnemy){ctx.filter='hue-rotate(180deg) saturate(1.3)';}
+
+            // 受击闪烁
+            if(e.flashTime>0){ctx.globalAlpha=0.6;}
+
+            // 绘制图片（中心在原点，脚部在 y=0 附近）
+            const yOffset=-sz*0.5;
+            ctx.drawImage(sprite,-sz/2+recoilX,yOffset+bobY+recoilY,sz,sz);
+
+            // 开火枪口闪光（在朝向方向）
+            if(isFiring&&e.recoil>0.08){
+                ctx.globalAlpha=1;
+                const fx=Math.cos(e.facing)*sz*0.4;
+                const fy=Math.sin(e.facing)*sz*0.4;
+                if(d.isVehicle){/* 载具已经旋转，闪光在本地坐标 */}
+                ctx.fillStyle='#FFD700';
+                ctx.beginPath();ctx.arc(fx,fy+yOffset+bobY,d.isVehicle?6:4,0,Math.PI*2);ctx.fill();
+                ctx.fillStyle='rgba(255,200,50,0.4)';
+                ctx.beginPath();ctx.arc(fx,fy+yOffset+bobY,d.isVehicle?10:7,0,Math.PI*2);ctx.fill();
+            }
+
+            if(e.isEnemy){ctx.filter='none';}
+            ctx.globalAlpha=1;
+            ctx.restore();
         }
     }else{
-        // 回退：用形状绘制
+        // 回退形状绘制（保留动画）
         const fl=e.flashTime>0;
+        ctx.save();
+        ctx.translate(x,y);
+        if(isMoving&&!d.isBuilding){ctx.translate(0,Math.sin(e.animTime*10)*1.5);}
+        if(isFiring){ctx.translate(-Math.cos(e.facing)*e.recoil*4,-Math.sin(e.facing)*e.recoil*4);}
         if(d.isInfantry){
             ctx.fillStyle=fl?'#fff':(e.isEnemy?'#8B1E1E':'#1F4E8C');
-            ctx.beginPath();ctx.arc(iso.x,iso.y-d.r,d.r,0,Math.PI*2);ctx.fill();
+            ctx.beginPath();ctx.arc(0,-d.r,d.r,0,Math.PI*2);ctx.fill();
+            ctx.strokeStyle='#222';ctx.lineWidth=2;
+            const a=e.facing;ctx.beginPath();ctx.moveTo(Math.cos(a)*d.r*0.5,-d.r);ctx.lineTo(Math.cos(a)*d.r*1.5,-d.r);ctx.stroke();
         }else if(d.isVehicle){
+            ctx.rotate(e.facing+Math.PI/2);
             ctx.fillStyle=fl?'#fff':(e.isEnemy?'#5C2C2C':'#2C4C7E');
-            ctx.fillRect(iso.x-d.r,iso.y-d.r*0.7,d.r*2,d.r*1.4);
+            ctx.fillRect(-d.r,-d.r*0.7,d.r*2,d.r*1.4);
         }else if(d.isHarvester){
             ctx.fillStyle=fl?'#fff':'#8B7355';
             ctx.beginPath();
-            for(let i=0;i<6;i++){const a=i/6*Math.PI*2;if(i===0)ctx.moveTo(iso.x+Math.cos(a)*d.r,iso.y+Math.sin(a)*d.r);else ctx.lineTo(iso.x+Math.cos(a)*d.r,iso.y+Math.sin(a)*d.r);}
+            for(let i=0;i<6;i++){const a=i/6*Math.PI*2;if(i===0)ctx.moveTo(Math.cos(a)*d.r,Math.sin(a)*d.r);else ctx.lineTo(Math.cos(a)*d.r,Math.sin(a)*d.r);}
             ctx.closePath();ctx.fill();
         }else{
             ctx.fillStyle=fl?'#fff':(e.isEnemy?'#3d2020':'#1a2a3a');
-            ctx.fillRect(iso.x-d.w/2,iso.y-d.h/2,d.w,d.h);
+            ctx.fillRect(-d.w/2,-d.h/2,d.w,d.h);
         }
+        ctx.restore();
     }
     ctx.globalAlpha=1;
 
