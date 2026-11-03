@@ -1,0 +1,30 @@
+{
+  "mapId": "urban",
+  "displayName": "城市巷战",
+  "themeId": "ww2",
+  "playerCount": 2,
+  "worldSize": [1600, 1000],
+  "mapType": "1v1",
+  "description": "建筑废墟阻挡通行，需要绕路；步兵在城市里比载具好用",
+  "playerStartPositions": [
+    [200, 800, 0],
+    [1400, 200, 0]
+  ],
+  "oreNodes": [
+    {"position": [500, 500, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1000, 600, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1200, 400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [300, 300, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
+  ],
+  "obstacles": [
+    {"position": [400, 350, 0], "size": [60, 60], "type": "BuildingRuin"},
+    {"position": [650, 300, 0], "size": [80, 50], "type": "BuildingRuin"},
+    {"position": [950, 450, 0], "size": [60, 80], "type": "BuildingRuin"},
+    {"position": [550, 650, 0], "size": [70, 60], "type": "BuildingRuin"},
+    {"position": [1100, 550, 0], "size": [50, 70], "type": "BuildingRuin"},
+    {"position": [750, 150, 0], "size": [90, 40], "type": "BuildingRuin"},
+    {"position": [850, 750, 0], "size": [70, 50], "type": "BuildingRuin"}
+  ],
+  "controlPoints": [],
+  "decorations": []
+}

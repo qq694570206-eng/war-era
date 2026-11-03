@@ -1,0 +1,30 @@
+{
+  "mapId": "crossroad",
+  "displayName": "十字路口",
+  "themeId": "ww2",
+  "playerCount": 4,
+  "worldSize": [2400, 1600],
+  "mapType": "2v2",
+  "description": "十字路口分割战场，中央控制点是争夺焦点",
+  "playerStartPositions": [
+    [200, 1200, 0],
+    [200, 400, 0],
+    [2200, 1200, 0],
+    [2200, 400, 0]
+  ],
+  "oreNodes": [
+    {"position": [600, 800, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1800, 800, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1200, 1200, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1200, 400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1200, 800, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
+  ],
+  "obstacles": [
+    {"position": [1200, 800, 0], "size": [50, 250], "type": "BuildingRuin"},
+    {"position": [800, 500, 0], "size": [250, 50], "type": "BuildingRuin"}
+  ],
+  "controlPoints": [
+    {"position": [1200, 800, 0], "type": "Economy", "radius": 50, "captureTime": 10}
+  ],
+  "decorations": []
+}

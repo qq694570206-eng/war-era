@@ -1,0 +1,28 @@
+{
+  "mapId": "highland",
+  "displayName": "高地要塞",
+  "themeId": "ww2",
+  "playerCount": 4,
+  "worldSize": [3200, 2000],
+  "mapType": "4人",
+  "description": "中央高地给视野优势，4方争夺；矿点分散逼迫扩张",
+  "playerStartPositions": [
+    [200, 1600, 0],
+    [3000, 1600, 0],
+    [200, 400, 0],
+    [3000, 400, 0]
+  ],
+  "oreNodes": [
+    {"position": [600, 1400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [2600, 1400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [600, 600, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [2600, 600, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1600, 1000, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1400, 1200, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
+  ],
+  "obstacles": [],
+  "controlPoints": [
+    {"position": [1600, 1000, 0], "type": "Highland", "radius": 60, "captureTime": 15}
+  ],
+  "decorations": []
+}

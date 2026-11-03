@@ -1,0 +1,29 @@
+{
+  "mapId": "river",
+  "displayName": "河流渡口",
+  "themeId": "ww2",
+  "playerCount": 4,
+  "worldSize": [2400, 1600],
+  "mapType": "2v2",
+  "description": "河流分割南北，只能走两座桥；桥是战略瓶颈",
+  "playerStartPositions": [
+    [200, 1300, 0],
+    [200, 300, 0],
+    [2200, 1300, 0],
+    [2200, 300, 0]
+  ],
+  "oreNodes": [
+    {"position": [500, 1200, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1900, 1200, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [500, 400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [1900, 400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
+  ],
+  "obstacles": [
+    {"position": [1200, 800, 0], "size": [2400, 100], "type": "Rock"}
+  ],
+  "controlPoints": [
+    {"position": [800, 800, 0], "type": "Vision", "radius": 50, "captureTime": 10},
+    {"position": [1600, 800, 0], "type": "Vision", "radius": 50, "captureTime": 10}
+  ],
+  "decorations": []
+}

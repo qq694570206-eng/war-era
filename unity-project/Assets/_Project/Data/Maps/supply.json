@@ -1,0 +1,26 @@
+{
+  "mapId": "supply",
+  "displayName": "补给线",
+  "themeId": "ww2",
+  "playerCount": 4,
+  "worldSize": [3200, 2000],
+  "mapType": "4人",
+  "description": "矿点少(4个)，逼迫争夺；中央控制点给经济加成",
+  "playerStartPositions": [
+    [200, 1600, 0],
+    [3000, 1600, 0],
+    [200, 400, 0],
+    [3000, 400, 0]
+  ],
+  "oreNodes": [
+    {"position": [700, 1500, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [2500, 1500, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [700, 500, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999},
+    {"position": [2500, 500, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
+  ],
+  "obstacles": [],
+  "controlPoints": [
+    {"position": [1600, 1000, 0], "type": "Economy", "radius": 60, "captureTime": 15}
+  ],
+  "decorations": []
+}
