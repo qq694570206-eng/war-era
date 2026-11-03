@@ -1,0 +1,91 @@
+﻿key,zh-CN,en
+ui.title,战争纪元,War Era
+ui.subtitle,移动端即时战略,Mobile RTS
+ui.ore,矿石,Ore
+ui.power,电力,Power
+ui.tech,科技点,Tech
+ui.start,开始战斗,Start Battle
+ui.difficulty,难度,Difficulty
+ui.difficulty.easy,简单,Easy
+ui.difficulty.normal,普通,Normal
+ui.difficulty.hard,困难,Hard
+ui.faction,阵营,Faction
+ui.map,地图,Map
+ui.theme,背景,Theme
+ui.build,建造,Build
+ui.defense,防御,Defense
+ui.infantry,步兵,Infantry
+ui.vehicle,载具,Vehicle
+ui.stop,坚守,Hold
+ui.rally,集结,Rally
+ui.delete,解散,Disband
+ui.tech_panel,科技升级,Tech Upgrades
+ui.super_weapon,超武就绪,Superweapon Ready
+ui.game_over_win,胜利！,Victory!
+ui.game_over_lose,基地被摧毁,Base Destroyed
+ui.retry,再来一局,Retry
+ui.back_to_menu,返回主菜单,Back to Menu
+ui.shop,商店,Shop
+ui.settings,设置,Settings
+ui.help,帮助,Help
+ui.campaign,战役,Campaign
+ui.skirmish,遭遇战,Skirmish
+ui.remove_ads,去广告,Remove Ads
+ui.restore_purchase,恢复购买,Restore Purchase
+ui.watch_ad_ore,看广告+500矿石,Watch Ad +500 Ore
+ui.watch_ad_build,看广告秒建,Watch Ad - Instant Build
+ui.watch_ad_revive,看广告复活HQ,Watch Ad - Revive HQ
+ui.toast.ore_low,矿石不足！,Not enough ore!
+ui.toast.power_low,电力不足！,Not enough power!
+ui.toast.too_close,离其他建筑太近！,Too close to other buildings!
+ui.toast.terrain_blocked,地形阻挡！,Terrain blocked!
+ui.toast.need_barracks,需要先建兵营！,Need to build Barracks first!
+ui.toast.need_warfactory,需要先建车厂！,Need to build War Factory first!
+ui.toast.need_tech,需要科技 T,Tech level required:
+ui.toast.squad_assigned,已编入编队,Assigned to squad
+ui.toast.squad_empty,没有可编入的战斗单位,No units to assign
+ui.toast.tutorial_done,教程完成！开始自由对战,Tutorial complete! Free play unlocked
+ui.toast.save_success,已存档,Saved
+ui.alert.enemy_infantry,敌方步兵来袭！,Enemy infantry incoming!
+ui.alert.enemy_antiarmor,敌方反装甲部队来袭！,Enemy anti-armor incoming!
+ui.alert.enemy_armor,敌方装甲部队来袭！,Enemy armor incoming!
+ui.alert.superweapon_ready,终极武器就绪！,Superweapon ready!
+ui.alert.cp_captured,控制点已占领！,Control point captured!
+ui.alert.cp_lost,敌方占领了控制点！,Enemy captured control point!
+unit.hq,指挥中心,Headquarters
+unit.powerplant,电厂,Power Plant
+unit.refinery,矿场,Refinery
+unit.barracks,兵营,Barracks
+unit.warfactory,车厂,War Factory
+unit.radar,雷达站,Radar Station
+unit.mgtower,机枪塔,MG Tower
+unit.atcannon,反坦炮,AT Cannon
+unit.rifleman,步枪兵,Rifleman
+unit.bazooka,反坦兵,Bazooka
+unit.sniper,狙击手,Sniper
+unit.tank,中型坦克,Medium Tank
+unit.heavytank,重型坦克,Heavy Tank
+unit.artillery,自行火炮,Artillery
+unit.harvester,采矿车,Harvester
+theme.ww2,二战,WWII
+theme.ancient,冷兵器,Ancient
+theme.ww1,一战,WWI
+theme.postwar,二战后局部,Postwar
+theme.modern,现代战争,Modern Warfare
+faction.allies,盟军,Allies
+faction.axis,轴心军,Axis
+faction.allies_desc,精准打击,Precision Strike
+faction.axis_desc,装甲洪流,Armor Horde
+map.plain,平原遭遇,Plains Encounter
+map.urban,城市巷战,Urban Combat
+map.crossroad,十字路口,Crossroads
+tech.t2,T2 科技解锁,T2 Unlock
+tech.armor,装甲强化,Armor Upgrade
+tech.firepower,火力升级,Firepower Upgrade
+tech.speed,机动强化,Speed Upgrade
+achievement.first_battle,初出茅庐,First Battle
+achievement.first_win,旗开得胜,First Victory
+achievement.streak_3,连战连捷,3 Win Streak
+achievement.streak_10,常胜将军,10 Win Streak
+achievement.nuke_used,核平,Nuclear Peace
+achievement.campaign_complete,战役通关,Campaign Complete
