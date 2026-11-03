@@ -1,4 +1,4 @@
-# 钢铁防线 (Iron Frontline) — Unity 工程
+# 战争纪元 (War Era) — Unity 工程
 
 ## 导入指南
 
@@ -19,10 +19,10 @@
 工程代码已就绪，但 ScriptableObject 数据资产需要手动创建：
 
 **在 `Assets/_Project/Data/Theme_WW2/` 下创建：**
-1. 右键 → Create → IronFrontline → Unit Definition（每个单位/建筑一个）
-2. 右键 → Create → IronFrontline → Damage Matrix（一个）
-3. 右键 → Create → IronFrontline → Faction Definition（两个：盟军+轴心）
-4. 右键 → Create → IronFrontline → Tech Upgrade（4个升级项）
+1. 右键 → Create → WarEra → Unit Definition（每个单位/建筑一个）
+2. 右键 → Create → WarEra → Damage Matrix（一个）
+3. 右键 → Create → WarEra → Faction Definition（两个：盟军+轴心）
+4. 右键 → Create → WarEra → Tech Upgrade（4个升级项）
 
 **单位定义清单（按设计案）：**
 | unitId | displayName | category | HP | damage | range | cost |
