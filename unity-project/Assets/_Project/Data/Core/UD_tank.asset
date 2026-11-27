@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deaa905e348664d66aa92413d02ff24b, type: 3}
+  m_Name: UD_tank
+  m_EditorClassIdentifier: 
+  displayName: "\u4E2D\u578B\u5766\u514B"
+  unitId: tank
+  category: 1
+  maxHp: 400
+  damage: 30
+  range: 70
+  fireRate: 1.2
+  damageType: 1
+  moveSpeed: 60
+  sightRange: 110
+  oreCost: 400
+  powerNeed: 1
+  powerSupply: 0
+  techLevel: 1
+  sprite: {fileID: 0}
+  prefab: {fileID: 6441325035314487943, guid: 5f41524a6243c4e288c15eab1969ed6d, type: 3}
+  selectionRadius: 12
+  isBuilding: 0
+  buildingSize: {x: 0, y: 0}
+  buildTime: 0
+  canProduceUnits: 0
+  producibleUnits: []
+  isHarvester: 0
+  oreCapacity: 100
+  harvestTime: 2

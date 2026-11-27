@@ -300,7 +300,7 @@ public static class PhaseBBootstrap
 
         // UI Canvas + UIManager
         var ui = BuildUI(mgr);
-        var um = mgr.GetComponent<UIManager>();
+        var um = mgr.AddComponent<UIManager>();
         um.oreText = ui.ore; um.powerText = ui.power; um.techText = ui.tech;
         um.unitInfoPanel = ui.infoPanel; um.unitNameText = ui.infoName;
         um.unitCountText = ui.infoCount; um.hpBarFill = ui.hpFill;

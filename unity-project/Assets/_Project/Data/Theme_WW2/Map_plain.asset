@@ -1,0 +1,62 @@
+%YAML 1.1
+%TAG !u! tag:yousandi.cn,2023:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: adc07a4e9d94a45558931460434399f5, type: 3}
+  m_Name: Map_plain
+  m_EditorClassIdentifier: 
+  mapId: plain
+  displayName: "\u5E73\u539F\u906D\u9047\u6218"
+  themeId: ww2
+  playerCount: 2
+  worldSize: {x: 2400, y: 1600}
+  terrainPreview: {fileID: 0}
+  playerStartPositions:
+  - {x: 200, y: 1200, z: 0}
+  - {x: 2100, y: 400, z: 0}
+  oreNodes:
+  - position: {x: 350, y: 1000, z: 0}
+    radius: 25
+    isInfinite: 1
+    maxAmount: 9999
+  - position: {x: 150, y: 1450, z: 0}
+    radius: 25
+    isInfinite: 1
+    maxAmount: 9999
+  - position: {x: 1950, y: 600, z: 0}
+    radius: 25
+    isInfinite: 1
+    maxAmount: 9999
+  - position: {x: 2250, y: 200, z: 0}
+    radius: 25
+    isInfinite: 1
+    maxAmount: 9999
+  - position: {x: 1200, y: 900, z: 0}
+    radius: 25
+    isInfinite: 1
+    maxAmount: 9999
+  - position: {x: 1350, y: 700, z: 0}
+    radius: 25
+    isInfinite: 1
+    maxAmount: 9999
+  obstacles:
+  - position: {x: 900, y: 400, z: 0}
+    size: {x: 60, y: 60}
+    type: 0
+  - position: {x: 1600, y: 1100, z: 0}
+    size: {x: 60, y: 60}
+    type: 0
+  - position: {x: 500, y: 600, z: 0}
+    size: {x: 40, y: 40}
+    type: 2
+  controlPoints: []
+  decorations: []
+  description: "\u5F00\u9614\u5E73\u539F\uFF0C\u53CC\u65B9\u57FA\u5730\u5BF9\u89D2\u7EBF\u5206\u5E03\uFF0C\u4E2D\u8DEF\u6709\u77FF\u533A\u4E89\u593A\u70B9\u3002"
+  mapType: 1v1
