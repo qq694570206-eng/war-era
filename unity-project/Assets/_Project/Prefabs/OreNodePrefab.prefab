@@ -105,7 +105,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   radius: 25
   maxAmount: 9999
-  currentAmount: 0
+  currentAmount: 9999
   isInfinite: 1
   sprite: {fileID: 0}
   oreColor: {r: 0.77, g: 0.66, b: 0.42, a: 1}
