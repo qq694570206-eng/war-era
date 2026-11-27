@@ -121,6 +121,6 @@ MonoBehaviour:
   isHarvester: 0
   oreCarried: 0
   harvestTimer: 0
-  spriteRenderer: {fileID: 8141375548188565070}
+  spriteRenderer: {fileID: 0}
   animTime: 0
   flashTime: 0

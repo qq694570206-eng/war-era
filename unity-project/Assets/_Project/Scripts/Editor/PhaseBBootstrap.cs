@@ -263,6 +263,7 @@ public static class PhaseBBootstrap
         var eco = mgr.AddComponent<EconomySystem>();
         eco.ore = 1200; eco.powerSupply = 25;
         mgr.AddComponent<UnitRegistry>();
+        mgr.AddComponent<CombatSystem>();
 
         var allies = LoadFaction("allies");
         var axis = LoadFaction("axis");
