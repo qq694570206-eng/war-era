@@ -133,7 +133,7 @@
     {
       "name": "explosion",
       "file": "unity-project/Assets/_Project/Art/Keyed/explosion.png",
-      "spritePixelsPerUnit": 10.67,
+      "spritePixelsPerUnit": 2.67,
       "pivot": [
         0.5,
         0.5

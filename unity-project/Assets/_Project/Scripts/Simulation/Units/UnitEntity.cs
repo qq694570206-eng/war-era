@@ -192,7 +192,12 @@ public class UnitEntity : MonoBehaviour
                 if (fireTimer <= 0)
                 {
                     fireTimer = def.fireRate;
-                    recoil = 0.15f;
+                    // 归一化点火值必须是字面上的 1f，不是 0.15f（旧代码遗留，v1.4 §5.1 标红）。
+                    // UnitView 的幅度乘的是 recoil²：0.15² = 0.0225，像素表全部只剩 2.25%
+                    // （tank 3px → 0.068px，rifleman 1.5px → 0.034px）。
+                    // 同时时长也塌：0.15 / recoilDecay(1/0.18) = 0.027s = 1.6 帧，设计是 11 帧。
+                    // 幅度和时长两个缺陷叠加 = 后坐完全不可见。别改回 0.15。
+                    recoil = 1f;
                     CombatSystem.Instance.DealDamage(this, target);
                     VFXManager.Instance?.SpawnBullet(transform.position, target.transform.position, isEnemy);
                     VFXManager.Instance?.SpawnMuzzleFlash(transform.position + new Vector3(Mathf.Cos(facing) * def.selectionRadius, Mathf.Sin(facing) * def.selectionRadius, 0));

@@ -77,7 +77,10 @@ ASSETS = [
     dict(name="heavytank",  src="heavytank.png",  tol=12, morph=False, pivot=(0.5, 0.00), ppu=8.00),
     dict(name="harvester",  src="harvester.png",  tol=18, morph=False, pivot=(0.5, 0.00), ppu=9.14),
     # ---- 特效 4 张（三张走联合判据 §3.4，一张走亮度键控 §3.5） ----
-    dict(name="explosion",    src="effects/explosion.png",    tol=12, morph=False, pivot=(0.5, 0.50), ppu=10.67,
+    # ★ explosion 的 ppu 填的是【单帧】值：Unity 的 spritePixelsToUnits 是对每个 sub-sprite
+    #   生效的，64px 帧 ÷ 2.67 = 24 世界单位（§1.2 目标）。若误填整图 256/24=10.67，
+    #   则每帧只有 64/10.67 = 6 世界单位，爆炸会小成目标的 1/4。
+    dict(name="explosion",    src="effects/explosion.png",    tol=12, morph=False, pivot=(0.5, 0.50), ppu=2.67,
          cells=(4, 4), mode="joint"),                      # 16 帧序列图，逐帧独立判据（§4.1）
     dict(name="muzzle_flash", src="effects/muzzle_flash.png", tol=12, morph=False, pivot=(0.5, 0.50), ppu=25.60,
          mode="joint"),

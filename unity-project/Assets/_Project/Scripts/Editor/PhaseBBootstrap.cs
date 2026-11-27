@@ -40,16 +40,24 @@ public static class PhaseBBootstrap
             return;
         }
         EnsureFolders();
+
+        // Refresh 必须放在【配置导入参数之前】，不能放最后。
+        // 必须先让 Unity 发现 Art/Keyed/*.png 并生成 meta，AssetImporter.GetAtPath 才拿得到
+        // TextureImporter。原来 Refresh 在第 52 行（最后），等于"先配置再发现文件"：
+        // 首次跑时文件还没进 AssetDatabase，GetAtPath 返回 null → 走 ImportAsset 兜底，
+        // 而随后的 Refresh 又会把刚写的设置重新导入一遍冲掉。
+        // 这就是"函数确实被调用了，但 meta 里仍是 textureType: 0"的原因。
+        AssetDatabase.Refresh();
+
         CreatePlaceholderSprites();
         ConfigureSpriteImporters();     // P0-2：逐张 PPU / pivot / Sprite 导入参数
         CreateFlashMaterial();          // P0-6：受击闪白材质
-        CreatePrefabs();                // P0-3：三层结构
+        CreatePrefabs();                // P0-3：四层结构
         CreateFactionAssets();
         var defs = CreateUnitDefinitions();   // P0-4 / P0-5：spriteForwardDeg + def.sprite
         CreateMapAssets();
         BuildScene(defs);
         AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
         Debug.Log("[PhaseB] ✅ 搭建完成。打开 Assets/_Project/Scenes/Battle.unity 按 Play 试玩。" +
                   "操作：左键点选单位，拖动框选，右键/点击下达移动攻击，底部按钮建造。");
     }
@@ -110,6 +118,18 @@ public static class PhaseBBootstrap
         new SpriteSpec("build_panel_bg", 1.0f, 0.5f, 0.5f),
         new SpriteSpec("minimap_frame",  1.0f, 0.5f, 0.5f),
     };
+
+    /// <summary>
+    /// 单独重跑导入参数（不动场景/预制体）。一键搭建之外留这个入口，
+    /// 是为了"只想修 meta 但又不想重建场景"时不必跑全流程。
+    /// </summary>
+    [MenuItem("WarEra/仅修复 Art/Keyed 导入参数")]
+    public static void FixSpriteImportersOnly()
+    {
+        AssetDatabase.Refresh();          // 先让 AssetDatabase 认识这些 png
+        ConfigureSpriteImporters();
+        AssetDatabase.SaveAssets();
+    }
 
     static void ConfigureSpriteImporters()
     {
@@ -482,22 +502,30 @@ public static class PhaseBBootstrap
         bar.producibleUnits = new[] { map["rifleman"], map["bazooka"], map["sniper"] };
         war.producibleUnits = new[] { map["tank"], map["heavytank"], map["artillery"], map["harvester"] };
 
-        // === P0-4 spriteForwardDeg 初值（制作人裁定 L：口径统一为「炮管锚」） ===
+        // === P0-4 spriteForwardDeg 终值（制作人裁定 L：口径统一为「炮管锚」） ===
         //
         // 定义：素材里"炮管/车头指向"相对图片 +X 轴的逆时针角（度）。
         // 公式：zDeg = facing*Rad2Deg − spriteForwardDeg（没有 +90f）。
         //
-        // 【这 4 个值是初值，不是终值】
-        // 来源是轮廓测量（炮管锚口径），允许 ±10° 误差，必须在 PPU 改完、
-        // 单位在屏幕上能看清之后目视复核。复核只改这里的数值，不改代码 ——
-        // 所以放在 UnitDefinition 资产字段里，而不是硬编码在 UnitView。
-        //
         // 为什么不能用 PCA 主轴：主轴有 180° 周期，只描述"长轴方向"不描述
         // "车头在哪一端"，有一半概率判反 180° 且代码不报错，只表现为车倒着开。
-        map["tank"].spriteForwardDeg      = -23.2f;  // TODO 需目视复核（炮管锚）
-        map["heavytank"].spriteForwardDeg = -11.3f;  // TODO 需目视复核（美术曾给 +16，用 PCA 判反，作废）
-        map["artillery"].spriteForwardDeg = -23.2f;  // TODO 复用 tank 贴图，同 tank
-        map["harvester"].spriteForwardDeg = 223f;    // TODO 需目视复核（= −137，推土铲朝左下）
+        //
+        // 【终值判据：径向射线法】从前景质心每 2° 打射线，取"该方向最后一段前景
+        // 的末端半径"与"最大连续厚度"。炮管 = 延伸最远 且 该方向最细。
+        //   tank      24~26° 末端 r=145px、厚度 63~73px（全图最细）→ 26°
+        //             （此前的 −23.2 是符号写反：该方向指向车体前下方，不在炮管上，
+        //              实测 −23.2° 射线与炮管偏 49°，肉眼在编辑器里一眼可辨）
+        //   heavytank 348° 末端最远但厚度 141px（与车体同粗，不是炮管）；
+        //             96~104° 最细 86px 但 r 仅 104px（侧面突出物）
+        //             → 采炮塔锚口径 −20
+        //   artillery 复用 tank 图，必须与 tank 同为 26（否则同一张图两个朝向）
+        //   harvester elong=1.02 双向对称、无车头概念，填 0 不补偿。
+        //             （早期 223 = −137「推土铲朝左下」已撤回：填任何单向值都是猜）
+        // 建筑（mgtower/atcannon）isBuilding=true 在 UnitView 第一行短路，填了不生效。
+        map["tank"].spriteForwardDeg      = 26f;     // 炮管锚，射线法实测 24~26°
+        map["heavytank"].spriteForwardDeg = -20f;    // 炮塔锚
+        map["artillery"].spriteForwardDeg = 26f;     // 复用 tank 贴图，必须与 tank 一致
+        map["harvester"].spriteForwardDeg = 0f;      // 双向对称，不做补偿
         // 步兵（rifleman/bazooka/sniper）走镜像、建筑不旋转，此字段不参与计算。
 
         // === P0-5 def.sprite 接线（全工程原本的空白点） ===

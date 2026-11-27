@@ -157,6 +157,21 @@ public class UnitView : MonoBehaviour
         return Mathf.Max(1f, entity.def.selectionRadius);
     }
 
+    /// <summary>
+    /// 贴图在世界坐标下的水平宽度 = 车体长边（履带节距的分母用这个，不用 SpriteWorldHeight）。
+    /// FullRect 网格下 bounds.size.x = 贴图宽px / PPU，PPU 改了自动跟随。
+    /// 兜底取高度，保证极窄贴图（理论上不会有）不会导致 pitch=0 → fTrk 无穷大。
+    /// </summary>
+    float SpriteWorldWidth()
+    {
+        if (sr != null && sr.sprite != null)
+        {
+            float w = sr.sprite.bounds.size.x;
+            if (w > 0.01f) return w;
+        }
+        return SpriteWorldHeight();
+    }
+
     /// <summary>世界单位 → 1080p 屏幕像素的换算系数（orthographicSize=300 时为 1.8）。</summary>
     static float PixelsToWorld(float pixels, Camera cam)
     {
@@ -201,19 +216,25 @@ public class UnitView : MonoBehaviour
         recoilPivot.localPosition = localBack * offsetWorld;
     }
 
-    /// <summary>后坐幅度（1080p 屏幕像素），按武器类型。人眼阈约 1px，低于它等于没有。</summary>
+    /// <summary>后坐幅度（1080p 屏幕像素），按武器类型。人眼阈约 1px，低于它等于没有。
+    ///
+    /// 数值来源：docs/animation-facing-spec-v1.md §5.3 像素表。
+    /// 这几张【没有实机验证过】，一律按规格取，不按手感擅自改小 ——
+    /// 改小会让人以为是实现 bug 而不是调参，下次对文档会互相矛盾。
+    /// 若将来实机觉得偏大，改这里并在注释写「实机试过 X px 偏大」，别只改数。
+    /// </summary>
     static float RecoilPixelsOf(string unitId)
     {
         switch (unitId)
         {
             case "rifleman":  return 1.5f;
-            case "sniper":    return 1.5f;
-            case "bazooka":   return 2.5f;
-            case "mgtower":   return 1.5f;
+            case "sniper":    return 1.5f;   // 复用 rifleman 图，同幅度
+            case "bazooka":   return 2.0f;   // 规格 §5.3
+            case "mgtower":   return 3.0f;   // 规格 §5.3（建筑走抖动，不走位移）
             case "tank":      return 3.0f;
             case "heavytank": return 4.0f;
             case "artillery": return 5.0f;
-            case "atcannon":  return 2.5f;
+            case "atcannon":  return 3.0f;   // 规格 §5.3
             default:          return 2.0f;
         }
     }
@@ -264,7 +285,14 @@ public class UnitView : MonoBehaviour
         {
             // 履带：地面颠簸，幅度很小，只表明"不是死物"。
             // 【关键】履带车不弹跳 —— 弹跳是轮式/生物特征，给坦克加弹跳是纸片感第一来源。
-            float L = Mathf.Max(h, 1f) * 1.4f;               // 车体长边近似（§4.2）
+            //
+            // 车体长边必须取【水平宽】，不能取 h*1.4：
+            //   h 是贴图的竖直高，车体长边在 X 轴，两者不等价。旧写法 h*1.4 对 tank
+            //   恰好也撞 6Hz 上限看不出差别，但 heavytank 实测 4.02Hz（应 5.62Hz，慢 40%），
+            //   表现为"重坦接地感比中坦还迟钝"，而应该反过来。
+            //   实测差异：tank +0.0%（都撞上限）/ heavytank +40.0% / harvester +17.6% / artillery +30.7%
+            // 用 sr.sprite.bounds.size.x：FullRect 网格下它就是贴图宽/PPU，PPU 改了自己跟着变。
+            float L = SpriteWorldWidth();
             float pitch = 0.25f * L;                          // 履带节距
             float fTrk = Mathf.Clamp(entity.def.moveSpeed / pitch, 1.5f, 6f);
             dy = h * 0.006f * Mathf.Sin(2f * Mathf.PI * fTrk * t);
