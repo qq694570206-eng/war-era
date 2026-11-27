@@ -232,6 +232,7 @@ public static class PhaseBBootstrap
         // 摄像机
         var camGo = new GameObject("Main Camera");
         var cam = camGo.AddComponent<Camera>();
+        camGo.AddComponent<AudioListener>();
         cam.orthographic = true;
         cam.orthographicSize = 300f;
         cam.nearClipPlane = 0.1f; cam.farClipPlane = 2000f;
