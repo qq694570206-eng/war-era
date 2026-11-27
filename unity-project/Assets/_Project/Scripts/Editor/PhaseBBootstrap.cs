@@ -109,7 +109,12 @@ public static class PhaseBBootstrap
         new SpriteSpec("heavytank",  8.00f, 0.5f, 0.00f),
         new SpriteSpec("harvester",  9.14f, 0.5f, 0.00f),
         // 特效
-        new SpriteSpec("explosion",  10.67f, 0.5f, 0.50f, true, 64, 64),   // 4x4=16 帧（P1 接线）
+        // ★ explosion 的 PPU 必须填【单帧值 2.67】，不是整图值 10.67。
+        //   Multiple 模式下 spritePixelsToUnits 作用于每个 sub-sprite（64×64 的帧），
+        //   不是 256×256 的整图：64 / 2.67 = 23.97 世界单位 ≈ 规格目标 24（§2 表）。
+        //   若填 10.67：64 / 10.67 = 6.00 单位，爆炸只有目标的 1/4，肉眼明显偏小。
+        //   tools/keyed_manifest.json 里也是 2.67，两边必须一致（曾出现 C# 10.67 / 清单 2.67 打架）。
+        new SpriteSpec("explosion",   2.67f, 0.5f, 0.50f, true, 64, 64),   // 4x4=16 帧（P1 接线）
         new SpriteSpec("muzzle_flash", 25.60f, 0.5f, 0.50f),
         new SpriteSpec("nuke_cloud",  4.27f, 0.5f, 0.00f),
         new SpriteSpec("smoke_column", 18.3f, 0.5f, 0.00f),
