@@ -3,6 +3,9 @@
 """
 key_assets.py — AI 白/灰底素材批量抠图（阶段 C / P0-1）
 
+生成者：lead-programmer
+基线：docs/art-asset-integration-v1.md + 制作人裁定表（PPU 逐资产值）
+
 依据：
   docs/art-asset-integration-v1.md   §2 逐资产 tol/pivot 总表、§3 抠图判定、§4.1 explosion 序列图
   docs/animation-facing-spec-v1.md   （无抠图条款，仅引用 PPU）
@@ -73,11 +76,13 @@ ASSETS = [
     dict(name="tank",       src="tank.png",       tol=12, morph=False, pivot=(0.5, 0.00), ppu=9.14),
     dict(name="heavytank",  src="heavytank.png",  tol=12, morph=False, pivot=(0.5, 0.00), ppu=8.00),
     dict(name="harvester",  src="harvester.png",  tol=18, morph=False, pivot=(0.5, 0.00), ppu=9.14),
-    # ---- 特效 4 张 ----
+    # ---- 特效 4 张（三张走联合判据 §3.4，一张走亮度键控 §3.5） ----
     dict(name="explosion",    src="effects/explosion.png",    tol=12, morph=False, pivot=(0.5, 0.50), ppu=10.67,
-         cells=(4, 4)),                                    # 16 帧序列图，逐帧独立边缘环（§4.1）
-    dict(name="muzzle_flash", src="effects/muzzle_flash.png", tol=12, morph=False, pivot=(0.5, 0.50), ppu=25.60),
-    dict(name="nuke_cloud",   src="effects/nuke_cloud.png",   tol=12, morph=False, pivot=(0.5, 0.00), ppu=4.27),
+         cells=(4, 4), mode="joint"),                      # 16 帧序列图，逐帧独立判据（§4.1）
+    dict(name="muzzle_flash", src="effects/muzzle_flash.png", tol=12, morph=False, pivot=(0.5, 0.50), ppu=25.60,
+         mode="joint"),
+    dict(name="nuke_cloud",   src="effects/nuke_cloud.png",   tol=12, morph=False, pivot=(0.5, 0.00), ppu=4.27,
+         mode="joint"),
     dict(name="smoke_column", src="effects/smoke_column.png", tol=0,  morph=False, pivot=(0.5, 0.00), ppu=18.3,
          mode="luma"),                                     # 亮度键控，不用 floodfill（§3.3）
     # ---- UI 3 张（本轮不接线，产物先备好） ----
@@ -94,6 +99,11 @@ NO_FILL = {"explosion", "harvester"}
 # 规格要求提级去噪、需人工目检的 4 张（§3.3）
 MUST_MORPH = {"hq", "rifleman", "bazooka", "mgtower"}
 LUMA_BG = 203.0   # smoke_column 背景亮度（§2：背景 (205,203,199)，均亮约 203）
+
+# 特效联合判据阈值（规格 §3.4）：1px 精度实测 0.05/0.08/0.12 三档抠掉比例 40.6/41.0/41.1%，
+# 差异极小，取 0.08；亮度 235 是"近白"分界，低于此的灰不判背景（否则会吃掉火焰外焰）。
+JOINT_LUM_MIN = 235.0
+JOINT_SAT_MAX = 0.08
 
 
 # ---------------------------------------------------------------- 基础工具
@@ -338,23 +348,154 @@ def drop_specks(alpha, min_px=200):
     return out.astype(np.float32), dropped
 
 
-# ---------------------------------------------------------------- 两条抠图路径
-def key_floodfill(rgb, tol, morph, despeck=True):
-    """标准路径：边缘环众数 seed → tol 判据 → 四边 floodfill → 可选开闭 → 去碎块 → bleed → 羽化。"""
-    seed, ring = ring_mode(rgb)
-    diff = np.abs(rgb.astype(np.int16) - np.array(seed, dtype=np.int16)).max(axis=2)
-    candidate = diff <= tol
+# ---------------------------------------------------------------- 残底救援
+# 规格 §3.1 只给了"一个 seed + 一个 tol"，实测对 5 张双灰阶棋盘格底图不够用：
+#   素材背景是深灰/浅灰交替的棋盘（不是渐变，也不是纯色），
+#   边缘环众数只会命中其中一档，另一档整片留下来当"前景"。
+#   实测残留（边带 8px 内 亮>170 且 饱和度<0.13 的不透明像素占比）：
+#     harvester 58.0% / bazooka 14.7% / powerplant 7.8% / mgtower 2.7% / refinery 1.2%
+#   harvester 抠完 fg=93.8% —— 几乎整幅不透明，等于没抠。
+#
+# 救法：单 seed 抠完（含开闭运算与去碎块）先自检残底率；超阈值才在"边缘带亮部"
+# 做 4-means，把其它几档灰也追加成背景 seed，再统一 floodfill 一次。
+#
+# 【必须在形态学与去碎块之后测】—— 这是踩过的坑，别改回测原始 mask：
+#   hq/rifleman/mgtower 的残底是稀疏噪点，3x3 开运算本来就会清掉，
+#   在开运算之前测会把它们误判成残底并触发救援，实测 mgtower 因此被多删 31.7% 的合法前景。
+#   两种测法对照（残底率）：
+#                 pre-morph → post-morph
+#     hq            10.48%  →   0.32%
+#     mgtower       46.07%  →   2.77%
+#     rifleman       8.30%  →   0.60%
+#   只有这三张之外的三张（powerplant 7.83% / bazooka 14.23% / harvester 57.96%）
+#   是真的双灰阶残底，开闭运算救不动。
+#
+# 触发阈值 2%（原 3% 漏掉 mgtower）：
+#   mgtower 残底率实测 2.77%，卡在 3% 线下不触发，羽化带 meanRGB 停在 (219.8,217.7,215.4)
+#   —— 这不是"没白到 250"的临界，是整张图背景是双档灰（253 与约 227）而 tol=18 只覆盖
+#   235~255，227 那档 5000+px 整片被判成前景。降线后 mgtower 救到 0.30%，
+#   羽化带降到 (159.2,155.1,145.2)，删除的 5085px 中"亮度<150 的暗像素"占比 0.00%（未误删主体）。
+#   其余 9 张残底率均 <1.4%，降线到 2% 对它们零影响（行为完全不变）。
+RESIDUAL_TRIGGER = 0.02        # 边带残底率超过 2% 才启动救援
+RESIDUAL_BAND_PX = 8           # 判定残底用的边带宽度
+RESIDUAL_LUM_MIN = 170.0       # 残底必须是"亮"的（排除建筑暗部、车体、人物）
+RESIDUAL_SAT_MAX = 0.13        # 且必须是"低饱和"的（排除爆炸火光等彩色前景）
+# 后备 seed 的亮度下限 200（原 150 会误采主体墙面）：
+#   RESCUE_LUMA_MIN=150 时 mgtower 边缘带亮部会把墙面的 (162,162,158) 采成 seed，
+#   于是主体被当成背景挖掉 11821px（占前景 31.7%），其中 24.9% 亮度<150 —— 明显是砖墙暗部。
+#   提到 200 后 seed 只落在 223/246 两档灰上，删除量 5085px 且暗像素占比 0.00%。
+#   依据：这 24 张素材的背景灰最低一档实测不低于 205（rifleman 底 201~205 是最暗的一组），
+#   主体亮面再怎么浅也在 190 以下（墙砖 162、车体 <120、人形军装 <170）。
+RESCUE_LUMA_MIN = 200.0        # 只从边缘带的亮部取后备 seed（暗部是主体轮廓，不可采）
+RESCUE_K = 4                   # 后备 seed 簇数（实测 k=2/3/4 差异 <1%，k=4 最稳）
 
-    reached = floodfill_bg(candidate)   # 连通到边界的背景
-    fg = ~reached                        # 前景 = 未被 floodfill 打到的（内部高光洞自动保留）
 
+def _band_mask(h, w, b=RESIDUAL_BAND_PX):
+    m = np.zeros((h, w), dtype=bool)
+    m[:b, :] = True
+    m[h - b:, :] = True
+    m[:, :b] = True
+    m[:, w - b:] = True
+    return m
+
+
+def residual_ratio(fg, rgb, b=RESIDUAL_BAND_PX):
+    """边带里"不透明 + 亮 + 低饱和"像素占边带的比例 = 残底率。
+
+    为什么是这三个条件联立：
+      · 不透明     —— 真残底一定是被误判成前景的像素
+      · 亮 >170    —— 背景是浅灰/白；建筑墙面的暗部、车体、人物都远暗于此
+      · 饱和<0.13  —— 排除爆炸火光、矿点黄等本来该保留的彩色前景
+    实测这套判据对 13 张单位图的"真残底 / 主体贴边"区分与目检一致。
+    """
+    h, w = fg.shape
+    band = _band_mask(h, w, b)
+    lum = rgb.mean(axis=2)
+    sat = (rgb.max(axis=2) - rgb.min(axis=2)) / np.maximum(rgb.max(axis=2), 1)
+    return float((fg & band & (lum > RESIDUAL_LUM_MIN) & (sat < RESIDUAL_SAT_MAX)).sum()) / float(band.sum())
+
+
+def _kmeans_on_luma(px, k, iters=80):
+    """对边缘带亮部像素做 1D k-means（按亮度分簇），返回标签与簇心。"""
+    v = px.mean(axis=1)
+    centers = np.sort(np.percentile(v, np.linspace(5, 95, k)))
+    labels = np.zeros(len(v), dtype=np.int32)
+    for _ in range(iters):
+        labels = np.abs(v[:, None] - centers[None, :]).argmin(axis=1)
+        for i in range(k):
+            sel = labels == i
+            if sel.any():
+                centers[i] = v[sel].mean()
+    return labels, centers
+
+
+def build_bg_seeds(rgb, seed0, tol0):
+    """返回 (seeds, tols)。默认只有主 seed；残底率超阈值时追加后备 seed。"""
+    seeds = [np.asarray(seed0, dtype=np.float32)]
+    tols = [float(tol0)]
+    h, w, _ = rgb.shape
+    lum = rgb.mean(axis=2)
+    band = _band_mask(h, w, 3)                      # seed 采样用 3px 窄带，避开主体
+    px = rgb[band & (lum > RESCUE_LUMA_MIN)]
+    if len(px) < 300:
+        return seeds, tols
+    labels, _ = _kmeans_on_luma(px, RESCUE_K)
+    for i in range(RESCUE_K):
+        sel = labels == i
+        if sel.sum() < 20:
+            continue
+        med = np.median(px[sel], axis=0)
+        # 与已有 seed 距离 <10 视为同一档灰，不重复追加
+        if min(np.abs(med - s).max() for s in seeds) < 10:
+            continue
+        seeds.append(med.astype(np.float32))
+        tols.append(min(46.0, max(10.0, 2.4 * float(px[sel].mean(axis=1).std()))))
+    return seeds, tols
+
+
+def _flood_fg(rgb, seeds, tols):
+    h, w, _ = rgb.shape
+    candidate = np.zeros((h, w), dtype=bool)
+    for s, t in zip(seeds, tols):
+        candidate |= (np.abs(rgb - s).max(axis=2) <= t)
+    return ~floodfill_bg(candidate)
+
+
+def _finalize(fg, morph, despeck):
+    """开闭运算 + 去碎块。返回硬 mask（bool）与实际删掉的像素数。"""
     if morph:
         fg = morph_open_close(fg)
-
-    alpha_hard = fg.astype(np.float32)
     dropped = 0
     if despeck:
-        alpha_hard, dropped = drop_specks(alpha_hard)
+        alpha, dropped = drop_specks(fg.astype(np.float32))
+        fg = alpha > 0.5
+    return fg, dropped
+
+
+# ---------------------------------------------------------------- 两条抠图路径
+def key_floodfill(rgb, tol, morph, despeck=True):
+    """标准路径：边缘环众数 seed → tol 判据 → 四边 floodfill → 可选开闭 → 去碎块 → bleed → 羽化。
+
+    残底自检放在开闭运算与去碎块【之后】（见 RESIDUAL_TRIGGER 注释）。
+    超阈值时追加后备 seed 重跑一遍，只在残底率确实下降时才采纳。
+    """
+    seed, ring = ring_mode(rgb)
+    seed0 = np.asarray(seed, dtype=np.float32)
+
+    fg, dropped = _finalize(_flood_fg(rgb, [seed0], [float(tol)]), morph, despeck)
+    resid_single = residual_ratio(fg, rgb)
+    seeds_used, tols_used = [seed0], [float(tol)]
+    rescued = False
+
+    if resid_single > RESIDUAL_TRIGGER:
+        seeds2, tols2 = build_bg_seeds(rgb, seed, tol)
+        if len(seeds2) > 1:
+            fg2, dropped2 = _finalize(_flood_fg(rgb, seeds2, tols2), morph, despeck)
+            resid2 = residual_ratio(fg2, rgb)
+            if resid2 < resid_single:          # 只在确实变好时才采纳，绝不反向劣化
+                fg, dropped, seeds_used, tols_used, rescued = fg2, dropped2, seeds2, tols2, True
+
+    alpha_hard = fg.astype(np.float32)
 
     # 顺序：先 bleed（硬 mask 上向透明区扩色）→ 再羽化（alpha 渐变）
     out_rgb = bleed(rgb, alpha_hard, rounds=3)
@@ -362,6 +503,56 @@ def key_floodfill(rgb, tol, morph, despeck=True):
 
     stats = dict(seed=[int(v) for v in seed], tol=int(tol), morph=bool(morph),
                  ring_sd=round(float(ring.std(axis=0).mean()), 2),
+                 despeck_dropped_px=int(dropped),
+                 residual_single=round(resid_single * 100, 2),
+                 residual_final=round(residual_ratio(fg, rgb) * 100, 2),
+                 rescued=rescued,
+                 seeds_extra=[[int(round(x)) for x in s] for s in seeds_used[1:]],
+                 tols_extra=[round(t, 1) for t in tols_used[1:]])
+    return out_rgb, alpha, stats
+
+
+def key_joint(rgb, lum_min=JOINT_LUM_MIN, sat_max=JOINT_SAT_MAX, despeck=True):
+    """特效专用：亮度 + 饱和度联合判据（规格 §3.4）。
+
+    为什么不能用 key_floodfill：
+      火焰核心是近白高光，与白底同色。RGB-tol 判据只看"离 seed 多远"，
+      火心离白色 seed 也在 tol 内 ⇒ 火球中心被打穿成透明洞。
+    联合判据要求"又亮又灰"才算背景：火心虽然亮，但饱和度高（暖橙），不算背景。
+
+    实测四张（规格 §3.4 原表）：
+      特效          近白低饱和   高饱和s>0.35   floodfill抠掉   主体内残留近白
+      explosion       41.8%        37.5%          41.0%           1.2%
+      muzzle_flash    29.9%        42.5%          29.6%           0.4%
+      nuke_cloud      46.0%        48.4%          45.9%           0.2%
+    第 4 列是关键：主体内近白残留 0.2~1.2%，证明火球中心确实被保住。
+
+    仍然只从四边 floodfill，不做全局扫描——否则主体内部近白高光同样会被挖掉。
+    """
+    mx = rgb.max(axis=2)
+    mn = rgb.min(axis=2)
+    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0.0)
+    lum = rgb.mean(axis=2)
+    candidate = (lum > lum_min) & (sat < sat_max)
+    fg = ~floodfill_bg(candidate)
+
+    dropped = 0
+    if despeck:
+        alpha, dropped = drop_specks(fg.astype(np.float32))
+        fg = alpha > 0.5
+
+    alpha_hard = fg.astype(np.float32)
+    out_rgb = bleed(rgb, alpha_hard, rounds=3)
+    alpha = feather(alpha_hard)
+
+    core = rgb[alpha_hard > 0.5]
+    core_near_white = float(((core.mean(axis=1) > 235) &
+                             ((core.max(axis=1) - core.min(axis=1)) / np.maximum(core.max(axis=1), 1) < sat_max)
+                             ).sum()) / max(len(core), 1)
+    stats = dict(seed="joint(lum+sat)", tol=None,
+                 rule=f"lum>{lum_min:.0f} & sat<{sat_max:.2f}",
+                 bg_frac=round(1 - float(fg.mean()), 4),
+                 core_near_white=round(core_near_white * 100, 2),
                  despeck_dropped_px=int(dropped))
     return out_rgb, alpha, stats
 
@@ -397,27 +588,40 @@ def process_one(asset, write=True):
                  needs_manual_review=asset["name"] in MUST_MORPH)
 
     if cells:
-        # explosion：4x4 逐帧独立边缘环 + 逐帧 floodfill（§4.1 明确不共用第 0 帧参数）
+        # explosion：4x4 逐帧独立判据 + 逐帧 floodfill（§4.1 明确不共用第 0 帧参数）
         cx, cy = cells
         cw, ch = w // cx, h // cy
+        joint = asset.get("mode") == "joint"
         out_rgb = np.zeros((h, w, 3), dtype=np.float32)
         out_a = np.zeros((h, w), dtype=np.float32)
         frames = []
         for ry in range(cy):
             for rx in range(cx):
                 sl = (slice(ry * ch, (ry + 1) * ch), slice(rx * cw, (rx + 1) * cw))
-                f_rgb, f_a, f_st = key_floodfill(rgb[sl], asset["tol"], asset["morph"])
+                if joint:
+                    f_rgb, f_a, f_st = key_joint(rgb[sl])
+                else:
+                    f_rgb, f_a, f_st = key_floodfill(rgb[sl], asset["tol"], asset["morph"])
                 out_rgb[sl] = f_rgb
                 out_a[sl] = f_a
-                frames.append(dict(index=ry * cx + rx, seed=f_st["seed"],
-                                   tol=f_st["tol"],
+                frames.append(dict(index=ry * cx + rx,
+                                   seed=f_st.get("seed"), tol=f_st.get("tol"),
+                                   core_near_white=f_st.get("core_near_white"),
                                    fg=round(float((f_a > 0.5).mean()), 4)))
         stats["frames"] = frames
         stats["cell"] = [cw, ch]
         stats["seed"], stats["tol"] = frames[0]["seed"], frames[0]["tol"]
+        stats["rule"] = "joint(lum+sat) 逐帧独立" if joint else "rgb-tol 逐帧独立"
         stats["fg_ratio"] = round(float((out_a > 0.5).mean()), 4)
         stats["trim"] = "off"      # 序列图整块 alpha 的 bbox 恒等于整帧，Trim 无意义
         bbox = None
+    elif asset.get("mode") == "joint":
+        out_rgb, out_a, st = key_joint(rgb)
+        stats.update(st)
+        stats["morph"] = False
+        stats["fg_ratio"] = round(float((out_a > 0.5).mean()), 4)
+        stats["trim"] = "auto"
+        bbox = bbox_of(out_a)
     elif asset.get("mode") == "luma":
         out_rgb, out_a, st = key_luma(rgb)
         stats.update(st)

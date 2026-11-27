@@ -293,7 +293,11 @@ public class UnitEntity : MonoBehaviour
         target = null;
         hasMoveTarget = false;
         UnitRegistry.Instance?.Unregister(this);
-        VFXManager.Instance?.SpawnExplosion(transform.position, def.category == UnitCategory.Vehicle ? 25f : 15f);
+        // scale 语义 = 直径倍数（见 VFXManager.SpawnExplosion 注释）。
+        // 旧值 25/15 是按"乘到 64 单位占位图上"算的 → 实际直径 1600/960 单位，
+        // 屏幕全高只有 600，等于每次死亡都糊满屏。目标直径取单位尺寸的 1.5~2 倍：
+        // 载具 1.2（≈77 单位）、步兵 0.7（≈45 单位）。
+        VFXManager.Instance?.SpawnExplosion(transform.position, def.category == UnitCategory.Vehicle ? 1.2f : 0.7f);
         AudioManager.Instance?.PlayExplosion(def.category == UnitCategory.Vehicle);
 
         // 延迟销毁（等死亡动画播完）

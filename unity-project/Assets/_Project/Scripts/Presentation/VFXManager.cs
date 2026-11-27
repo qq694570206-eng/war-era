@@ -82,10 +82,25 @@ public class VFXManager : MonoBehaviour
         if (bullet != null) bullet.Initialize(from, to, isEnemy);
     }
 
+    /// <summary>
+    /// 播放爆炸。<paramref name="scale"/> 语义 = 【直径倍数】，
+    /// 即目标爆炸直径 = EXPLOSION_BASE_DIAMETER × scale。
+    ///
+    /// 【为什么改语义】旧语义是「乘到 prefab 的 localScale 上」，而占位图
+    /// placehold_circle.png 是 64px @ PPU 1.0 = 64 世界单位。调用点传 25 时，
+    /// 实际直径 = 64 × 25 = 1600 世界单位，而屏幕全高只有 600（orthographicSize=300）
+    /// —— 任意单位一死，爆炸会盖住整个屏幕（2.7 倍屏高）。
+    ///
+    /// 现在把基准直径显式写在这里，调用点只表达"多大倍数的爆炸"，与贴图尺寸解耦。
+    /// 这样以后换真图（explosion 单帧 24 世界单位）也不用改调用点。
+    /// </summary>
     public void SpawnExplosion(Vector3 position, float scale = 1f)
     {
         var go = GetFromPool(explosionPool, explosionPrefab);
         if (go == null) return;
+
+        if (scale <= 0f) scale = 1f;   // 防御：传 0 会缩成不可见，排查起来很费时
+
         go.transform.position = position;
         go.transform.localScale = Vector3.one * scale;
         go.SetActive(true);
@@ -93,8 +108,9 @@ public class VFXManager : MonoBehaviour
         var ps = go.GetComponent<ParticleSystem>();
         if (ps != null) { ps.Clear(); ps.Play(); }
 
-        // 自动回收
-        StartCoroutine(DeactivateAfter(go, 0.6f));
+        // 回收时长 0.6 → 0.70：16 帧 @24fps = 0.6667s，0.6 会截掉最后一帧
+        // （美术规格 §4.3-2。本轮还是占位图，但先把时长对齐，换序列帧时不再动这里。）
+        StartCoroutine(DeactivateAfter(go, 0.70f));
     }
 
     public void SpawnMuzzleFlash(Vector3 position)

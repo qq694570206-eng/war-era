@@ -1,31 +1,46 @@
 // ================================================================
-// UnitView.cs — 单位表现层（挂载在 ArtRoot 上，SpriteRenderer 同节点）
+// UnitView.cs — 单位表现层（挂在 ArtRoot 上）
 //
-// 三层结构（docs/animation-facing-spec-v1.md §5.2）：
-//   UnitEntity  根：位置由逻辑驱动，不旋转、不缩放
-//    └ RecoilPivot ：只承担后坐位移（世界方向 → local 转换）
-//       └ ArtRoot   ：只承担朝向 rotation + 呼吸/弹跳的 posY/scale，挂 SpriteRenderer
+// 生成者：lead-programmer
+// 依据：docs/animation-facing-spec-v1.md §5.2（四层结构）
+//       + 制作人裁定（四层、通道归属、后坐按像素）
 //
-// 为什么必须拆：
-//   旧代码在同一个 transform 上既设 rotation 又设 localPosition，而 recoilDir 是世界
-//   方向。rotation≠0 时它会被再旋转一次 → 载具朝右上开炮，车却往左上退。
+// 【四层结构：每层只有一个写入者】
+//   UnitPrefab            UnitEntity          transform.position     只由逻辑写
+//    └ RecoilPivot                             localPosition          只写后坐
+//       └ ArtRoot         UnitView             localRotation          只写朝向   ← 本脚本
+//          └ AnimPivot                          localPosition+scale    只写呼吸/弹跳
+//             └ SpriteRenderer                  localScale ≡ one       任何代码不许碰
 //
-// 缩放只走 PPU（TextureImporter.spritePixelsPerUnit），本脚本不改 localScale 的基准。
-// 规格 §7.1 的 artRoot.localScale = k 公式按团队裁定作废：PPU 是导入期常量，
-// Sprite.bounds 天然正确，无需每帧算 k，也不会被这里的呼吸缩放覆写。
+// 为什么必须四层而不是三层：
+//   三层时 ArtRoot 同时写 localRotation（朝向）和 localScale（呼吸），
+//   呼吸一旦写 localScale 就会把 PPU 换算出的显示尺寸一起覆写掉 —— 尺寸基准消失。
+//   拆出 AnimPivot 后，尺寸由 PPU 在导入期决定，运行时无人碰 SpriteRenderer 的 scale。
+//
+// 【三个通道，三层，不许混写】
+//   前后/上下位移（弹跳、行走 bob） → AnimPivot.localPosition
+//   伸缩（呼吸、压缩）             → AnimPivot.localScale
+//   朝向角度                       → ArtRoot.localRotation
+//   后坐位移                       → RecoilPivot.localPosition
+//   位置/逻辑                      → UnitEntity.transform.position
+//
+// 缩放只走 PPU（TextureImporter.spritePixelsPerUnit）。动画规格 §7.1 的
+// artRoot.localScale = k 公式已按裁定作废：PPU 是导入期常量，Sprite.bounds 天然正确。
 //
 // 朝向策略（§1 混合方案，不是一套方案打天下）：
 //   步兵   C：仅 flipX 镜像，不旋转（素材是站立人形，绕 Z 转会躺倒）
-//   载具   A：全向旋转，zDeg = facing*Rad2Deg - def.spriteForwardDeg
+//   载具   A：全向旋转，zDeg = facing*Rad2Deg - def.spriteForwardDeg（没有 +90）
 //   建筑   D：不旋转（有固定占地与投影，一转就穿帮）
 // ================================================================
 using UnityEngine;
 
 public class UnitView : MonoBehaviour
 {
-    [Header("Hierarchy (留空则自动向上/向下查找)")]
-    [Tooltip("后坐位移节点。留空则用本节点的父节点（ArtRoot 的父 = RecoilPivot）")]
+    [Header("Hierarchy")]
+    [Tooltip("后坐位移节点（ArtRoot 的父）。留空则自动取 transform.parent")]
     public Transform recoilPivot;
+    [Tooltip("呼吸/弹跳节点（ArtRoot 的子）。留空则自动取 transform.GetChild(0)")]
+    public Transform animPivot;
 
     [Header("Tuning")]
     [Tooltip("履带载具转向速率（度/秒）。180° 用时 0.33s（§2.4）")]
@@ -45,18 +60,23 @@ public class UnitView : MonoBehaviour
     private bool flipXState = false;   // 步兵镜像当前状态（带死区保持）
 
     // 排序层 ID 缓存：排序层名解析只在启动做一次。
-    // （每帧写 sr.sortingLayerName 会让 Unity 每次做一遍名字→ID 查找，白白浪费。）
     private static int worldSpriteLayerId = int.MinValue;
     private int lastSortingOrder = int.MinValue;
+    private int lastSortingLayer = int.MinValue;
 
     void Awake()
     {
         entity = GetComponentInParent<UnitEntity>();
-        sr = GetComponent<SpriteRenderer>();
         artRoot = transform;
 
         if (recoilPivot == null && transform.parent != null)
             recoilPivot = transform.parent;
+        if (animPivot == null && transform.childCount > 0)
+            animPivot = transform.GetChild(0);
+
+        // sr 从 AnimPivot 的子对象取（四层结构下 renderer 在最底层）
+        sr = animPivot != null ? animPivot.GetComponentInChildren<SpriteRenderer>()
+                               : GetComponentInChildren<SpriteRenderer>();
 
         // 固定相位：不能用 Random.Range 每帧取（60fps 下会过热成噪点，§4.4）
         phaseA = (GetInstanceID() % 100) * 0.0628f;
@@ -67,7 +87,7 @@ public class UnitView : MonoBehaviour
 
         // 注意：不在这里改 sr.color。占位 prefab 的染色是"没接真图"时的可见性保障，
         // 强制白会把占位圆染成白圆反而看不见。真图接管时由
-        // UnitEntity.ApplyDefinitionSprite() 负责把 color 复位为白。
+        // UnitEntity.ApplyDefinitionSprite() 把 color 复位为白（补丁 ③）。
     }
 
     void Update()
@@ -80,11 +100,9 @@ public class UnitView : MonoBehaviour
         bool isMoving = (entity.hasMoveTarget || entity.target != null) && !entity.holdPosition;
         float h = SpriteWorldHeight();
 
-        // 深度排序（§6）：单位与建筑必须同层同规则，否则会出现
-        // "坦克钻进 HQ 后面还压着它"的穿帮——等距游戏最常见的排序 bug。
         UpdateSorting();
 
-        // 后坐位移对所有类型统一在这里算（ArtRoot 只管朝向/呼吸，二者互不污染）
+        // 后坐位移：写 RecoilPivot（不写 ArtRoot/AnimPivot）
         ApplyRecoil();
 
         if (entity.def.isBuilding)
@@ -108,16 +126,20 @@ public class UnitView : MonoBehaviour
     /// 深度排序（美术规格 §6）：单位与建筑共用同一层同一公式。
     /// WorldSprite 的 order = (1600 - y) * 2，取值 0…3200；
     /// FX 层从 5000 起，两层不重叠，避免特效被建筑切一半。
-    /// y 越小 order 越大 → 屏幕下方压住上方。
     /// </summary>
     void UpdateSorting()
     {
         if (sr == null) return;
-        sr.sortingLayerID = worldSpriteLayerId;
+
+        if (lastSortingLayer != worldSpriteLayerId)
+        {
+            sr.sortingLayerID = worldSpriteLayerId;
+            lastSortingLayer = worldSpriteLayerId;
+        }
 
         int order = Mathf.RoundToInt((1600f - entity.transform.position.y) * 2f);
         // 只在变化时写：sortingOrder 是 native 属性，每帧无条件赋值在 300 单位同屏时
-        // 是 1.8 万次/秒的无谓 P/Invoke。y 不动时 order 也不动。
+        // 是 1.8 万次/秒的无谓 P/Invoke。
         if (order != lastSortingOrder)
         {
             sr.sortingOrder = order;
@@ -135,10 +157,27 @@ public class UnitView : MonoBehaviour
         return Mathf.Max(1f, entity.def.selectionRadius);
     }
 
+    /// <summary>世界单位 → 1080p 屏幕像素的换算系数（orthographicSize=300 时为 1.8）。</summary>
+    static float PixelsToWorld(float pixels, Camera cam)
+    {
+        // orthographicSize 是半高；屏幕全高 = 2*orthoSize 世界单位。
+        // 1080p 下 1080px / (2*300) = 1.8 px per world unit。
+        float pxPerUnit = (cam != null && cam.orthographicSize > 0.01f)
+            ? (Screen.height / (2f * cam.orthographicSize))
+            : 1.8f;
+        if (pxPerUnit < 0.01f) pxPerUnit = 1.8f;
+        return pixels / pxPerUnit;
+    }
+
     /// <summary>
     /// 后坐位移：世界方向 → RecoilPivot 的 local。
-    /// 旧代码把世界方向直接赋给 localPosition，rotation≠0 时会被再旋转一次，
-    /// 导致"朝右上开炮、车往左上退"。这里用父节点旋转的逆变换修正。
+    ///
+    /// 【必须做坐标变换】旧代码把世界方向直接赋给 localPosition，rotation≠0 时会被
+    /// 再旋转一次 → 载具朝右上开炮、车却往左上退。
+    ///
+    /// 【幅度按像素定，不用比例】旧实现 recoil=0.15 × 0.3 = 0.045 世界单位 ≈ 0.08px，
+    /// 人眼阈约 1px —— 这就是"开火完全没后坐感"的真正原因。
+    /// 现按 1080p 像素值反算世界单位：步枪 1.5px / 坦克 3px / 火炮 5px。
     /// </summary>
     void ApplyRecoil()
     {
@@ -146,81 +185,71 @@ public class UnitView : MonoBehaviour
 
         if (entity.recoil <= 0f)
         {
-            recoilPivot.localPosition = Vector3.zero;
+            // 只在非零时写，避免与其它层抢同一属性
+            if (recoilPivot.localPosition != Vector3.zero)
+                recoilPivot.localPosition = Vector3.zero;
             return;
         }
 
-        float h = SpriteWorldHeight();
         // 回弹曲线 easeOut：起始猛、快速衰减，符合真实反冲（§5.1）
         float r = entity.recoil * entity.recoil;
-        float offset = h * RecoilAmountOf(entity.def.unitId) * r;
+        float offsetWorld = PixelsToWorld(RecoilPixelsOf(entity.def.unitId), Camera.main) * r;
 
         Vector3 worldBack = new Vector3(-Mathf.Cos(entity.facing), -Mathf.Sin(entity.facing), 0f);
-        // localPosition 是相对父节点（根，位置由逻辑驱动、不旋转）的空间。
-        // 这里显式做一次世界→父空间的旋转变换，即使根当前 rotation 为 identity 也不省略，
-        // 避免以后根节点引入旋转时又退回同一个 bug。
         Transform parent = recoilPivot.parent;
-        Vector3 localBack = parent != null
-            ? parent.InverseTransformDirection(worldBack)
-            : worldBack;
-        recoilPivot.localPosition = localBack * offset;
+        Vector3 localBack = parent != null ? parent.InverseTransformDirection(worldBack) : worldBack;
+        recoilPivot.localPosition = localBack * offsetWorld;
     }
 
-    /// <summary>后坐幅度 A（×贴图高），按武器类型取值，见规格 §5.3 表。</summary>
-    static float RecoilAmountOf(string unitId)
+    /// <summary>后坐幅度（1080p 屏幕像素），按武器类型。人眼阈约 1px，低于它等于没有。</summary>
+    static float RecoilPixelsOf(string unitId)
     {
         switch (unitId)
         {
-            case "rifleman":  return 0.010f;
-            case "bazooka":   return 0.020f;
-            case "sniper":    return 0.010f;
-            case "mgtower":   return 0.015f;
-            case "tank":      return 0.025f;
-            case "heavytank": return 0.032f;
-            case "artillery": return 0.040f;
-            case "atcannon":  return 0.030f;   // 建筑抖动 ×2
-            default:          return 0.020f;
+            case "rifleman":  return 1.5f;
+            case "sniper":    return 1.5f;
+            case "bazooka":   return 2.5f;
+            case "mgtower":   return 1.5f;
+            case "tank":      return 3.0f;
+            case "heavytank": return 4.0f;
+            case "artillery": return 5.0f;
+            case "atcannon":  return 2.5f;
+            default:          return 2.0f;
         }
     }
 
     // ---------------------------------------------------------------- 建筑
     void UpdateBuildingVisual(bool isMoving, float h, float t)
     {
-        // 建筑不旋转：zDeg ≡ 0（§7 总表 D 类）
-        artRoot.localRotation = Quaternion.identity;
+        // 建筑不旋转：zDeg ≡ 0（§7 总表 D 类）。写 ArtRoot.localRotation。
+        if (artRoot.localRotation != Quaternion.identity)
+            artRoot.localRotation = Quaternion.identity;
 
-        // 开火震颤：固定 14Hz 正弦 + 每栋随机相位。
-        // 旧代码用 Random.Range 每帧取，60fps 下会过热成噪点，且幅度 0.02 单位
-        // 在 60 单位的建筑上几乎不可见。
-        if (entity.recoil > 0f)
-        {
-            float a = h * 0.0015f * 2f;   // 建筑 ×2（§5.3 表末行）
-            float k = entity.recoil * entity.recoil;
-            artRoot.localPosition = new Vector3(
-                a * k * Mathf.Sin(t * 90f + phaseA),
-                a * k * Mathf.Sin(t * 90f + phaseB),
-                0f);
-        }
-        else
-        {
-            artRoot.localPosition = Vector3.zero;
-        }
-        artRoot.localScale = Vector3.one;
+        // 开火震颤：固定 14Hz 正弦 + 每栋随机相位，写 AnimPivot.localPosition。
+        // 旧代码用 Random.Range 每帧取，60fps 下会过热成噪点。
+        float a = h * 0.0015f * 2f;   // 建筑 ×2（§5.3 表末行）
+        float k = entity.recoil * entity.recoil;
+        SetAnimPosition(new Vector3(
+            a * k * Mathf.Sin(t * 90f + phaseA),
+            a * k * Mathf.Sin(t * 90f + phaseB),
+            0f));
+        SetAnimScale(Vector3.one);
     }
 
     // ---------------------------------------------------------------- 载具
     void UpdateVehicleVisual(bool isMoving, float h, float t, float dt, bool wheeled)
     {
         // === 朝向：zDeg = facing*Rad2Deg − spriteForwardDeg（§2.2）===
-        // 素材的"前"实测朝图片 +X（tank 车体主轴 177°≈水平），不是 +Y。
-        // 旧的 +90 假设素材朝上，导致向右开时炮管被转到 114.6°（朝左上）。
+        // 【没有 +90f】素材的"前"实测朝图片 +X，不是 +Y。+90 等价于"假设素材朝上"，
+        // 实测 tank 炮管朝 +23.2°，保留 +90 会把误差从 23° 放大到 67°。
+        // spriteForwardDeg 从 UnitDefinition 读，不许在此写死 0（补丁 F / I / L）。
         float zDeg = entity.facing * Mathf.Rad2Deg - entity.def.spriteForwardDeg;
 
         float rate = wheeled ? wheeledTurnRate : trackedTurnRate;
         Quaternion target = Quaternion.Euler(0f, 0f, zDeg);
         artRoot.localRotation = Quaternion.RotateTowards(artRoot.localRotation, target, rate * dt);
 
-        // === 运动表现（§4.2 履带 / §4.3 轮式）===
+        // === 运动表现（§4.2 履带 / §4.3 轮式），写 AnimPivot ===
         float dy = 0f;
         float rollDeg = 0f;
 
@@ -234,7 +263,7 @@ public class UnitView : MonoBehaviour
         else if (isMoving)
         {
             // 履带：地面颠簸，幅度很小，只表明"不是死物"。
-            // 【关键】履带车不弹跳——弹跳是轮式/生物特征，给坦克加弹跳是纸片感第一来源。
+            // 【关键】履带车不弹跳 —— 弹跳是轮式/生物特征，给坦克加弹跳是纸片感第一来源。
             float L = Mathf.Max(h, 1f) * 1.4f;               // 车体长边近似（§4.2）
             float pitch = 0.25f * L;                          // 履带节距
             float fTrk = Mathf.Clamp(entity.def.moveSpeed / pitch, 1.5f, 6f);
@@ -243,13 +272,12 @@ public class UnitView : MonoBehaviour
             rollDeg = 0.6f * Mathf.Sin(2f * Mathf.PI * 1.37f * fTrk * t);
         }
 
-        artRoot.localPosition = new Vector3(0f, dy, 0f);
-
-        // 车体微抖叠加在朝向上（不改 localRotation 的基准，避免与 RotateTowards 打架）
+        // 车体微抖叠加在朝向上（ArtRoot），不写 AnimPivot 的 rotation
         if (rollDeg != 0f)
-        {
             artRoot.localRotation = artRoot.localRotation * Quaternion.Euler(0f, 0f, rollDeg);
-        }
+
+        SetAnimPosition(new Vector3(0f, dy, 0f));
+        SetAnimScale(Vector3.one);
     }
 
     // ---------------------------------------------------------------- 步兵
@@ -257,7 +285,8 @@ public class UnitView : MonoBehaviour
     {
         // 步兵不旋转：素材是站立人形（主轴 91.5° 竖直、垂直拉长 2.12 倍），
         // 绕 Z 旋转会让他躺倒/倒挂，不可修复（§1）。
-        artRoot.localRotation = Quaternion.identity;
+        if (artRoot.localRotation != Quaternion.identity)
+            artRoot.localRotation = Quaternion.identity;
 
         // === 镜像：带 ±0.15 死区 ===
         // 旧逻辑 facing > ±PI/2 没有死区，正上/正下时 cos 在 0 附近抖动 → 疯狂翻转。
@@ -282,8 +311,11 @@ public class UnitView : MonoBehaviour
         float dy, rotZ, scaleY, scaleX;
         if (isMoving)
         {
-            dy     = h * 0.035f * Mathf.Abs(Mathf.Sin(phase));
-            rotZ   = 2.0f * Mathf.Sin(phase + Mathf.PI * 0.5f);
+            // bob 从 0.035·h 降到 0.020·h：原值在 21.6px 高的人物上是 0.75px @4.7Hz，
+            // 看起来像抽搐（补丁 N）。
+            dy     = h * 0.020f * Mathf.Abs(Mathf.Sin(phase));
+            // rotZ 从 ±2.0° 降到 ±1.2°，同上（补丁 N）
+            rotZ   = 1.2f * Mathf.Sin(phase + Mathf.PI * 0.5f);
             scaleY = 1f - 0.02f * Mathf.Abs(Mathf.Sin(phase));
         }
         else
@@ -294,8 +326,31 @@ public class UnitView : MonoBehaviour
         }
         scaleX = 1f - 0.08f * sinFacing;
 
-        artRoot.localPosition = new Vector3(0f, dy, 0f);
-        artRoot.localRotation = Quaternion.Euler(0f, 0f, rotZ);
-        artRoot.localScale = new Vector3(scaleX, scaleY, 1f);
+        // 步兵的 rotZ 是"摇摆"，属姿态不属朝向；写 AnimPivot 以免与 ArtRoot 的
+        // identity 约束冲突（ArtRoot 步兵恒为 0）。
+        SetAnimPosition(new Vector3(0f, dy, 0f));
+        SetAnimRotation(rotZ);
+        // 横向收缩写在 AnimPivot.localScale 的 X 上；Y 是呼吸/压缩。
+        // SpriteRenderer 那层的 localScale 恒为 one，此处不碰。
+        SetAnimScale(new Vector3(scaleX, scaleY, 1f));
+    }
+
+    // ---------------------------------------------------------------- 写入器
+    // 这三个 setter 是唯一允许写 AnimPivot 的地方。集中在此便于审查
+    // "每层只有一个写入者"这条约定。
+
+    void SetAnimPosition(Vector3 p)
+    {
+        if (animPivot != null) animPivot.localPosition = p;
+    }
+
+    void SetAnimRotation(float zDeg)
+    {
+        if (animPivot != null) animPivot.localRotation = Quaternion.Euler(0f, 0f, zDeg);
+    }
+
+    void SetAnimScale(Vector3 s)
+    {
+        if (animPivot != null) animPivot.localScale = s;
     }
 }

@@ -113,8 +113,13 @@ public static class PhaseBBootstrap
 
     static void ConfigureSpriteImporters()
     {
-        int ok = 0, missing = 0;
+        // 三级结果分开计数，避免"成功了 N 张"掩盖"失败了哪张为什么"。
+        //   ok       —— 写入并 SaveAndReimport 成功
+        //   missing  —— 文件不存在（多半是没跑 tools/key_assets.py）
+        //   failed   —— 文件在、但拿不到 TextureImporter 或回读校验不一致（必须带原因）
+        int ok = 0, missing = 0, failed = 0;
         var missingFiles = new System.Text.StringBuilder();
+        var failedFiles = new System.Text.StringBuilder();
 
         foreach (var spec in SpriteSpecs)
         {
@@ -131,7 +136,12 @@ public static class PhaseBBootstrap
             {
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
                 ti = AssetImporter.GetAtPath(path) as TextureImporter;
-                if (ti == null) { missing++; missingFiles.Append(spec.file).Append(' '); continue; }
+                if (ti == null)
+                {
+                    failed++;
+                    failedFiles.Append(spec.file).Append("(拿不到 TextureImporter) ");
+                    continue;
+                }
             }
 
             ti.textureType = TextureImporterType.Sprite;
@@ -180,12 +190,51 @@ public static class PhaseBBootstrap
             }
 
             ti.SaveAndReimport();
+
+            // 回读校验：SaveAndReimport 可能被 Library 缓存吞掉，不校验就只是"我以为写进去了"。
+            // 这是"信号连了但没执行"的典型场景 —— ti.textureType = Sprite 赋值成功，
+            // 但 reimport 后仍是 Default，游戏里 Sprite 字段为空、方块照样显示。
+            var after = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (after == null || after.textureType != TextureImporterType.Sprite)
+            {
+                failed++;
+                failedFiles.Append(spec.file)
+                          .Append("(回读 textureType=")
+                          .Append(after == null ? "null" : after.textureType.ToString())
+                          .Append(") ");
+                continue;
+            }
+            if (!Mathf.Approximately(after.spritePixelsPerUnit, spec.ppu))
+            {
+                failed++;
+                failedFiles.Append(spec.file)
+                          .Append("(PPU 回读=").Append(after.spritePixelsPerUnit.ToString("0.00"))
+                          .Append(" 期望=").Append(spec.ppu.ToString("0.00")).Append(") ");
+                continue;
+            }
             ok++;
         }
 
-        Debug.Log($"[PhaseC] 导入参数已写入 {ok} 张（Art/Keyed）。" +
-                  (missing > 0 ? $" 缺失 {missing} 张：{missingFiles} —— 先跑 python3 tools/key_assets.py"
-                               : " 全部命中。"));
+        if (failed > 0)
+        {
+            Debug.LogError($"[PhaseC] 导入参数写入失败 {failed} 张：{failedFiles}" +
+                           "—— 这几张在游戏里不会显示真图（会退回方块/空白）。");
+        }
+        if (missing > 0)
+        {
+            Debug.LogError($"[PhaseC] 缺失 {missing} 张：{missingFiles}" +
+                           "—— 先跑 python3 tools/key_assets.py 生成 Art/Keyed/。");
+        }
+        if (ok == SpriteSpecs.Length)
+        {
+            Debug.Log($"[PhaseC] ✅ 导入参数已写入 {ok} 张（Art/Keyed），全部通过回读校验" +
+                      "（textureType=Sprite + PPU 一致 + alphaIsTransparency）。");
+        }
+        else
+        {
+            Debug.LogWarning($"[PhaseC] 导入参数写入 {ok}/{SpriteSpecs.Length} 张，" +
+                             $"失败 {failed} 张、缺失 {missing} 张。详见上方 LogError。");
+        }
     }
 
 
@@ -281,27 +330,66 @@ public static class PhaseBBootstrap
         MakeFxPrefab("AttackIndicatorPrefab", circleSprite, new Color(1f, 0.3f, 0.2f, 0.7f), 0.8f);
     }
 
+    /// <summary>
+    /// 四层预制体骨架（制作人裁定一 + docs/animation-facing-spec-v1.md §5.2）：
+    ///
+    ///   UnitPrefab              (UnitEntity)               transform.position  只由逻辑写
+    ///    └ RecoilPivot                                      localPosition       只写后坐
+    ///       └ ArtRoot           (UnitView)                  localRotation       只写朝向
+    ///          └ AnimPivot                                  localPosition+scale 只写呼吸/弹跳
+    ///             └ SpriteRenderer                          localScale ≡ one    任何代码不许碰
+    ///
+    /// 为什么必须四层而不是三层：
+    ///   三层时 ArtRoot 同时写 rotation（朝向）和 scale（呼吸），呼吸一旦写 localScale
+    ///   就会把 PPU 换算出的显示尺寸一起覆写掉 —— 尺寸基准每帧被重置成约 1。
+    ///   拆出 AnimPivot 后，尺寸在导入期由 PPU 决定，运行时无人碰 renderer 的 scale。
+    ///
+    /// sr.color 必须是 Color.white：占位时代给 UnitPrefab 染了蓝、BuildingPrefab 染了灰蓝。
+    /// 不清掉的话真图接进来会整张染成蓝色，而错误表现是"图是蓝的"，很难联想到是 prefab 的 tint。
+    /// 占位可见性改由占位图自身的颜色承担（placehold 的 PNG 本身是白色，靠 tint 上色），
+    /// 因此这里对占位也保持 tint，只在真图接管时由 ApplyDefinitionSprite 复位为白。
+    /// </summary>
     static void MakeUnitPrefab(string name, Sprite placeholder, Color tint)
     {
         var root = new GameObject(name);
         var entity = root.AddComponent<UnitEntity>();
 
+        // 第 2 层：只写后坐位移
         var recoilPivot = new GameObject("RecoilPivot");
         recoilPivot.transform.SetParent(root.transform, false);
         recoilPivot.transform.localPosition = Vector3.zero;
+        recoilPivot.transform.localRotation = Quaternion.identity;
+        recoilPivot.transform.localScale = Vector3.one;
 
+        // 第 3 层：只写朝向旋转，挂 UnitView
         var artRoot = new GameObject("ArtRoot");
         artRoot.transform.SetParent(recoilPivot.transform, false);
         artRoot.transform.localPosition = Vector3.zero;
-        artRoot.transform.localScale = Vector3.one;   // 恒为 1，尺寸全交给 PPU
+        artRoot.transform.localRotation = Quaternion.identity;
+        artRoot.transform.localScale = Vector3.one;
 
-        var sr = artRoot.AddComponent<SpriteRenderer>();
+        // 第 4 层：只写呼吸/弹跳的 pos+scale
+        var animPivot = new GameObject("AnimPivot");
+        animPivot.transform.SetParent(artRoot.transform, false);
+        animPivot.transform.localPosition = Vector3.zero;
+        animPivot.transform.localRotation = Quaternion.identity;
+        animPivot.transform.localScale = Vector3.one;
+
+        // 第 5 层：SpriteRenderer，localScale 恒为 one，不挂任何脚本
+        var srGo = new GameObject("Sprite");
+        srGo.transform.SetParent(animPivot.transform, false);
+        srGo.transform.localPosition = Vector3.zero;
+        srGo.transform.localRotation = Quaternion.identity;
+        srGo.transform.localScale = Vector3.one;      // 恒为 1，尺寸全交给 PPU
+
+        var sr = srGo.AddComponent<SpriteRenderer>();
         sr.sprite = placeholder;
-        sr.color = tint;
+        sr.color = tint;                              // 占位期用 tint；真图接管时复位为白
         if (flashMaterial != null) sr.sharedMaterial = flashMaterial;
 
         var view = artRoot.AddComponent<UnitView>();
         view.recoilPivot = recoilPivot.transform;
+        view.animPivot = animPivot.transform;
 
         entity.spriteRenderer = sr;
 
@@ -394,16 +482,25 @@ public static class PhaseBBootstrap
         bar.producibleUnits = new[] { map["rifleman"], map["bazooka"], map["sniper"] };
         war.producibleUnits = new[] { map["tank"], map["heavytank"], map["artillery"], map["harvester"] };
 
-        // P0-4 spriteForwardDeg 逐张标定（动画规格 §2.3）
-        // 含义：素材里"车头/炮管指向"相对图片 +X 轴的逆时针角（度）。
-        // 只对载具有意义；步兵走镜像、建筑不旋转，填了也不读。
-        map["tank"].spriteForwardDeg      = 0f;    // 高置信：主轴 177°≈水平
-        map["heavytank"].spriteForwardDeg = -15f;  // 中：素材本身被生成歪了 15°
-        map["artillery"].spriteForwardDeg = 0f;    // 低：TODO 缺独立素材，复用 tank 贴图
-        // TODO: harvester 剪影近方形（长宽比 1.02），测量不可靠 —— 必须目视复核（§2.3）
-        map["harvester"].spriteForwardDeg = -45f;
+        // === P0-4 spriteForwardDeg 初值（制作人裁定 L：口径统一为「炮管锚」） ===
+        //
+        // 定义：素材里"炮管/车头指向"相对图片 +X 轴的逆时针角（度）。
+        // 公式：zDeg = facing*Rad2Deg − spriteForwardDeg（没有 +90f）。
+        //
+        // 【这 4 个值是初值，不是终值】
+        // 来源是轮廓测量（炮管锚口径），允许 ±10° 误差，必须在 PPU 改完、
+        // 单位在屏幕上能看清之后目视复核。复核只改这里的数值，不改代码 ——
+        // 所以放在 UnitDefinition 资产字段里，而不是硬编码在 UnitView。
+        //
+        // 为什么不能用 PCA 主轴：主轴有 180° 周期，只描述"长轴方向"不描述
+        // "车头在哪一端"，有一半概率判反 180° 且代码不报错，只表现为车倒着开。
+        map["tank"].spriteForwardDeg      = -23.2f;  // TODO 需目视复核（炮管锚）
+        map["heavytank"].spriteForwardDeg = -11.3f;  // TODO 需目视复核（美术曾给 +16，用 PCA 判反，作废）
+        map["artillery"].spriteForwardDeg = -23.2f;  // TODO 复用 tank 贴图，同 tank
+        map["harvester"].spriteForwardDeg = 223f;    // TODO 需目视复核（= −137，推土铲朝左下）
+        // 步兵（rifleman/bazooka/sniper）走镜像、建筑不旋转，此字段不参与计算。
 
-        // P0-5 def.sprite 接线（全工程原本的空白点：UnitRegistry 只 Instantiate，从不读 sprite）
+        // === P0-5 def.sprite 接线（全工程原本的空白点） ===
         WireSprites(map);
 
         return map;
@@ -435,6 +532,10 @@ public static class PhaseBBootstrap
         // TODO: artillery 缺独立素材，复用 tank（同上）
         spriteOf["artillery"] = "tank";
 
+        // 补丁 C：复用必须显式打日志，否则以后没人知道这是复用而非独立素材
+        Debug.LogWarning("[PhaseC] 'sniper' 无独立素材，复用 'rifleman' 贴图。TODO: 缺独立素材，待美术补图。");
+        Debug.LogWarning("[PhaseC] 'artillery' 无独立素材，复用 'tank' 贴图。TODO: 缺独立素材，待美术补图。");
+
         int wired = 0;
         var missing = new System.Text.StringBuilder();
 
@@ -453,7 +554,12 @@ public static class PhaseBBootstrap
             Sprite sp = AssetDatabase.LoadAssetAtPath<Sprite>(path);
             if (sp == null)
             {
-                missing.Append(unitId).Append("→").Append(path).Append(' ');
+                // 静默失败是这次坑的根因：textureType=0 时 LoadAssetAtPath<Sprite> 返回
+                // null 且不报错。所以这里必须 LogError 而不是 LogWarning。
+                Debug.LogError($"[PhaseC] '{unitId}' 的 sprite 加载失败：{path} 返回 null。" +
+                               $"最常见原因：该 PNG 的 textureType 不是 Sprite（=8）。" +
+                               $"先跑 python3 tools/key_assets.py 再重跑一键搭建。");
+                missing.Append(unitId).Append("→null ");
                 continue;
             }
 
@@ -463,7 +569,7 @@ public static class PhaseBBootstrap
         }
 
         Debug.Log($"[PhaseC] def.sprite 接线完成 {wired}/{map.Count} 个 UnitDefinition。" +
-                  (missing.Length > 0 ? $" 未接线：{missing}（先跑 python3 tools/key_assets.py）" : " 全部命中。"));
+                  (missing.Length > 0 ? $" 未接线：{missing}" : " 全部命中。"));
     }
 
     // ---------------- 地图 ----------------
@@ -565,6 +671,20 @@ public static class PhaseBBootstrap
         var input = mgr.AddComponent<TouchInputSystem>();
         input.mainCamera = cam;
         input.worldBounds = new Vector2(2400, 1600);
+
+        // 【补丁 A / M：必须在给 mainCamera 赋值之后】修一个会让整个画面炸掉的 bug。
+        //
+        // TouchInputSystem 的字段默认 minZoom=5 / maxZoom=20，而本场景
+        // cam.orthographicSize = 300，第 166 行每次都做
+        //   orthographicSize = Clamp(orthographicSize + zoomDelta, minZoom, maxZoom)
+        // 玩家第一次双指缩放，正交半高会从 300 被瞬间夹到 20（视野缩小 15 倍）。
+        // 而美术的 PPU 全表、1.8px/单位、hq 上屏 144px 全部只在 orthographicSize=300 时成立。
+        //
+        // 用相对推导而不是写死 150/450：写死等于把 orthographicSize 抄两遍，
+        // 以后调基准视野必有一处忘改 —— 这个 bug 的成因正是「同一件事写在两个地方」，
+        // 用写死的方式修等于埋同样的雷。
+        input.minZoom = cam.orthographicSize * 0.5f;    // 150
+        input.maxZoom = cam.orthographicSize * 1.5f;    // 450
 
         // UI Canvas + UIManager
         var ui = BuildUI(mgr);

@@ -414,6 +414,11 @@ if (recoil > 0f) recoil = Mathf.Max(0f, recoil - dt * recoilDecay);
 ```
 **回弹曲线用 easeOut：** `r = recoil * recoil` ——后坐起始猛、快速衰减，符合真实反冲。
 
+> **v1.4 补一个必须标红的坑：点火值必须是 `1f`，不是 `0.15f`。**
+> `UnitEntity.cs` 现在写的是 `recoil = 0.15f;`（旧代码遗留）。因为幅度乘的是 `recoil²`，0.15 → `r = 0.0225`，**只剩标称值的 2.25%**；而且衰减到 0 只需 `0.15 / (1/0.18) = 0.027s = 1.6 帧`（设计 0.18s = 11 帧）。
+> 结果：tank 后坐实际 **0.068px**、存活 **1.6 帧**。**两处缺陷叠加，等于没有。** 详见 §19.1。
+> **"归一化到 0..1" 这句话必须落实为字面上的 `1f`**——只要点火值不是 1，§5.3 那张像素表就是一张废纸。
+
 ### 5.2 问题二：后坐方向与旋转共用同一个 transform
 
 ```csharp
@@ -477,6 +482,8 @@ float offset = offsetWorld * (recoil * recoil);   // easeOut
 | 重炮 heavytank | 18f (300ms) | 10f 顿帧 | 16f | 44f (733ms) | **4.0 px** | 0.22s | — |
 | 火炮 artillery | 24f (400ms) | 10f 顿帧 | 20f | 54f (900ms) | **5.0 px** | 0.26s | 2.5s |
 | 防空炮 atcannon（建筑） | 10f | 6f | 10f | 26f (433ms) | **3.0 px**（走建筑抖动） | 0.12s | 1.8s |
+
+> **这张表的"目标像素"是峰值，成立前提是点火值 = 1.0。** 见 §5.1 的红字与 §19.1。当前实现点火 0.15 → 全表 ×0.0225。
 
 **为什么用像素而不用 h 的比例（v1 的做法）**：`h` 比例在不同尺寸单位上给出完全不同的视觉强度。tank（50px）上 1.26px 尚可，rifleman（27px）上 0.54px 就是不可见——**同一套比例参数在两类单位上一边够用一边失效**。而"后坐要看得见"这个需求本身是像素级的（人眼分辨阈约 1px），所以参数就该按像素定，世界值由 `pxPerUnit` 反算。
 
@@ -575,8 +582,8 @@ sr.sprite = sprite;   // PPU 已在导入期写好，运行时无需任何代码
 
 ```
 UnitEntity        位置：逻辑移动。任何表现层不许写这里
- └─ RecoilPivot   后坐位移：只写 localPosition（§5.2）  ← UnitView 挂在【这一层】
-     └─ ArtRoot   朝向：只写 localRotation（§2.2）
+ └─ RecoilPivot   后坐位移：只写 localPosition（§5.2）
+     └─ ArtRoot   朝向：只写 localRotation（§2.2）   ← UnitView 实际挂这层（可接受，见下）
          └─ AnimPivot  呼吸/压缩/抖动：只写 localPosition + localScale
              └─ SpriteRenderer   ← 贴图。谁的 localScale 都不许碰
 ```
@@ -587,8 +594,16 @@ UnitEntity        位置：逻辑移动。任何表现层不许写这里
 > 真正不能接受的是写 `transform.xxx`（自己所在节点）——那样挂在哪层就污染哪层。**规则改写为：`UnitView` 里除 `Awake` 外不许出现裸的 `transform.localPosition / localRotation / localScale`，一律走显式引用。**
 > 若挂错（比如挂 `AnimPivot` 上又写 `transform.localPosition`），会出现 `RecoilPivot` 与 `AnimPivot` **抢同一个 `localPosition`**，表现为后坐和呼吸互相覆盖、走起来一顿一顿。
 
-**为什么必须拆出 `AnimPivot`（这是初版的错）：**
-`UnitView.cs:92` 与 `:96` 对 **SpriteRenderer 所在节点**直接赋值 `localScale = new Vector3(1, 1+bob, 1)`。该节点若同时承担尺寸基准，每帧都会被重置成 ~1，尺寸基准消失，单位在行走时忽大忽小、并因像素密度跳变而"拉伸模糊"。把 bob 隔离到最内层 `AnimPivot` 后：
+**为什么建议拆出 `AnimPivot`（v1.4 收窄了这条的严重程度）：**
+
+`UnitView.cs` 在 `UpdateInfantryVisual` 末尾对 **SpriteRenderer 所在节点**（`ArtRoot`）直接赋值 `artRoot.localScale = new Vector3(scaleX, scaleY, 1f)`。
+
+> **v1.4 自我校准**：我 v1.1–v1.3 一直写"尺寸基准会完全消失"。**在 PPU 方案落地后这句话不再成立**——尺寸基准现在由 `TextureImporter.spritePixelsPerUnit` 决定，`localScale` 的 1.0 只是"不额外缩放"，写成 `0.92` 也只是"额外压 8%"，基准不会丢。
+> 所以这条的真实代价是**精度损失，不是基准丢失**：`scaleX = 1 − 0.08·|sin(facing)|` 在 27px 宽的人形上压掉约 1.6px，非整数倍重采样 → **横向轻微模糊**；`scaleY` 的 2% 更轻。art-model-director 说的"会拉伸模糊"是准确的，我说的"基准消失"在当前实现下不成立，**以他的说法为准**。
+> 拆分 `AnimPivot` 的理由因此降级为：① 消除 8%/2% 的非整数采样模糊（把缩放限制在 δ<0.04 的更小量级）；② 避免以后有人真把尺寸写回 `localScale` 时重新踩坑。**是优化，不是阻塞项。**
+
+把 bob 隔离到最内层 `AnimPivot` 后：
+
 - `SpriteRenderer.localScale` 恒为 `Vector3.one`（**任何代码都不许写它**）
 - 尺寸基准在 `SpriteRenderer` 上通过 PPU 决定，一次设定
 - `AnimPivot.localScale = Vector3.one * (1 ± δ)`，δ 见 §4 各表（δ 恒 < 0.04，绝不会缩到 0 附近，与初始约 1 的基准天然兼容）
@@ -1046,9 +1061,11 @@ float zDeg = entity.facing * Mathf.Rad2Deg - def.spriteForwardDeg;
 
 ### 17.3 关于 `UnitView` 挂载层级
 
-你提的"改造时要确认 `UnitView` 挂在 RecoilPivot 而不是 SpriteRenderer 上"，**我核实了：`UnitView` 目前没有任何挂载点**——全工程只有 `UnitView.cs` 自己的类定义，`PhaseBBootstrap` 创建预制体时没挂它。所以这是**要新建**的挂载，不是"确认"。
+> **v1.4 更正**：我在 v1.3 写过"`UnitView` 目前没有任何挂载点"，**这条已过期**。当前 `PhaseBBootstrap.cs:303` 已经在 `ArtRoot` 上 `AddComponent<UnitView>()` 并显式注入 `view.recoilPivot`。详见 §7.1 的 v1.4 修正。
 
-已在 §7 补了判断标准：`UnitView` 所在节点的 `localPosition` 只被后坐写过、`localRotation` 恒零、`localScale` 恒一，三条全符合才算挂对。
+**结论改为：挂载点不重要，通道唯一才重要。** 现有挂法（挂 `ArtRoot`、持 `recoilPivot` 引用）是可行的，因为它写的是 `recoilPivot.localPosition` 和 `artRoot.localRotation/localPosition/localScale` 三个显式引用，没有裸写 `transform.xxx`，通道不串。
+
+**唯一硬规则**：`UnitView` 里除 `Awake` 外不许出现裸的 `transform.localPosition / localRotation / localScale`。挂了四层结构后又写 `transform.xxx`，等于把 `ArtRoot` 和 `AnimPivot` 的通道合并，回到"后坐与呼吸互相覆盖"。
 
 ### 17.4 爆炸尺寸：你的发现比你说的更严重，已核实
 
@@ -1071,3 +1088,99 @@ float zDeg = entity.facing * Mathf.Rad2Deg - def.spriteForwardDeg;
 **建议**：给 `Art/Units/` 和 `Art/Effects/` 各配一个 `TextureImporter` Preset（Sprite / Single / alphaIsTransparency / 对应 PPU），以后拖图进来自动生效。**这比写一次性脚本更根治**——一次性脚本只修当前 24 张，下次美术加图还会错。这条我写在 §13.3 末尾。
 
 ---
+
+## 19. 主程序当前实现与本规格的差异清单（v1.4 新增）
+
+> 我核了 `UnitView.cs`（356 行，四层结构已落地）、`UnitEntity.cs`、`PhaseBBootstrap.cs`、`TouchInputSystem.cs` 的当前状态。**先说结论：四层结构、通道归属、`0.020f`/`1.2°`、像素化后坐、`spriteForwardDeg` 读字段——这五条都已经按规格实现了，做得对。** 下面是仍对不上的地方，按严重程度排。
+
+### 19.1 P0：后坐仍然看不见，因为点火值是 0.15 而不是 1.0
+
+这是本轮最要紧的一条，**它让 `PixelsToWorld` 那一整套像素化工作基本归零**。
+
+`ApplyRecoil()` 里：
+
+```csharp
+float r = entity.recoil * entity.recoil;                                  // r = recoil²
+float offsetWorld = PixelsToWorld(RecoilPixelsOf(unitId), Camera.main) * r;
+```
+
+而 `UnitEntity.cs:195` 开火时写的是 **`recoil = 0.15f;`**（旧代码遗留）。
+
+代入 `recoil = 0.15` → `r = 0.0225` → 幅度只有标称值的 **2.25%**：
+
+| 单位 | `RecoilPixelsOf` 标称 | 实际生效像素 | 判定 |
+|---|---|---|---|
+| rifleman | 1.5 px | **0.034 px** | 完全不可见 |
+| bazooka | 2.5 px | 0.056 px | 完全不可见 |
+| tank | 3.0 px | **0.068 px** | 完全不可见 |
+| heavytank | 4.0 px | 0.090 px | 完全不可见 |
+| artillery | 5.0 px | 0.113 px | 完全不可见 |
+
+**更糟的是持续时间也一起塌了。** `recoilDecay = 1/0.18`（每秒衰减 5.56），从 0.15 衰减到 0 只需：
+
+```
+0.15 / (1/0.18) = 0.027 s = 1.6 帧（60fps）
+```
+
+**设计要的是 0.18 s = 11 帧，实际 1.6 帧。** 也就是说后坐既不可见（0.07px）又只活 1.6 帧，两个缺陷叠在一起——这正是"开火完全没有打击感"的完整解释。
+
+**修法（一行）**：`UnitEntity.cs:195` `recoil = 0.15f;` → **`recoil = 1f;`**
+
+> 这条我在 §5.1 写过"`recoil` 归一化到 0..1，开火时 `recoil = 1f`"，§17 也强调过"不是参数偏小，是维度错了"。**但文档里两个地方（§5.1 的新写法、§5.3 的旧例）都出现过 `0.15`，主程序照着旧例写了。这是我的文档瑕疵，不是他的实现问题。** 本轮把 §5.3 的老例子也标注清楚。
+
+### 19.2 P1：`fTrk` 把画布高当成车体长边，履带频率偏高 44%
+
+```csharp
+float L     = Mathf.Max(h, 1f) * 1.4f;   // 代码注释写"车体长边近似"
+float pitch = 0.25f * L;
+float fTrk  = Mathf.Clamp(entity.def.moveSpeed / pitch, 1.5f, 6f);
+```
+
+`h` 是**贴图世界高度**（竖直方向），而"车体长边"是**水平方向**的宽度。tank 素材 254×145（长宽比 1.75），长边在 X 方向：
+
+| 单位 | `h`（竖直高） | 代码 `L = h×1.4` | 真实长边（画布宽） | `fTrk` 代码值 | `fTrk` 正确值 | 偏差 |
+|---|---|---|---|---|---|---|
+| tank（speed 60） | 28 | 39.2 | **28** | 6.12 → clamp **6** | 8.57 → clamp **6** | 都撞上限，**此例无差** |
+| heavytank（speed 45） | 32 | 44.8 | **32** | **4.02** | **5.62** | **偏低 40%** |
+
+**结论有偏差但不算严重**：tank 因为速度高，两个算法都撞到 6Hz 上限；heavytank 本该 5.62Hz，现在 4.02Hz，履带颠簸比设计慢 40%。观感上是"重坦的接地感比中坦还迟钝"，而实物应该反过来（重坦节距更大但速度更慢，实际频率接近）。
+
+**修法**：`L` 改用宽度，或直接给 `UnitDefinition` 加 `spriteLongAxis` 字段按 §2.3 测量值填（tank 28 / heavytank 32）。**优先级低于 19.1，可以下轮一起改。**
+
+### 19.3 P2：`artcannon` 后坐像素从 3.0 被改成 2.5，无理由
+
+`RecoilPixelsOf` 里 `case "atcannon": return 2.5f;`，文档 §5.3 是 **3.0 px**。
+
+单看这一处无伤大雅（0.5px），但它暴露一个模式：**规格表里的数值被"顺手调了一下"没人说为什么。** 若是主程序实机看过觉得 3px 太大，那按 §七边界"手感必须真人在实机上判断"，我接受他的 2.5，**但请在代码注释里写一句"实机试过 3px 偏大"**，否则下次有人对文档又会以为是实现错了。同理要确认的还有 `bazooka`（文档 2.0 → 实现 2.5，调大了）。
+
+### 19.4 已核对无误的项（不用动）
+
+| 项 | 状态 |
+|---|---|
+| 四层结构 `UnitEntity / RecoilPivot / ArtRoot / AnimPivot / Sprite` | ✓ `PhaseBBootstrap:308-337` 已建，5 节点 |
+| `UnitView` 挂 `ArtRoot`，显式注入 `recoilPivot` + `animPivot` | ✓ 通道不串，符合 §7.1 v1.4 修正后的规则 |
+| `zDeg = facing*Rad2Deg - spriteForwardDeg`（**无 +90**） | ✓ |
+| 步兵 `0.020·h` / `1.2°` | ✓ 已从 0.035/2.0 改到位 |
+| 步兵 `rotZ` 写 `AnimPivot` 而非 `ArtRoot` | ✓ 且注释说明了理由，比规格更严谨 |
+| 后坐世界→local 变换 + 像素反算 | ✓ 公式正确（**只是被 19.1 的点火值废掉了**） |
+| 步兵镜像 ±0.15 死区 | ✓ |
+| `spriteForwardDeg` 从字段读、未写死 | ✓ |
+| `ConfigureSpriteImporters` 设 `textureType = Sprite` + PPU + pivot | ✓ 但**尚未运行过**（meta 里仍是 `textureType: 0`） |
+| `TextureImporterSettings.spriteMeshType = FullRect` | ✓ 符合 §4.0 方案 B（不引 Tight 顶点开销） |
+
+**只有一条要我提醒**：`ConfigureSpriteImporters` 是一次性 Editor 脚本，**当前 `.meta` 里依然是 `textureType: 0` / `spritePixelsToUnits: 100`，说明它还没被执行**。在它跑过之前，§7.1.1 的 PPU 表和本文件所有 px 数值都还停留在纸面。这条仍是 §10 的第 0.5 步，**不是已完成项**。
+
+---
+
+## 20. 三条验收点（v1.4 收口，可直接照着点）
+
+前面 §6 是体验级验收。这里给三条**能在 Editor 里 5 分钟量出来**的，专门验本轮的改动：
+
+| # | 操作 | 判定 | 验的是 |
+|---|---|---|---|
+| **A** | 让一辆 tank 开火，逐帧（`Ctrl+P` 暂停逐步）看 `RecoilPivot.localPosition` | 峰值 ≥ 1.5 世界单位（= 3px @1.8px/单位），且持续 **≈11 帧** | 19.1 的后坐链 |
+| **B** | 场景里同时放 tank 与 rifleman，都接真图（`Keyed/tank.png`） | tank 屏高 ≈ **50px**（±10%），rifleman ≈ **27px**（±10%），两者不同高 | PPU 是否真的生效（19.4 那条） |
+| **C** | 命令 tank 向右走、向上走各 2 秒 | 炮管始终指向前进方向，车体长轴与运动方向夹角 < 15°；**车不出现"横向平移"** | 朝向公式 |
+
+> 验收 A 的前置是 19.1 修完。**没修 A 一定不过，且不修 A 的话后面所有"打击感"讨论都是空谈**——0.068px 的后坐和 0 没有区别。
+

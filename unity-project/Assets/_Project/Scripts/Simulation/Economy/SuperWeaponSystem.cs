@@ -71,7 +71,9 @@ public class SuperWeaponSystem : MonoBehaviour
         currentCharge = 0f;
 
         // 特效
-        VFXManager.Instance?.SpawnExplosion(targetPosition, blastRadius / 15f);
+        // scale 语义 = 直径倍数（基准 64 世界单位，见 VFXManager.SpawnExplosion）。
+        // 核弹该大：blastRadius 默认 140 → 140/12 ≈ 11.7 → 直径约 750 单位（略超屏高，符合核弹）。
+        VFXManager.Instance?.SpawnExplosion(targetPosition, blastRadius / 12f);
         AudioManager.Instance?.PlayNuke();
 
         // 范围伤害（延迟 0.5 秒模拟弹道飞行）
@@ -109,7 +111,8 @@ public class SuperWeaponSystem : MonoBehaviour
             float angle = Random.Range(0, Mathf.PI * 2);
             float r = Random.Range(0, blastRadius);
             Vector3 pos = target + new Vector3(Mathf.Cos(angle) * r, Mathf.Sin(angle) * r, 0);
-            VFXManager.Instance?.SpawnExplosion(pos, 3f);
+            // 子爆：原值 3 → 直径 192 单位（占屏高 1/3），过大。改 1.5 → 直径约 96 单位。
+            VFXManager.Instance?.SpawnExplosion(pos, 1.5f);
         }
     }
 }

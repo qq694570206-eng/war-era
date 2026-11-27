@@ -23,6 +23,11 @@
       "morph": true,
       "ring_sd": 14.21,
       "despeck_dropped_px": 2128,
+      "residual_single": 0.32,
+      "residual_final": 0.32,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.4559,
       "trim": "auto",
       "bbox": [
@@ -61,12 +66,31 @@
       "tol": 12,
       "morph": false,
       "ring_sd": 9.17,
-      "despeck_dropped_px": 9,
-      "fg_ratio": 0.539,
+      "despeck_dropped_px": 276,
+      "residual_single": 7.83,
+      "residual_final": 1.03,
+      "rescued": true,
+      "seeds_extra": [
+        [
+          210,
+          211,
+          213
+        ],
+        [
+          229,
+          229,
+          230
+        ]
+      ],
+      "tols_extra": [
+        12.3,
+        12.8
+      ],
+      "fg_ratio": 0.5017,
       "trim": "auto",
       "bbox": [
-        0,
-        0,
+        2,
+        1,
         252,
         247
       ],
@@ -101,6 +125,11 @@
       "morph": false,
       "ring_sd": 19.74,
       "despeck_dropped_px": 1,
+      "residual_single": 1.17,
+      "residual_final": 1.17,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.5816,
       "trim": "auto",
       "bbox": [
@@ -140,6 +169,11 @@
       "morph": false,
       "ring_sd": 26.62,
       "despeck_dropped_px": 4,
+      "residual_single": 0.98,
+      "residual_final": 0.98,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.52,
       "trim": "auto",
       "bbox": [
@@ -179,6 +213,11 @@
       "morph": false,
       "ring_sd": 85.32,
       "despeck_dropped_px": 1,
+      "residual_single": 1.35,
+      "residual_final": 1.35,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.7679,
       "trim": "auto",
       "bbox": [
@@ -218,6 +257,11 @@
       "morph": false,
       "ring_sd": 0.66,
       "despeck_dropped_px": 125,
+      "residual_single": 0.09,
+      "residual_final": 0.09,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.5989,
       "trim": "auto",
       "bbox": [
@@ -256,14 +300,33 @@
       "tol": 18,
       "morph": true,
       "ring_sd": 27.0,
-      "despeck_dropped_px": 11044,
-      "fg_ratio": 0.5688,
+      "despeck_dropped_px": 130,
+      "residual_single": 2.77,
+      "residual_final": 0.89,
+      "rescued": true,
+      "seeds_extra": [
+        [
+          223,
+          222,
+          220
+        ],
+        [
+          246,
+          245,
+          243
+        ]
+      ],
+      "tols_extra": [
+        10.0,
+        10.0
+      ],
+      "fg_ratio": 0.4912,
       "trim": "auto",
       "bbox": [
         1,
-        19,
+        34,
         254,
-        236
+        233
       ],
       "out": "unity-project/Assets/_Project/Art/Keyed/mgtower.png",
       "corner_alpha": [
@@ -296,6 +359,11 @@
       "morph": false,
       "ring_sd": 0.76,
       "despeck_dropped_px": 26,
+      "residual_single": 0.57,
+      "residual_final": 0.57,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.4747,
       "trim": "auto",
       "bbox": [
@@ -335,6 +403,11 @@
       "morph": true,
       "ring_sd": 27.61,
       "despeck_dropped_px": 226,
+      "residual_single": 0.6,
+      "residual_final": 0.6,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.3183,
       "trim": "auto",
       "bbox": [
@@ -373,11 +446,36 @@
       "tol": 20,
       "morph": true,
       "ring_sd": 23.74,
-      "despeck_dropped_px": 4208,
-      "fg_ratio": 0.6305,
+      "despeck_dropped_px": 0,
+      "residual_single": 14.23,
+      "residual_final": 4.83,
+      "rescued": true,
+      "seeds_extra": [
+        [
+          213,
+          211,
+          206
+        ],
+        [
+          233,
+          231,
+          229
+        ],
+        [
+          242,
+          241,
+          238
+        ]
+      ],
+      "tols_extra": [
+        14.1,
+        10.0,
+        10.0
+      ],
+      "fg_ratio": 0.5625,
       "trim": "auto",
       "bbox": [
-        1,
+        12,
         1,
         254,
         254
@@ -413,6 +511,11 @@
       "morph": false,
       "ring_sd": 19.84,
       "despeck_dropped_px": 12,
+      "residual_single": 0.64,
+      "residual_final": 0.64,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.368,
       "trim": "auto",
       "bbox": [
@@ -452,6 +555,11 @@
       "morph": false,
       "ring_sd": 40.55,
       "despeck_dropped_px": 5,
+      "residual_single": 0.92,
+      "residual_final": 0.92,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.46,
       "trim": "auto",
       "bbox": [
@@ -490,14 +598,33 @@
       "tol": 18,
       "morph": false,
       "ring_sd": 32.89,
-      "despeck_dropped_px": 735,
-      "fg_ratio": 0.9385,
+      "despeck_dropped_px": 695,
+      "residual_single": 57.96,
+      "residual_final": 0.81,
+      "rescued": true,
+      "seeds_extra": [
+        [
+          216,
+          215,
+          211
+        ],
+        [
+          237,
+          235,
+          231
+        ]
+      ],
+      "tols_extra": [
+        10.0,
+        10.1
+      ],
+      "fg_ratio": 0.5115,
       "trim": "auto",
       "bbox": [
         0,
-        0,
+        19,
         255,
-        255
+        228
       ],
       "out": "unity-project/Assets/_Project/Art/Keyed/harvester.png",
       "corner_alpha": [
@@ -524,176 +651,125 @@
       "frames": [
         {
           "index": 0,
-          "seed": [
-            247,
-            247,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.2786
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.1,
+          "fg": 0.2537
         },
         {
           "index": 1,
-          "seed": [
-            247,
-            249,
-            251
-          ],
-          "tol": 12,
-          "fg": 0.3535
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.58,
+          "fg": 0.3389
         },
         {
           "index": 2,
-          "seed": [
-            249,
-            249,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.635
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.33,
+          "fg": 0.6238
         },
         {
           "index": 3,
-          "seed": [
-            255,
-            255,
-            255
-          ],
-          "tol": 12,
-          "fg": 0.7764
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.78,
+          "fg": 0.7124
         },
         {
           "index": 4,
-          "seed": [
-            249,
-            249,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.512
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.25,
+          "fg": 0.4978
         },
         {
           "index": 5,
-          "seed": [
-            255,
-            255,
-            255
-          ],
-          "tol": 12,
-          "fg": 0.6604
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.92,
+          "fg": 0.6104
         },
         {
           "index": 6,
-          "seed": [
-            255,
-            255,
-            255
-          ],
-          "tol": 12,
-          "fg": 0.675
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.21,
+          "fg": 0.627
         },
         {
           "index": 7,
-          "seed": [
-            255,
-            255,
-            255
-          ],
-          "tol": 12,
-          "fg": 0.7063
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.09,
+          "fg": 0.6506
         },
         {
           "index": 8,
-          "seed": [
-            249,
-            249,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.6318
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.66,
+          "fg": 0.6277
         },
         {
           "index": 9,
-          "seed": [
-            251,
-            251,
-            251
-          ],
-          "tol": 12,
-          "fg": 0.668
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.46,
+          "fg": 0.6526
         },
         {
           "index": 10,
-          "seed": [
-            251,
-            251,
-            251
-          ],
-          "tol": 12,
-          "fg": 0.7275
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.35,
+          "fg": 0.7004
         },
         {
           "index": 11,
-          "seed": [
-            249,
-            249,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.509
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.27,
+          "fg": 0.4985
         },
         {
           "index": 12,
-          "seed": [
-            247,
-            247,
-            247
-          ],
-          "tol": 12,
-          "fg": 0.5144
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.62,
+          "fg": 0.5098
         },
         {
           "index": 13,
-          "seed": [
-            247,
-            247,
-            247
-          ],
-          "tol": 12,
-          "fg": 0.4758
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.52,
+          "fg": 0.4727
         },
         {
           "index": 14,
-          "seed": [
-            249,
-            249,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.5488
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 0.91,
+          "fg": 0.5391
         },
         {
           "index": 15,
-          "seed": [
-            249,
-            249,
-            249
-          ],
-          "tol": 12,
-          "fg": 0.46
+          "seed": "joint(lum+sat)",
+          "tol": null,
+          "core_near_white": 1.32,
+          "fg": 0.4456
         }
       ],
       "cell": [
         64,
         64
       ],
-      "seed": [
-        247,
-        247,
-        249
-      ],
-      "tol": 12,
-      "fg_ratio": 0.5708,
+      "seed": "joint(lum+sat)",
+      "tol": null,
+      "rule": "joint(lum+sat) 逐帧独立",
+      "fg_ratio": 0.5475,
       "trim": "off",
       "out": "unity-project/Assets/_Project/Art/Keyed/explosion.png"
     },
@@ -711,22 +787,20 @@
       "ppu": 25.6,
       "no_fill": false,
       "needs_manual_review": false,
-      "seed": [
-        253,
-        253,
-        253
-      ],
-      "tol": 12,
+      "seed": "joint(lum+sat)",
+      "tol": null,
+      "rule": "lum>235 & sat<0.08",
+      "bg_frac": 0.2975,
+      "core_near_white": 0.43,
+      "despeck_dropped_px": 80,
       "morph": false,
-      "ring_sd": 7.48,
-      "despeck_dropped_px": 81,
-      "fg_ratio": 0.7418,
+      "fg_ratio": 0.7026,
       "trim": "auto",
       "bbox": [
         0,
         0,
         255,
-        250
+        247
       ],
       "out": "unity-project/Assets/_Project/Art/Keyed/muzzle_flash.png",
       "corner_alpha": [
@@ -750,16 +824,14 @@
       "ppu": 4.27,
       "no_fill": false,
       "needs_manual_review": false,
-      "seed": [
-        255,
-        255,
-        255
-      ],
-      "tol": 12,
+      "seed": "joint(lum+sat)",
+      "tol": null,
+      "rule": "lum>235 & sat<0.08",
+      "bg_frac": 0.4734,
+      "core_near_white": 0.15,
+      "despeck_dropped_px": 965,
       "morph": false,
-      "ring_sd": 53.74,
-      "despeck_dropped_px": 960,
-      "fg_ratio": 0.533,
+      "fg_ratio": 0.5266,
       "trim": "auto",
       "bbox": [
         4,
@@ -847,11 +919,30 @@
       "tol": 12,
       "morph": false,
       "ring_sd": 10.84,
-      "despeck_dropped_px": 31,
-      "fg_ratio": 0.7423,
+      "despeck_dropped_px": 0,
+      "residual_single": 2.56,
+      "residual_final": 0.59,
+      "rescued": true,
+      "seeds_extra": [
+        [
+          227,
+          229,
+          221
+        ],
+        [
+          244,
+          244,
+          243
+        ]
+      ],
+      "tols_extra": [
+        17.6,
+        10.0
+      ],
+      "fg_ratio": 0.7375,
       "trim": "auto",
       "bbox": [
-        0,
+        2,
         2,
         255,
         250
@@ -887,6 +978,11 @@
       "morph": false,
       "ring_sd": 0.92,
       "despeck_dropped_px": 56,
+      "residual_single": 0.0,
+      "residual_final": 0.0,
+      "rescued": false,
+      "seeds_extra": [],
+      "tols_extra": [],
       "fg_ratio": 0.3967,
       "trim": "auto",
       "bbox": [
