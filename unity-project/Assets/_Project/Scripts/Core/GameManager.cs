@@ -32,6 +32,7 @@ public class GameManager : MonoBehaviour
     public int startingPower = 25;
 
     private bool gameOver = false;
+    public bool IsGameOver => gameOver;
 
     void Awake()
     {

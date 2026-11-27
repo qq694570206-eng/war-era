@@ -20,7 +20,8 @@
     {"position": [1200, 800, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
   ],
   "obstacles": [
-    {"position": [1200, 800, 0], "size": [50, 250], "type": "BuildingRuin"},
+    {"position": [1200, 695, 0], "size": [50, 40], "type": "BuildingRuin"},
+    {"position": [1200, 905, 0], "size": [50, 40], "type": "BuildingRuin"},
     {"position": [800, 500, 0], "size": [250, 50], "type": "BuildingRuin"}
   ],
   "controlPoints": [

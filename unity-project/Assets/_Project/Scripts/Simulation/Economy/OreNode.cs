@@ -25,6 +25,7 @@ public class OreNode : MonoBehaviour
     /// </summary>
     public int Harvest(int requestedAmount)
     {
+        if (requestedAmount <= 0) return 0;
         if (!isInfinite && currentAmount <= 0) return 0;
 
         int harvested = isInfinite ? requestedAmount : Mathf.Min(requestedAmount, currentAmount);

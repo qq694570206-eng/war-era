@@ -85,7 +85,7 @@ public class SaveSystem : MonoBehaviour
 
     void AutoSave()
     {
-        if (GameManager.Instance == null || GameManager.Instance.gameOver) return;
+        if (GameManager.Instance == null || GameManager.Instance.IsGameOver) return;
         SaveSkirmish(0, "自动存档");
     }
 

@@ -88,7 +88,9 @@ public class SuperWeaponSystem : MonoBehaviour
         // TODO: 接入全屏闪光特效
 
         // 范围伤害
-        foreach (var unit in UnitRegistry.Instance.GetAllUnits())
+        // Death unregisters immediately; iterate a snapshot to keep the blast stable.
+        var blastTargets = UnitRegistry.Instance.GetAllUnits().ToArray();
+        foreach (var unit in blastTargets)
         {
             if (unit == null || unit.isDead) continue;
 

@@ -1,0 +1,6 @@
+{
+    "name": "WarEra.Runtime",
+    "references": ["UnityEngine.UI", "Unity.TextMeshPro"],
+    "autoReferenced": true,
+    "noEngineReferences": false
+}

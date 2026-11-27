@@ -19,7 +19,9 @@
     {"position": [1900, 400, 0], "radius": 25, "isInfinite": true, "maxAmount": 9999}
   ],
   "obstacles": [
-    {"position": [1200, 800, 0], "size": [2400, 100], "type": "Rock"}
+    {"position": [360, 800, 0], "size": [720, 100], "type": "Rock"},
+    {"position": [1200, 800, 0], "size": [640, 100], "type": "Rock"},
+    {"position": [2040, 800, 0], "size": [720, 100], "type": "Rock"}
   ],
   "controlPoints": [
     {"position": [800, 800, 0], "type": "Vision", "radius": 50, "captureTime": 10},

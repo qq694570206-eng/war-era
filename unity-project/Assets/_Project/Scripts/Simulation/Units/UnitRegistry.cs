@@ -21,6 +21,11 @@ public class UnitRegistry : MonoBehaviour
 
     public UnitEntity SpawnUnit(UnitDefinition def, FactionDefinition faction, Vector3 position, bool isEnemy)
     {
+        if (def == null)
+        {
+            Debug.LogError("Cannot spawn a unit without a UnitDefinition.");
+            return null;
+        }
         if (def.prefab == null)
         {
             Debug.LogError($"UnitDefinition '{def.unitId}' has no prefab assigned!");
@@ -34,14 +39,7 @@ public class UnitRegistry : MonoBehaviour
             entity = go.AddComponent<UnitEntity>();
         }
 
-        // 通过反射调用 Initialize（因为它是 private）
-        // 或者改成 public — 建议在 UnitEntity 中把 Initialize 改 public
-        entity.def = def;
-        entity.faction = faction;
-        entity.isEnemy = isEnemy;
-        entity.isHarvester = def.isHarvester;
-        entity.maxHp = faction != null ? faction.GetModifiedHp(def.maxHp) : def.maxHp;
-        entity.currentHp = entity.maxHp;
+        entity.Initialize(def, faction, isEnemy);
 
         Register(entity);
         return entity;
@@ -49,6 +47,7 @@ public class UnitRegistry : MonoBehaviour
 
     public void Register(UnitEntity entity)
     {
+        if (entity == null || entity.isDead || allUnits.Contains(entity)) return;
         allUnits.Add(entity);
         if (entity.isEnemy)
             enemyUnits.Add(entity);
@@ -61,6 +60,11 @@ public class UnitRegistry : MonoBehaviour
         allUnits.Remove(entity);
         playerUnits.Remove(entity);
         enemyUnits.Remove(entity);
+    }
+
+    void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
     }
 
     /// <summary>

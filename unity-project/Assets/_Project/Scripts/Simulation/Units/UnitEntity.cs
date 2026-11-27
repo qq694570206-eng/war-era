@@ -46,7 +46,7 @@ public class UnitEntity : MonoBehaviour
         animator = GetComponentInChildren<Animator>();
     }
 
-    void Initialize(UnitDefinition definition, FactionDefinition factionDef, bool enemy)
+    public void Initialize(UnitDefinition definition, FactionDefinition factionDef, bool enemy)
     {
         def = definition;
         faction = factionDef;
@@ -60,7 +60,7 @@ public class UnitEntity : MonoBehaviour
 
     void Update()
     {
-        if (isDead) return;
+        if (isDead || def == null) return;
 
         float dt = GameClock.Instance?.DeltaTime ?? Time.deltaTime;
         animTime += dt;
@@ -186,6 +186,7 @@ public class UnitEntity : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isDead || damage <= 0f || float.IsNaN(damage) || float.IsInfinity(damage)) return;
         currentHp -= damage;
         flashTime = 0.08f;
 
@@ -203,12 +204,21 @@ public class UnitEntity : MonoBehaviour
 
     public void Die()
     {
+        if (isDead) return;
         isDead = true;
+        target = null;
+        hasMoveTarget = false;
+        UnitRegistry.Instance?.Unregister(this);
         VFXManager.Instance?.SpawnExplosion(transform.position, def.category == UnitCategory.Vehicle ? 25f : 15f);
         AudioManager.Instance?.PlayExplosion(def.category == UnitCategory.Vehicle);
 
         // 延迟销毁（等死亡动画播完）
         Destroy(gameObject, 0.8f);
+    }
+
+    void OnDestroy()
+    {
+        UnitRegistry.Instance?.Unregister(this);
     }
 
     public void CommandMove(Vector3 position)

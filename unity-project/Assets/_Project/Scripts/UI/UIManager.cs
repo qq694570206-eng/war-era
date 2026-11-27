@@ -4,39 +4,38 @@
 // ================================================================
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class UIManager : MonoBehaviour
 {
     public static UIManager Instance { get; private set; }
 
     [Header("Resource Bar")]
-    public TMP_Text oreText;
-    public TMP_Text powerText;
-    public TMP_Text techText;
+    public Text oreText;
+    public Text powerText;
+    public Text techText;
 
     [Header("Unit Info Panel")]
     public GameObject unitInfoPanel;
-    public TMP_Text unitNameText;
-    public TMP_Text unitCountText;
+    public Text unitNameText;
+    public Text unitCountText;
     public Image hpBarFill;
-    public TMP_Text hpText;
-    public TMP_Text dmgText;
-    public TMP_Text rangeText;
+    public Text hpText;
+    public Text dmgText;
+    public Text rangeText;
 
     [Header("Toast")]
     public GameObject toastPanel;
-    public TMP_Text toastText;
+    public Text toastText;
     public float toastDuration = 2f;
 
     [Header("Alert")]
     public GameObject alertPanel;
-    public TMP_Text alertText;
+    public Text alertText;
     public float alertDuration = 5f;
 
     [Header("Game Over")]
     public GameObject gameOverPanel;
-    public TMP_Text gameOverText;
+    public Text gameOverText;
 
     private float toastTimer = 0f;
     private float alertTimer = 0f;

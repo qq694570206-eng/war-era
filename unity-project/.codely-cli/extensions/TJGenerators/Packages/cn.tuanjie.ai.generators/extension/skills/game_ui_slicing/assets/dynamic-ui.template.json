@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "font_path": "REPLACE_WITH_LOCAL_CJK_FONT_PATH",
+  "canvas_scales": [1.0, 0.5],
+  "bar": {
+    "frame": "slices/health_frame.png",
+    "track": "slices/health_track.png",
+    "fill": "slices/health_fill.png",
+    "size": [600, 96],
+    "frame_border_ltrb": [24, 24, 24, 24],
+    "frame_scale": 1.0,
+    "fill_rect": [24, 24, 552, 48],
+    "fill_radius": 4,
+    "text_rect": [170, 26, 260, 42],
+    "font_size": 26,
+    "text_color": [255, 255, 255],
+    "text_stroke_width": 1,
+    "text_outline": [0, 0, 0],
+    "label_mode": "current_max",
+    "colors": [
+      {"up_to": 0.25, "rgb": [225, 52, 48]},
+      {"up_to": 0.6, "rgb": [240, 190, 45]},
+      {"up_to": 1.0, "rgb": [66, 197, 108]}
+    ],
+    "states": [[0,100],[1,100],[25,100],[50,100],[99,100],[100,100],[-5,100],[120,100],[1,0],[999999,999999]]
+  },
+  "text_samples": [
+    {"name":"short_name","text":"林间守卫","size":[320,64],"font_size":26,"wrap":false},
+    {"name":"long_name","text":"来自遥远北境森林的传奇守护者","size":[320,80],"font_size":24,"wrap":true},
+    {"name":"large_number","text":"999999 / 999999","size":[320,64],"font_size":26,"wrap":false}
+  ]
+}

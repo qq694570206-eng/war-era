@@ -86,7 +86,7 @@ public class MapLoader : MonoBehaviour
     public Vector3 GetPlayerStartPosition(int playerIndex)
     {
         if (currentMap == null || currentMap.playerStartPositions == null) return Vector3.zero;
-        if (playerIndex >= currentMap.playerStartPositions.Length) return Vector3.zero;
+        if (playerIndex < 0 || playerIndex >= currentMap.playerStartPositions.Length) return Vector3.zero;
         return currentMap.playerStartPositions[playerIndex];
     }
 

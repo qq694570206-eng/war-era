@@ -27,20 +27,27 @@ public class EconomySystem : MonoBehaviour
         Instance = this;
     }
 
-    public bool CanAfford(int cost) => ore >= cost;
+    public bool CanAfford(int cost) => cost >= 0 && ore >= cost;
     public bool HasPower(int need) => (powerSupply - powerUsed) >= need;
 
     public bool SpendOre(int amount)
     {
-        if (ore < amount) return false;
+        if (amount < 0 || ore < amount) return false;
         ore -= amount;
         return true;
     }
 
     public void AddOre(int amount)
     {
+        if (amount <= 0) return;
         ore += amount;
         techPoints += Mathf.CeilToInt(amount / 100f); // 每100矿石给1科技点
+    }
+
+    // A failed spawn returns prepaid funds without awarding mining technology points.
+    public void RefundOre(int amount)
+    {
+        if (amount > 0) ore += amount;
     }
 
     public void AddPower(int amount) => powerSupply += amount;

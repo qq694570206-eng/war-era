@@ -1,0 +1,58 @@
+{
+  "maps": {
+    "crossroad.json": {
+      "errors": [],
+      "warnings": [
+        "Infinite ore remains from prototype; finite-economy design is not applied.",
+        "Map data supports 4 starts; current GameManager only initializes two sides."
+      ],
+      "navigationComponents": 1
+    },
+    "highland.json": {
+      "errors": [],
+      "warnings": [
+        "Infinite ore remains from prototype; finite-economy design is not applied.",
+        "Map data supports 4 starts; current GameManager only initializes two sides."
+      ],
+      "navigationComponents": 1
+    },
+    "plain.json": {
+      "errors": [],
+      "warnings": [
+        "Infinite ore remains from prototype; finite-economy design is not applied."
+      ],
+      "navigationComponents": 1
+    },
+    "river.json": {
+      "errors": [],
+      "warnings": [
+        "Infinite ore remains from prototype; finite-economy design is not applied.",
+        "Map data supports 4 starts; current GameManager only initializes two sides."
+      ],
+      "navigationComponents": 1
+    },
+    "supply.json": {
+      "errors": [],
+      "warnings": [
+        "Infinite ore remains from prototype; finite-economy design is not applied.",
+        "Map data supports 4 starts; current GameManager only initializes two sides."
+      ],
+      "navigationComponents": 1
+    },
+    "urban.json": {
+      "errors": [],
+      "warnings": [
+        "Infinite ore remains from prototype; finite-economy design is not applied."
+      ],
+      "navigationComponents": 1
+    }
+  },
+  "errors": [],
+  "warnings": [
+    "Missing Packages/manifest.json; Unity build baseline remains incomplete",
+    "Missing ProjectSettings/ProjectVersion.txt; Unity build baseline remains incomplete",
+    "No serialized UnitDefinition assets: unit IDs, prerequisites and costs cannot yet be content-validated."
+  ],
+  "errorCount": 0,
+  "warningCount": 13
+}

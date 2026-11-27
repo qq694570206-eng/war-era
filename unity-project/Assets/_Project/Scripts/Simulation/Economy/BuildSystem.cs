@@ -27,6 +27,8 @@ public class BuildSystem : MonoBehaviour
     /// </summary>
     public bool SelectBuilding(UnitDefinition def)
     {
+        if (def == null || !def.isBuilding || def.prefab == null || EconomySystem.Instance == null)
+            return false;
         if (!EconomySystem.Instance.CanAfford(def.oreCost))
         {
             UIManager.Instance?.ShowToast("矿石不足！");
@@ -49,12 +51,19 @@ public class BuildSystem : MonoBehaviour
     /// </summary>
     public bool PlaceBuilding(Vector3 position)
     {
-        if (pendingBuildDef == null) return false;
+        if (pendingBuildDef == null || UnitRegistry.Instance == null || EconomySystem.Instance == null)
+            return false;
+        // Resources can change while the placement preview is open.
+        if (!EconomySystem.Instance.HasPower(pendingBuildDef.powerNeed))
+        {
+            UIManager.Instance?.ShowToast("电力不足！");
+            return false;
+        }
 
         // 检查与其他建筑的距离
         foreach (var unit in UnitRegistry.Instance.GetAllUnits())
         {
-            if (unit == null || !unit.def.isBuilding) continue;
+            if (unit == null || unit.isDead || unit.def == null || !unit.def.isBuilding) continue;
             if (Vector3.Distance(unit.transform.position, position) < minBuildingDistance)
             {
                 UIManager.Instance?.ShowToast("离其他建筑太近！");
@@ -70,6 +79,11 @@ public class BuildSystem : MonoBehaviour
 
         // 创建建筑
         UnitEntity building = UnitRegistry.Instance.SpawnUnit(pendingBuildDef, playerFaction, position, false);
+        if (building == null)
+        {
+            EconomySystem.Instance.RefundOre(pendingBuildDef.oreCost);
+            return false;
+        }
         if (building != null && pendingBuildDef.powerSupply > 0)
             EconomySystem.Instance.AddPower(pendingBuildDef.powerSupply);
         if (building != null && pendingBuildDef.powerNeed > 0)
@@ -87,7 +101,10 @@ public class BuildSystem : MonoBehaviour
     /// </summary>
     public bool ProduceUnit(UnitDefinition unitDef)
     {
-        if (unitDef.techLevel > TechSystem.Instance?.techLevel)
+        if (unitDef == null || unitDef.isBuilding || unitDef.prefab == null ||
+            UnitRegistry.Instance == null || EconomySystem.Instance == null) return false;
+        int techLevel = TechSystem.Instance != null ? TechSystem.Instance.techLevel : 1;
+        if (unitDef.techLevel > techLevel)
         {
             UIManager.Instance?.ShowToast($"需要科技 T{unitDef.techLevel}！");
             return false;
@@ -115,10 +132,15 @@ public class BuildSystem : MonoBehaviour
             return false;
         }
 
-        EconomySystem.Instance.SpendOre(cost);
+        if (!EconomySystem.Instance.SpendOre(cost)) return false;
 
         Vector3 spawnPos = producer.transform.position + new Vector3(unitDef.category == UnitCategory.Infantry ? 28f : 36f, 0, 0);
         UnitEntity unit = UnitRegistry.Instance.SpawnUnit(unitDef, playerFaction, spawnPos, false);
+        if (unit == null)
+        {
+            EconomySystem.Instance.RefundOre(cost);
+            return false;
+        }
 
         AudioManager.Instance?.PlayBuildSound();
         UIManager.Instance?.ShowToast($"{unitDef.displayName} 已生产");
