@@ -766,6 +766,10 @@
         64,
         64
       ],
+      "grid": [
+        4,
+        4
+      ],
       "seed": "joint(lum+sat)",
       "tol": null,
       "rule": "joint(lum+sat) 逐帧独立",
@@ -985,6 +989,14 @@
       "tols_extra": [],
       "fg_ratio": 0.3967,
       "trim": "auto",
+      "grid": [
+        2,
+        2
+      ],
+      "cell": [
+        128,
+        128
+      ],
       "bbox": [
         16,
         9,

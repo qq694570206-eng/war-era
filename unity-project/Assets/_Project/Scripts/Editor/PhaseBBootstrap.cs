@@ -58,6 +58,11 @@ public static class PhaseBBootstrap
         CreateMapAssets();
         BuildScene(defs);
         AssetDatabase.SaveAssets();
+
+        // 最后统一自检。放在 SaveAssets 之后，因为要读的是"落盘后"的资产，
+        // 而不是内存里刚 new 出来的对象 —— 后者永远是对的，证明不了任何事。
+        VerifyBuild(defs);
+
         Debug.Log("[PhaseB] ✅ 搭建完成。打开 Assets/_Project/Scenes/Battle.unity 按 Play 试玩。" +
                   "操作：左键点选单位，拖动框选，右键/点击下达移动攻击，底部按钮建造。");
     }
@@ -68,6 +73,132 @@ public static class PhaseBBootstrap
                                     "Assets/_Project/Scenes", KeyedDir,
                                     "Assets/_Project/Shaders" })
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+    }
+
+    // ================================================================
+    // 构建后自检 —— "关掉游戏还能证明它是对的"
+    //
+    // 为什么必须单独写这一段：上面每一步都会打印自己的成功日志，
+    // 但"每步都报成功"和"东西真的接上了"是两件事。实测踩过两类：
+    //   ① shader 编译失败（redefinition of 'SpriteFrag'）→ CreateFlashMaterial 照样返回，
+    //      材质创建成功但没 pass，闪白静默退回顶点色。日志里只有一行 Shader error，
+    //      混在几千行导入日志里，而画面看起来"闪白还有一点"，很容易被判成能用。
+    //   ② prefab 引用的材质 guid 与磁盘上 .mat 的 guid 不一致 → 材质丢引用，
+    //      SpriteRenderer 回落默认材质，闪白彻底没有，且 Inspector 里只是显示 None。
+    // 这两类都不会抛异常、不会中断构建，只能靠事后读落盘资产反查。
+    //
+    // 断言口径：期望值来自【规格表/常量表】，不引用被测对象自己的字段。
+    // 例如"每个 def.sprite 必须非空"来自规格 §0⓪ 的要求，
+    // 而不是读 def.sprite 再断言它等于自己。
+    // ================================================================
+    static void VerifyBuild(System.Collections.Generic.Dictionary<string, UnitDefinition> defs)
+    {
+        int fail = 0;
+
+        // ---- ① shader 真的编译通过，且材质真的挂在 prefab 上 ----
+        Shader sh = Shader.Find("WarEra/SpriteFlash");
+        if (sh == null || !sh.isSupported)
+        {
+            fail++;
+            Debug.LogError("[自检] ✗ shader 'WarEra/SpriteFlash' 未编译通过" +
+                           "（Shader.Find == null 或 isSupported == false）。" +
+                           "闪白会静默退回顶点色，见 UnitEntity.UpdateFlash 的 else 分支。");
+        }
+        else
+        {
+            // 从【落盘的 prefab】读 renderer，而不是从内存对象 —— 内存对象一定是对的。
+            var prefab = LoadPrefab("UnitPrefab");
+            var sr = prefab != null ? prefab.GetComponentInChildren<SpriteRenderer>(true) : null;
+            if (sr == null)
+            {
+                fail++;
+                Debug.LogError("[自检] ✗ UnitPrefab 上找不到 SpriteRenderer。");
+            }
+            else if (sr.sharedMaterial == null || sr.sharedMaterial.shader != sh)
+            {
+                fail++;
+                Debug.LogError("[自检] ✗ UnitPrefab 的 SpriteRenderer 没有挂 WarEra/SpriteFlash 材质" +
+                               $"（当前 = {(sr.sharedMaterial == null ? "null" : sr.sharedMaterial.shader.name)}）。" +
+                               "典型原因：prefab 引用的材质 guid 与磁盘 .mat 不一致（材质丢引用）。" +
+                               "闪白会静默失效。修法：删掉 Prefabs/UnitPrefab.prefab 后重跑本菜单。");
+            }
+            else if (!sr.sharedMaterial.HasProperty("_FlashAmount"))
+            {
+                fail++;
+                Debug.LogError("[自检] ✗ 材质缺少 _FlashAmount 属性，MaterialPropertyBlock 会静默失效。");
+            }
+        }
+
+        // ---- ② 每个 UnitDefinition 真的拿到了 sprite（规格 §0⓪）----
+        // 期望：15 个 unitId 全部非空。数量从规格表来，不从 map.Count 来。
+        const int ExpectedDefCount = 15;
+        int wired = 0;
+        var missing = new System.Text.StringBuilder();
+        foreach (var kv in defs)
+        {
+            // 重新从磁盘加载，确认 def.sprite 真的被序列化保存了
+            var onDisk = AssetDatabase.LoadAssetAtPath<UnitDefinition>(
+                DataCore + "/UD_" + kv.Key + ".asset");
+            if (onDisk == null || onDisk.sprite == null)
+                missing.Append(kv.Key).Append(' ');
+            else
+                wired++;
+        }
+        if (defs.Count != ExpectedDefCount)
+        {
+            fail++;
+            Debug.LogError($"[自检] ✗ UnitDefinition 数量 = {defs.Count}，规格要求 {ExpectedDefCount} 个。");
+        }
+        if (wired != ExpectedDefCount)
+        {
+            fail++;
+            Debug.LogError($"[自检] ✗ 落盘后 sprite 为空的 UnitDefinition：{missing}" +
+                           $"（{wired}/{ExpectedDefCount} 有图）。这些单位进游戏会显示占位方块。");
+        }
+
+        // ---- ③ 真图的 PPU 换算出的世界尺寸必须等于规格目标宽 ----
+        // 这是"PPU 写对了吗"的唯一硬证据：读 Sprite.bounds，不读 PPU 字段自己。
+        // 期望宽来自美术规格 §2 目标表（独立来源）。
+        //
+        // 【步兵故意不在此表】rifleman/bazooka 的 PPU 17.07 是按"整幅 15 单位"校准的，
+        // 而可见人形只占 x63–210（147px）→ 人形 8.6 单位 ≈ 规格目标 8.67。
+        // 拿 bounds.size.x（= 整幅 15.0）去比 8.67 必然报错，但那是正确实现。
+        // 也就是说：这个断言对步兵不成立，不加进表里比"加了再给个宽容差"更诚实。
+        var expectWidth = new System.Collections.Generic.Dictionary<string, float>
+        {
+            { "hq", 80f }, { "powerplant", 44f }, { "refinery", 56f }, { "barracks", 48f },
+            { "warfactory", 56f }, { "radar", 44f }, { "mgtower", 32f }, { "atcannon", 36f },
+            { "tank", 28f }, { "heavytank", 32f }, { "harvester", 28f },
+        };
+        var badSize = new System.Text.StringBuilder();
+        foreach (var kv in expectWidth)
+        {
+            var onDisk = AssetDatabase.LoadAssetAtPath<UnitDefinition>(
+                DataCore + "/UD_" + kv.Key + ".asset");
+            if (onDisk == null || onDisk.sprite == null) continue;   // ② 已报过
+            float w = onDisk.sprite.bounds.size.x;
+            // 容差 1%：radar 实测 −6.3%（主体 240px 未满框），那是规格承认的偏差，单独放过。
+            float tol = kv.Key == "radar" ? 0.07f : 0.01f;
+            if (Mathf.Abs(w - kv.Value) > kv.Value * tol)
+                badSize.Append($"{kv.Key} 实测{w:0.0}u 应{kv.Value:0}u ");
+        }
+        if (badSize.Length > 0)
+        {
+            fail++;
+            Debug.LogError($"[自检] ✗ PPU 换算出的世界宽度不符规格：{badSize}" +
+                           "（期望值来自 docs/art-asset-integration-v1.md §2 目标宽表）");
+        }
+
+        if (fail == 0)
+        {
+            Debug.Log($"[自检] ✅ 全部通过：shader 可编译且已挂到 prefab、{wired}/{ExpectedDefCount} 个 定义有 sprite、" +
+                      $"{expectWidth.Count} 张建筑/载具世界宽度符合规格目标。");
+        }
+        else
+        {
+            Debug.LogError($"[自检] ❌ {fail} 项未通过，见上方逐条 LogError。" +
+                           "这些项目【不会】中断构建，也不会抛异常 —— 但进游戏后是静默失效的。");
+        }
     }
 
     // ================================================================
@@ -313,12 +444,37 @@ public static class PhaseBBootstrap
                            "单位将退回 sr.color 闪白方案（见 UnitEntity.UpdateFlash 的 else 分支）。");
             return;
         }
+
+        // 【必须校验编译结果】Shader.Find 只要文件存在就返回对象 —— 即使 shader 编译失败。
+        // 实测踩过的坑：函数体重定义 SpriteFrag 导致
+        //   Shader error in 'WarEra/SpriteFlash': redefinition of 'SpriteFrag' at line 66 (on metal)
+        // 此时 Shader.Find 仍然成功、CreateAsset 也成功，但材质是粉红/无 pass，
+        // 而 UnitEntity.UpdateFlash 发现没有 _FlashAmount 就静默退回 sr.color ——
+        // "闪白还能看见一点" ← 这个假象让整条 shader 路径失效一个月都发现不了。
+        // 所以这里主动验一次：isSupported + 材质上真能读到属性。
+        if (!sh.isSupported)
+        {
+            Debug.LogError("[PhaseC] shader 'WarEra/SpriteFlash' 编译失败（isSupported=false），" +
+                           "多半是 CGPROGRAM 里有编译错误。看上一行 Shader error 的原文修，" +
+                           "不要靠 LogWarning 掩盖 —— 单位会退回顶点色闪白。");
+            return;
+        }
+
         flashMaterial = AssetDatabase.LoadAssetAtPath<Material>(matPath);
         if (flashMaterial == null)
             flashMaterial = new Material(sh) { name = "SpriteFlash" };
         flashMaterial.shader = sh;
         if (!File.Exists(matPath)) AssetDatabase.CreateAsset(flashMaterial, matPath);
         else EditorUtility.SetDirty(flashMaterial);
+
+        // 最后一道：材质上真的能读到 _FlashAmount。属性名写错 / [PerRendererData] 缺失
+        // 都会让 MaterialPropertyBlock 静默失效，而材质本身看起来完全正常。
+        if (!flashMaterial.HasProperty("_FlashAmount"))
+        {
+            Debug.LogError("[PhaseC] 材质缺少 _FlashAmount 属性 —— 闪白会静默失效。" +
+                           "检查 SpriteFlash.shader 的 Properties 里是否声明了 " +
+                           "[PerRendererData] _FlashAmount。");
+        }
     }
 
     /// <summary>

@@ -26,14 +26,19 @@ MonoBehaviour:
   powerNeed: 2
   powerSupply: 0
   techLevel: 1
-  sprite: {fileID: 0}
+  sprite: {fileID: 21300000, guid: 62ccb82922642404a91356faedc11557, type: 3}
   prefab: {fileID: 989063845724527254, guid: 991f96160cd8443f88a379f6d94d5cd4, type: 3}
   selectionRadius: 48
+  spriteForwardDeg: 0
   isBuilding: 1
   buildingSize: {x: 56, y: 56}
   buildTime: 5
   canProduceUnits: 1
-  producibleUnits: []
+  producibleUnits:
+  - {fileID: 11400000, guid: 41b04c8e334ad4f038ddf826edfc1e0b, type: 2}
+  - {fileID: 11400000, guid: 5b3d3a6288ac54f0490af1b659eb8d08, type: 2}
+  - {fileID: 11400000, guid: e33444e148d9b4ad79dd0af509981662, type: 2}
+  - {fileID: 11400000, guid: 462fc499d7e234232a9e68d9ef2b3938, type: 2}
   isHarvester: 0
   oreCapacity: 100
   harvestTime: 2

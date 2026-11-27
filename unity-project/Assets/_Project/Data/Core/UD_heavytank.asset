@@ -26,9 +26,10 @@ MonoBehaviour:
   powerNeed: 2
   powerSupply: 0
   techLevel: 2
-  sprite: {fileID: 0}
+  sprite: {fileID: 21300000, guid: 8cbc0e3684a5b4b70a2b9a8b37fec376, type: 3}
   prefab: {fileID: 6441325035314487943, guid: 5f41524a6243c4e288c15eab1969ed6d, type: 3}
   selectionRadius: 14
+  spriteForwardDeg: -20
   isBuilding: 0
   buildingSize: {x: 0, y: 0}
   buildTime: 0

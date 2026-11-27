@@ -94,7 +94,17 @@ ASSETS = [
     dict(name="build_panel_bg", src="ui/build_panel_bg.png", tol=12, morph=False, pivot=(0.5, 0.5), ppu=1.0,
          crop=(0, 40, 256, 216), opaque=True),
     dict(name="minimap_frame",  src="ui/minimap_frame.png",  tol=12, morph=False, pivot=(0.5, 0.5), ppu=1.0),
-    dict(name="resource_icons", src="ui/resource_icons.png", tol=12, morph=False, pivot=(0.5, 0.5), ppu=1.0),
+    # ★ import_cells=(2,2) 必须写：这张图是 2×2 四格图标（实测四块中心
+    #   (65,65)/(189,65)/(66,186)/(192,188)，格距正好 128），Unity 侧按 Multiple 128×128 切。
+    #   漏写这个字段的后果：manifest 里 spriteMode 写成 Single，与 C# 的 Multiple 打架，
+    #   而两边都不报错 —— 正是 explosion PPU 那类"同一件事写两遍、只有一处对"的坑。
+    #
+    #   为什么用 import_cells 而不是复用 cells：
+    #   cells= 会同时切到【逐格独立抠图】路径，而这张图的四格背景一致、无需逐格判据；
+    #   更关键的是 cells= 会跳过四角 alpha 自检（explosion 才需要跳）。这张四角是空的，
+    #   自检应当保留。import_cells 只影响 manifest/导入参数，不改变抠图流程。
+    dict(name="resource_icons", src="ui/resource_icons.png", tol=12, morph=False, pivot=(0.5, 0.5), ppu=1.0,
+         import_cells=(2, 2)),
 ]
 
 # 规格明确"禁止填洞"的 2 张（本脚本全流程无填洞步骤，此处仅用于报告与人工复核提示）
@@ -613,6 +623,7 @@ def process_one(asset, write=True):
                                    fg=round(float((f_a > 0.5).mean()), 4)))
         stats["frames"] = frames
         stats["cell"] = [cw, ch]
+        stats["grid"] = [cx, cy]     # 网格（列, 行）；与 cell（像素）是两个量，清单里分开写
         stats["seed"], stats["tol"] = frames[0]["seed"], frames[0]["tol"]
         stats["rule"] = "joint(lum+sat) 逐帧独立" if joint else "rgb-tol 逐帧独立"
         stats["fg_ratio"] = round(float((out_a > 0.5).mean()), 4)
@@ -644,6 +655,13 @@ def process_one(asset, write=True):
         stats["fg_ratio"] = round(float((out_a > 0.5).mean()), 4)
         stats["trim"] = "auto"
         bbox = bbox_of(out_a)
+
+    # import_cells：只声明"Unity 侧要按 NxM 切开"，不改变抠图流程（见 ASSETS 里 resource_icons 注释）。
+    # 写进 stats 是为了让 manifest 能推出 spriteMode=Multiple 和 cellSize。
+    ic = asset.get("import_cells")
+    if ic:
+        stats["grid"] = [ic[0], ic[1]]
+        stats["cell"] = [w // ic[0], h // ic[1]]
 
     if bbox:
         stats["bbox"] = list(bbox)
@@ -746,14 +764,23 @@ def main(argv):
             json.dump(dict(assets=report, no_fill=sorted(NO_FILL),
                            output_dir=os.path.relpath(OUT_DIR, ROOT).replace(os.sep, "/")),
                       f, ensure_ascii=False, indent=2)
-        # Unity 侧 ConfigureSpriteImporters 可对照此清单校验 PPU/pivot
+        # Unity 侧 ConfigureSpriteImporters 可对照此清单校验 PPU/pivot。
+        #
+        # 【grid / cellSize 必须写进清单】这两个值的单位不一样，混用会静默写错：
+        #   grid     = (列数, 行数)，例如 explosion 4×4、resource_icons 2×2
+        #   cellSize = 单格像素尺寸，= (图宽/列数, 图高/行数)，例如 64×64、128×128
+        # C# 的 SpriteSpec 收的是【cellSize】，抠图脚本收的是【grid】。
+        # 之前清单里两者都没有，于是"5×5 网格"和"25 帧"这类错法无人可查。
+        # 现在两个都写，tools/check_art_import.py 负责把 grid 换算成 cellSize 再比对。
         with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
             json.dump(dict(items=[
                 dict(name=s["name"],
                      file=s.get("out", ""),
                      spritePixelsPerUnit=s["ppu"],
                      pivot=s["pivot"],
-                     spriteMode="Multiple" if s.get("frames") else "Single")
+                     spriteMode=("Multiple" if (s.get("frames") or s.get("grid")) else "Single"),
+                     grid=(list(s["grid"]) if s.get("grid") else None),
+                     cellSize=(list(s["cell"]) if s.get("cell") else None))
                 for s in report]), f, ensure_ascii=False, indent=2)
         print(f"\n报告：{os.path.relpath(REPORT_PATH, ROOT)}")
         print(f"清单：{os.path.relpath(MANIFEST_PATH, ROOT)}（供 Unity 导入参数对照）")

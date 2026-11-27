@@ -54,7 +54,7 @@ Shader "WarEra/SpriteFlash"
         {
         CGPROGRAM
             #pragma vertex SpriteVert
-            #pragma fragment SpriteFrag
+            #pragma fragment SpriteFlashFrag
             #pragma target 2.0
             #pragma multi_compile_instancing
             #pragma multi_compile_local _ PIXELSNAP_ON
@@ -63,7 +63,15 @@ Shader "WarEra/SpriteFlash"
 
             float _FlashAmount;
 
-            fixed4 SpriteFrag(v2f IN) : SV_Target
+            // 【函数名不能叫 SpriteFrag】UnitySprites.cginc 第 86 行已经定义了
+            //   fixed4 SpriteFrag(v2f IN) : SV_Target
+            // 再定义一次就是重定义，实测报错：
+            //   Shader error in 'WarEra/SpriteFlash': redefinition of 'SpriteFrag' at line 66 (on metal)
+            // 这个错误的表现极具迷惑性：Console 里只有一行 Shader error，材质仍是粉红/回退，
+            // 而 UnitEntity.UpdateFlash 会走 else 分支（HasProperty 为 false）→ 退回 sr.color，
+            // 于是"闪白还能看见一点"，很容易被误判为"能用"。实际上 shader 路径整条没生效。
+            // 必须换名 + 同步改 #pragma fragment。
+            fixed4 SpriteFlashFrag(v2f IN) : SV_Target
             {
                 fixed4 c = SampleSpriteTexture(IN.texcoord) * IN.color;
                 // 受击闪白：向纯白插值（不是乘白，乘白等于没效果）

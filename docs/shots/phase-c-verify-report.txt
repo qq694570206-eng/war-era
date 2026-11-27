@@ -1,0 +1,59 @@
+
+========== 阶段C 终验 ==========
+
+[1] UnitDefinition.sprite
+  ✅ UnitDefinition 数量 = 15                         实际 15
+  ✅ def.sprite · artillery                         tank PPU=9.14 世界=28.0u
+  ✅ def.sprite · atcannon                          atcannon PPU=7.11 世界=36.0u
+  ✅ def.sprite · barracks                          barracks PPU=5.33 世界=48.0u
+  ✅ def.sprite · bazooka                           bazooka PPU=17.07 世界=15.0u
+  ✅ def.sprite · harvester                         harvester PPU=9.14 世界=28.0u
+  ✅ def.sprite · heavytank                         heavytank PPU=8.00 世界=32.0u
+  ✅ def.sprite · hq                                hq PPU=3.20 世界=80.0u
+  ✅ def.sprite · mgtower                           mgtower PPU=8.00 世界=32.0u
+  ✅ def.sprite · powerplant                        powerplant PPU=5.82 世界=44.0u
+  ✅ def.sprite · radar                             radar PPU=5.82 世界=44.0u
+  ✅ def.sprite · refinery                          refinery PPU=4.57 世界=56.0u
+  ✅ def.sprite · rifleman                          rifleman PPU=17.07 世界=15.0u
+  ✅ def.sprite · sniper                            rifleman PPU=17.07 世界=15.0u
+  ✅ def.sprite · tank                              tank PPU=9.14 世界=28.0u
+  ✅ def.sprite · warfactory                        warfactory PPU=4.57 世界=56.0u
+
+[2] 预制体材质链
+  ✅ UnitPrefab · material 非空                       SpriteFlash
+  ✅ UnitPrefab · shader 非空                         WarEra/SpriteFlash
+  ✅ UnitPrefab · shader 已编译                        isSupported=True
+  ✅ UnitPrefab · 有 _FlashAmount                    是
+  ⓘ UnitPrefab · prefab 上的 color = RGBA(0.250, 0.650, 0.840, 1.000)（占位色，运行时由 ApplyDefinitionSprite 复位为白）
+  ✅ UnitPrefab · UnitView 已挂                       是
+  ✅ UnitPrefab · renderer.scale ≡ 1                (1.00, 1.00, 1.00)
+  ✅ BuildingPrefab · material 非空                   SpriteFlash
+  ✅ BuildingPrefab · shader 非空                     WarEra/SpriteFlash
+  ✅ BuildingPrefab · shader 已编译                    isSupported=True
+  ✅ BuildingPrefab · 有 _FlashAmount                是
+  ⓘ BuildingPrefab · prefab 上的 color = RGBA(0.350, 0.420, 0.500, 1.000)（占位色，运行时由 ApplyDefinitionSprite 复位为白）
+  ✅ BuildingPrefab · UnitView 已挂                   是
+  ✅ BuildingPrefab · renderer.scale ≡ 1            (1.00, 1.00, 1.00)
+
+[3] 运行时行为（实例化 + 模拟若干帧）
+    ⓘ rifleman 赋值后：ue.def=rifleman def.sprite=rifleman sr=Sprite ue.sr=Sprite
+    ⓘ rifleman Initialize 后：sr.sprite=rifleman color=RGBA(1.000, 1.000, 1.000, 1.000)
+  ✅ rifleman · 步兵不旋转、改走镜像（设计）                      z=0.0°  flipX=False（facing=45° 应朝右，flipX 与素材默认朝向有关）
+  ✅ rifleman · renderer.scale 未被覆写                 (1.00, 1.00, 1.00)
+  ✅ rifleman · sprite 已换成真图                        rifleman
+  ✅ rifleman · color 复位为白                          RGBA(1.000, 1.000, 1.000, 1.000)
+    ⓘ tank 赋值后：ue.def=tank def.sprite=tank sr=Sprite ue.sr=Sprite
+    ⓘ tank Initialize 后：sr.sprite=tank color=RGBA(1.000, 1.000, 1.000, 1.000)
+  ✅ tank · 朝向被写入                                   z 0.0° → 19.0°（期望 19.0°，含 rollDeg≤0.6°）
+  ✅ tank · renderer.scale 未被覆写                     (1.00, 1.00, 1.00)
+  ✅ tank · sprite 已换成真图                            tank
+  ✅ tank · color 复位为白                              RGBA(1.000, 1.000, 1.000, 1.000)
+    ⓘ hq 赋值后：ue.def=hq def.sprite=hq sr=Sprite ue.sr=Sprite
+    ⓘ hq Initialize 后：sr.sprite=hq color=RGBA(1.000, 1.000, 1.000, 1.000)
+  ✅ hq · 建筑恒不旋转（设计）                                z=0.0°
+  ✅ hq · renderer.scale 未被覆写                       (1.00, 1.00, 1.00)
+  ✅ hq · sprite 已换成真图                              hq
+  ✅ hq · color 复位为白                                RGBA(1.000, 1.000, 1.000, 1.000)
+
+========== 通过 40 / 失败 0 ==========
+结论：阶段C 接线在资产与运行时两个层面全部成立。

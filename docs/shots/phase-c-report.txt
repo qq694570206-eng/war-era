@@ -1,0 +1,18 @@
+rifleman    位置=( -124,   62) sprite=rifleman 世界尺寸=15.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+bazooka     位置=(  -62,   62) sprite=bazooka 世界尺寸=15.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+sniper      位置=(    0,   62) sprite=rifleman 世界尺寸=15.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+tank        位置=(   62,   62) sprite=tank 世界尺寸=28.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+heavytank   位置=(  124,   62) sprite=heavytank 世界尺寸=32.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+harvester   位置=( -124,    0) sprite=harvester 世界尺寸=28.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+mgtower     位置=(  -62,    0) sprite=mgtower 世界尺寸=32.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+atcannon    位置=(    0,    0) sprite=atcannon 世界尺寸=36.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+hq          位置=(   62,    0) sprite=hq 世界尺寸=80.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+powerplant  位置=(  124,    0) sprite=powerplant 世界尺寸=44.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+refinery    位置=( -124,  -62) sprite=refinery 世界尺寸=56.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+barracks    位置=(  -62,  -62) sprite=barracks 世界尺寸=48.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+warfactory  位置=(    0,  -62) sprite=warfactory 世界尺寸=56.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+radar       位置=(   62,  -62) sprite=radar 世界尺寸=44.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+artillery   位置=(  124,  -62) sprite=tank 世界尺寸=28.0u color=RGBA(1.000, 1.000, 1.000, 1.000)
+
+非背景像素 221781 / 1920000 = 11.6%   (判据 >5%)  → ✅
+占位蓝色像素 7 = 0.00%  (判据 <0.5%，且应为0) → ✅
