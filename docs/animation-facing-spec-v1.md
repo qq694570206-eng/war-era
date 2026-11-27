@@ -582,9 +582,10 @@ UnitEntity        位置：逻辑移动。任何表现层不许写这里
 ```
 
 > **v1.3 补：`UnitView` 自己挂在哪一层，是改造时的头号陷阱。**
-> 现有 `UnitView.cs` 用 `transform.localPosition` / `transform.localScale` / `transform.rotation` 直接写自己所在的节点。四层拆开后，**`UnitView` 必须挂在 `RecoilPivot` 上**，并改为分别写 `recoilPivot` / `artRoot` / `animPivot` 三个引用，而不是写自己的 `transform`。
-> 若挂错（比如挂在 `AnimPivot` 上），会出现 `RecoilPivot` 与 `AnimPivot` **抢同一个 `localPosition`**，表现为后坐和呼吸互相覆盖、走起来一顿一顿。
-> **判断是否挂对的检查方法**：`UnitView` 所在节点的 `localPosition` 只被后坐逻辑写过，`localRotation` 恒为零，`localScale` 恒为一。三条全符合才算对。
+> **v1.4 修正：不再规定"必须挂在 RecoilPivot 上"——规定不变式，不规定挂载点。**
+> 判断标准只有一条：**一个通道只能有一个写入者。** 现有实现把 `UnitView` 挂在 `ArtRoot` 上并持 `recoilPivot` 引用（`PhaseBBootstrap.cs:303`），它写 `recoilPivot.localPosition` + `artRoot.localRotation` + `artRoot.localPosition` + `artRoot.localScale`——挂载点与文档原写法不同，但因为三个引用都是显式的，**通道没串**，可以接受。
+> 真正不能接受的是写 `transform.xxx`（自己所在节点）——那样挂在哪层就污染哪层。**规则改写为：`UnitView` 里除 `Awake` 外不许出现裸的 `transform.localPosition / localRotation / localScale`，一律走显式引用。**
+> 若挂错（比如挂 `AnimPivot` 上又写 `transform.localPosition`），会出现 `RecoilPivot` 与 `AnimPivot` **抢同一个 `localPosition`**，表现为后坐和呼吸互相覆盖、走起来一顿一顿。
 
 **为什么必须拆出 `AnimPivot`（这是初版的错）：**
 `UnitView.cs:92` 与 `:96` 对 **SpriteRenderer 所在节点**直接赋值 `localScale = new Vector3(1, 1+bob, 1)`。该节点若同时承担尺寸基准，每帧都会被重置成 ~1，尺寸基准消失，单位在行走时忽大忽小、并因像素密度跳变而"拉伸模糊"。把 bob 隔离到最内层 `AnimPivot` 后：
