@@ -33,7 +33,6 @@ public class UnitEntity : MonoBehaviour
     public float harvestTimer = 0f;
 
     [Header("Visual")]
-    public Animator animator;
     public SpriteRenderer spriteRenderer;
     public float animTime = 0f;
     public float flashTime = 0f;
@@ -43,7 +42,6 @@ public class UnitEntity : MonoBehaviour
     void Awake()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        animator = GetComponentInChildren<Animator>();
     }
 
     public void Initialize(UnitDefinition definition, FactionDefinition factionDef, bool enemy)
