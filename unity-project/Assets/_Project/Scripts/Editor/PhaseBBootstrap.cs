@@ -25,9 +25,16 @@ public static class PhaseBBootstrap
     [MenuItem("WarEra/阶段B 一键搭建")]
     public static void Setup()
     {
-        if (EditorApplication.isPlaying || EditorApplication.isCompiling)
+        if (EditorApplication.isCompiling)
         {
-            Debug.LogError("[PhaseB] 请先退出 Play 模式（再点一次 Play 按钮）并等待编译完成，再执行一键搭建。");
+            Debug.LogError("[PhaseB] 正在编译中，请等编译完成后再执行。");
+            return;
+        }
+        if (EditorApplication.isPlaying)
+        {
+            Debug.Log("[PhaseB] 检测到 Play 模式，自动退出后自动重新搭建…");
+            EditorApplication.isPlaying = false;
+            EditorApplication.delayCall += () => Setup();
             return;
         }
         EnsureFolders();
