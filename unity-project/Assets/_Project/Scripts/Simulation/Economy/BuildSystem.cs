@@ -110,7 +110,7 @@ public class BuildSystem : MonoBehaviour
             return false;
         }
 
-        int cost = playerFaction != null ? playerFaction.GetModifiedCost(unitDef.oreCost) : unitDef.oreCost;
+        int cost = playerFaction != null ? Mathf.RoundToInt(playerFaction.GetModifiedCost(unitDef.oreCost)) : unitDef.oreCost;
         if (!EconomySystem.Instance.CanAfford(cost))
         {
             UIManager.Instance?.ShowToast("矿石不足！");

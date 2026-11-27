@@ -351,11 +351,11 @@ public static class PhaseBBootstrap
         canvasGo.AddComponent<GraphicRaycaster>();
 
         refs.ore = MakeText(canvasGo.transform, "OreText", "矿石 1200", 36, font,
-            new Vector2(0, 1), new Vector2(0.25f, 1), new Vector2(20, -60), new Vector2(400, -10), Color.white, TextAnchor.Left);
+            new Vector2(0, 1), new Vector2(0.25f, 1), new Vector2(20, -60), new Vector2(400, -10), Color.white, TextAnchor.MiddleLeft);
         refs.power = MakeText(canvasGo.transform, "PowerText", "电力 0/25", 36, font,
-            new Vector2(0, 1), new Vector2(0.25f, 1), new Vector2(20, -110), new Vector2(400, -60), Color.white, TextAnchor.Left);
+            new Vector2(0, 1), new Vector2(0.25f, 1), new Vector2(20, -110), new Vector2(400, -60), Color.white, TextAnchor.MiddleLeft);
         refs.tech = MakeText(canvasGo.transform, "TechText", "科技 0", 36, font,
-            new Vector2(0, 1), new Vector2(0.25f, 1), new Vector2(20, -160), new Vector2(400, -110), Color.white, TextAnchor.Left);
+            new Vector2(0, 1), new Vector2(0.25f, 1), new Vector2(20, -160), new Vector2(400, -110), Color.white, TextAnchor.MiddleLeft);
 
         // 单位信息面板（左下）
         refs.infoPanel = MakePanel(canvasGo.transform, "UnitInfoPanel",
@@ -363,15 +363,15 @@ public static class PhaseBBootstrap
             new Color(0, 0, 0, 0.75f));
         refs.infoPanel.SetActive(false);
         refs.infoName = MakeText(refs.infoPanel.transform, "Name", "单位", 34, font,
-            new Vector2(0, 1), new Vector2(1, 1), new Vector2(15, -55), new Vector2(-15, -5), Color.white, TextAnchor.Left);
+            new Vector2(0, 1), new Vector2(1, 1), new Vector2(15, -55), new Vector2(-15, -5), Color.white, TextAnchor.MiddleLeft);
         refs.infoCount = MakeText(refs.infoPanel.transform, "Count", "", 30, font,
-            new Vector2(0.6f, 1), new Vector2(1, 1), new Vector2(-100, -55), new Vector2(-15, -5), Color.yellow, TextAnchor.Right);
+            new Vector2(0.6f, 1), new Vector2(1, 1), new Vector2(-100, -55), new Vector2(-15, -5), Color.yellow, TextAnchor.MiddleRight);
         refs.infoHp = MakeText(refs.infoPanel.transform, "HP", "HP", 28, font,
-            new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(15, -15), new Vector2(-15, 20), Color.white, TextAnchor.Left);
+            new Vector2(0, 0.5f), new Vector2(1, 0.5f), new Vector2(15, -15), new Vector2(-15, 20), Color.white, TextAnchor.MiddleLeft);
         refs.infoDmg = MakeText(refs.infoPanel.transform, "DMG", "攻击", 28, font,
-            new Vector2(0, 0.3f), new Vector2(1, 0.3f), new Vector2(15, -55), new Vector2(-15, -20), Color.white, TextAnchor.Left);
+            new Vector2(0, 0.3f), new Vector2(1, 0.3f), new Vector2(15, -55), new Vector2(-15, -20), Color.white, TextAnchor.MiddleLeft);
         refs.infoRange = MakeText(refs.infoPanel.transform, "Range", "射程", 28, font,
-            new Vector2(0, 0.1f), new Vector2(1, 0.1f), new Vector2(15, -45), new Vector2(-15, -10), Color.white, TextAnchor.Left);
+            new Vector2(0, 0.1f), new Vector2(1, 0.1f), new Vector2(15, -45), new Vector2(-15, -10), Color.white, TextAnchor.MiddleLeft);
         refs.hpFill = MakeFillBar(refs.infoPanel.transform, "HpBar", font);
 
         // Toast（底部中央）

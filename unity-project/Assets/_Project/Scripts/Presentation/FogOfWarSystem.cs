@@ -59,7 +59,7 @@ public class FogOfWarSystem : MonoBehaviour
         }
     }
 
-    void MarkVisible(Vector3 worldPos, float sightRange)
+    public void MarkVisible(Vector3 worldPos, float sightRange)
     {
         int cx = Mathf.FloorToInt(worldPos.x / fogCellSize);
         int cy = Mathf.FloorToInt(worldPos.y / fogCellSize);

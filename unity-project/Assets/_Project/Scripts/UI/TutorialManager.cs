@@ -108,7 +108,7 @@ public class TutorialManager : MonoBehaviour
                 return UnitRegistry.Instance?.GetPlayerUnits().Exists(u => u != null && u.def.unitId == "warfactory") ?? false;
 
             case TutorialCondition.SquadAssigned:
-                return TouchInputSystem.Instance?.squads[0]?.Count > 0 ?? false;
+                return (TouchInputSystem.Instance?.squads[0]?.Count ?? 0) > 0;
 
             case TutorialCondition.RadarBuilt:
                 return UnitRegistry.Instance?.GetPlayerUnits().Exists(u => u != null && u.def.unitId == "radar") ?? false;

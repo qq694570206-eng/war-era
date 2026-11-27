@@ -27,6 +27,10 @@ public class UnitEntity : MonoBehaviour
     public float fireTimer = 0f;
     public float recoil = 0f; // 后坐偏移
 
+    [Header("Building")]
+    public bool constructing = false;
+    public float buildProgress = 0f;
+
     [Header("Harvester")]
     public bool isHarvester = false;
     public int oreCarried = 0;
