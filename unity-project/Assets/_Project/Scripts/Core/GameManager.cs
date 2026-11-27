@@ -69,6 +69,10 @@ public class GameManager : MonoBehaviour
         SpawnPlayerBase();
         SpawnEnemyBase();
 
+        // 加载地图（矿点/障碍物/争夺点）
+        if (MapLoader.Instance != null && !string.IsNullOrEmpty(mapName))
+            MapLoader.Instance.LoadMap(mapName);
+
         // 摄像机对准玩家基地
         if (Camera.main != null)
         {
