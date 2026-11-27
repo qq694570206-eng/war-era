@@ -18,9 +18,11 @@ public static class PhaseBBootstrap
     const string DataWW2 = "Assets/_Project/Data/Theme_WW2";
     const string PrefabDir = "Assets/_Project/Prefabs";
     const string SceneDir = "Assets/_Project/Scenes";
+    const string KeyedDir = "Assets/_Project/Art/Keyed";
 
     static Sprite circleSprite;
     static Sprite squareSprite;
+    static Material flashMaterial;
 
     [MenuItem("WarEra/阶段B 一键搭建")]
     public static void Setup()
@@ -39,9 +41,11 @@ public static class PhaseBBootstrap
         }
         EnsureFolders();
         CreatePlaceholderSprites();
-        CreatePrefabs();
+        ConfigureSpriteImporters();     // P0-2：逐张 PPU / pivot / Sprite 导入参数
+        CreateFlashMaterial();          // P0-6：受击闪白材质
+        CreatePrefabs();                // P0-3：三层结构
         CreateFactionAssets();
-        var defs = CreateUnitDefinitions();
+        var defs = CreateUnitDefinitions();   // P0-4 / P0-5：spriteForwardDeg + def.sprite
         CreateMapAssets();
         BuildScene(defs);
         AssetDatabase.SaveAssets();
@@ -52,9 +56,138 @@ public static class PhaseBBootstrap
 
     static void EnsureFolders()
     {
-        foreach (var dir in new[] { DataCore, DataWW2, PrefabDir, SceneDir, "Assets/_Project/Scenes" })
+        foreach (var dir in new[] { DataCore, DataWW2, PrefabDir, SceneDir,
+                                    "Assets/_Project/Scenes", KeyedDir,
+                                    "Assets/_Project/Shaders" })
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
     }
+
+    // ================================================================
+    // P0-2 逐张导入参数（PPU / Custom pivot / Sprite / alphaIsTransparency）
+    //
+    // PPU 来源：团队裁定表（优先于美术规格 §1.2）。实测该表等价于 256 / 目标世界宽，
+    //          即"Sprite rect 保持整幅 256"时目标宽精确成立。
+    //          rifleman 是唯一例外：256/17.07 = 15 单位宽的整幅，而可见人形只占
+    //          x63–210（147px）→ 人形实际 8.6 单位 ≈ 规格目标 8.67，同样成立。
+    // pivot 来源：美术规格 §2 / §5（归一化，基准 = 图像矩形左下角）
+    // ================================================================
+    struct SpriteSpec
+    {
+        public string file;      // Art/Keyed 下的文件名（不含扩展名）
+        public float ppu;
+        public Vector2 pivot;
+        public bool multiple;    // explosion / resource_icons 走 Multiple
+        public int cellW, cellH;
+        public SpriteSpec(string f, float p, float px, float py, bool mul = false, int cw = 0, int ch = 0)
+        { file = f; ppu = p; pivot = new Vector2(px, py); multiple = mul; cellW = cw; cellH = ch; }
+    }
+
+    static readonly SpriteSpec[] SpriteSpecs = new[]
+    {
+        // 建筑（pivot y=0.10：让底菱形中心对齐 transform.position）
+        new SpriteSpec("hq",         3.20f, 0.5f, 0.10f),
+        new SpriteSpec("powerplant", 5.82f, 0.5f, 0.10f),
+        new SpriteSpec("refinery",   4.57f, 0.5f, 0.10f),
+        new SpriteSpec("barracks",   5.33f, 0.5f, 0.10f),
+        new SpriteSpec("warfactory", 4.57f, 0.5f, 0.10f),
+        new SpriteSpec("radar",      5.82f, 0.5f, 0.10f),
+        new SpriteSpec("mgtower",    8.00f, 0.5f, 0.10f),
+        new SpriteSpec("atcannon",   7.11f, 0.5f, 0.10f),
+        // 步兵（pivot y=0.02：脚踩画面最底，留 2% 避免与地面共面抖动）
+        new SpriteSpec("rifleman",  17.07f, 0.5f, 0.02f),
+        new SpriteSpec("bazooka",   17.07f, 0.5f, 0.02f),
+        // 载具（pivot y=0.00：履带接地面 = transform 位置）
+        new SpriteSpec("tank",       9.14f, 0.5f, 0.00f),
+        new SpriteSpec("heavytank",  8.00f, 0.5f, 0.00f),
+        new SpriteSpec("harvester",  9.14f, 0.5f, 0.00f),
+        // 特效
+        new SpriteSpec("explosion",  10.67f, 0.5f, 0.50f, true, 64, 64),   // 4x4=16 帧（P1 接线）
+        new SpriteSpec("muzzle_flash", 25.60f, 0.5f, 0.50f),
+        new SpriteSpec("nuke_cloud",  4.27f, 0.5f, 0.00f),
+        new SpriteSpec("smoke_column", 18.3f, 0.5f, 0.00f),
+        // UI（P1 接线，本轮只备好导入参数）
+        new SpriteSpec("resource_icons", 1.0f, 0.5f, 0.5f, true, 128, 128),
+        new SpriteSpec("build_panel_bg", 1.0f, 0.5f, 0.5f),
+        new SpriteSpec("minimap_frame",  1.0f, 0.5f, 0.5f),
+    };
+
+    static void ConfigureSpriteImporters()
+    {
+        int ok = 0, missing = 0;
+        var missingFiles = new System.Text.StringBuilder();
+
+        foreach (var spec in SpriteSpecs)
+        {
+            string path = KeyedDir + "/" + spec.file + ".png";
+            if (!File.Exists(path))
+            {
+                missing++;
+                missingFiles.Append(spec.file).Append(' ');
+                continue;
+            }
+
+            var ti = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (ti == null)
+            {
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+                ti = AssetImporter.GetAtPath(path) as TextureImporter;
+                if (ti == null) { missing++; missingFiles.Append(spec.file).Append(' '); continue; }
+            }
+
+            ti.textureType = TextureImporterType.Sprite;
+            ti.spriteImportMode = spec.multiple ? SpriteImportMode.Multiple : SpriteImportMode.Single;
+            ti.spritePixelsPerUnit = spec.ppu;
+            ti.alphaIsTransparency = true;
+            ti.filterMode = FilterMode.Bilinear;
+            ti.mipmapEnabled = false;          // 2D 正交，Mipmap 只让远景变糊
+            ti.wrapMode = TextureWrapMode.Clamp;
+            ti.maxTextureSize = 256;           // 原图只有 256，放到 512 只浪费显存
+            ti.textureCompression = TextureImporterCompression.Uncompressed; // 小图，避免块压缩糊边
+            ti.npotScale = TextureImporterNPOTScale.None;
+
+            var settings = new TextureImporterSettings();
+            ti.ReadTextureSettings(settings);
+            settings.spriteMode = (int)ti.spriteImportMode;
+            settings.spriteAlignment = (int)SpriteAlignment.Custom;
+            settings.spritePivot = spec.pivot;
+            settings.spriteMeshType = SpriteMeshType.FullRect;  // 不做 Tight 网格，避免逐图差异
+            settings.spriteGenerateFallbackPhysicsShape = false;
+            ti.SetTextureSettings(settings);
+
+            if (spec.multiple)
+            {
+                // 按单元格切分，行优先命名 <file>_00..NN（美术规格 §4.1 / §8.3）
+                string fileNoExt = spec.file;
+                var metas = new System.Collections.Generic.List<SpriteMetaData>();
+                int cols = Mathf.Max(1, 256 / Mathf.Max(1, spec.cellW));
+                int rows = Mathf.Max(1, 256 / Mathf.Max(1, spec.cellH));
+                int idx = 0;
+                for (int r = rows - 1; r >= 0; r--)      // Unity 的 y 从下往上
+                {
+                    for (int c = 0; c < cols; c++)
+                    {
+                        metas.Add(new SpriteMetaData
+                        {
+                            name = string.Format("{0}_{1:00}", fileNoExt, idx),
+                            rect = new Rect(c * spec.cellW, r * spec.cellH, spec.cellW, spec.cellH),
+                            alignment = (int)SpriteAlignment.Custom,
+                            pivot = spec.pivot
+                        });
+                        idx++;
+                    }
+                }
+                ti.spritesheet = metas.ToArray();
+            }
+
+            ti.SaveAndReimport();
+            ok++;
+        }
+
+        Debug.Log($"[PhaseC] 导入参数已写入 {ok} 张（Art/Keyed）。" +
+                  (missing > 0 ? $" 缺失 {missing} 张：{missingFiles} —— 先跑 python3 tools/key_assets.py"
+                               : " 全部命中。"));
+    }
+
 
     // ---------------- 占位美术 ----------------
     static void CreatePlaceholderSprites()
@@ -90,29 +223,52 @@ public static class PhaseBBootstrap
     }
 
     // ---------------- Prefab ----------------
+    /// <summary>
+    /// P0-6 受击闪白材质。用自建 WarEra/SpriteFlash，而不是 Sprites/Default ——
+    /// 后者没有 _FlashAmount 属性，接真图后闪白会静默失效（不报错、没效果）。
+    /// 全工程只需这一个材质，所有单位共用，保证合批不碎。
+    /// </summary>
+    static void CreateFlashMaterial()
+    {
+        const string matPath = "Assets/_Project/Shaders/SpriteFlash.mat";
+        Shader sh = Shader.Find("WarEra/SpriteFlash");
+        if (sh == null)
+        {
+            Debug.LogError("[PhaseC] 找不到 shader 'WarEra/SpriteFlash'。" +
+                           "确认 Assets/_Project/Shaders/SpriteFlash.shader 已编译。" +
+                           "单位将退回 sr.color 闪白方案（见 UnitEntity.UpdateFlash 的 else 分支）。");
+            return;
+        }
+        flashMaterial = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+        if (flashMaterial == null)
+            flashMaterial = new Material(sh) { name = "SpriteFlash" };
+        flashMaterial.shader = sh;
+        if (!File.Exists(matPath)) AssetDatabase.CreateAsset(flashMaterial, matPath);
+        else EditorUtility.SetDirty(flashMaterial);
+    }
+
+    /// <summary>
+    /// P0-3 三层预制体结构（动画规格 §5.2）：
+    ///
+    ///   UnitPrefab          (UnitEntity)            根：位置由逻辑驱动，不旋转
+    ///    └ RecoilPivot                               只承担后坐位移（世界→local 转换）
+    ///       └ ArtRoot      (SpriteRenderer+UnitView) 只承担朝向 + 呼吸，并挂 sprite
+    ///
+    /// 为什么要拆：旧代码在同一个 transform 上既设 rotation 又设 localPosition，
+    /// 而 recoilDir 是世界方向 → rotation≠0 时被再旋转一次 → 后坐朝反方向。
+    ///
+    /// localScale 恒为 1：尺寸全交给 TextureImporter.spritePixelsPerUnit。
+    /// 占位时代用 localScale=1.6 凑尺寸，现在必须删掉（美术规格 §0③）。
+    /// </summary>
     static void CreatePrefabs()
     {
-        // 单位占位（圆）
-        var unit = new GameObject("UnitPrefab");
-        var us = unit.AddComponent<SpriteRenderer>();
-        us.sprite = circleSprite; us.color = new Color(0.25f, 0.65f, 0.84f);
-        unit.AddComponent<UnitEntity>();
-        PrefabUtility.SaveAsPrefabAsset(unit, PrefabDir + "/UnitPrefab.prefab");
-        Object.DestroyImmediate(unit);
+        MakeUnitPrefab("UnitPrefab", circleSprite, new Color(0.25f, 0.65f, 0.84f));
+        MakeUnitPrefab("BuildingPrefab", squareSprite, new Color(0.35f, 0.42f, 0.5f));
 
-        // 建筑占位（方）
-        var bld = new GameObject("BuildingPrefab");
-        var bs = bld.AddComponent<SpriteRenderer>();
-        bs.sprite = squareSprite; bs.color = new Color(0.35f, 0.42f, 0.5f);
-        bs.transform.localScale = Vector3.one * 1.6f;
-        bld.AddComponent<UnitEntity>();
-        PrefabUtility.SaveAsPrefabAsset(bld, PrefabDir + "/BuildingPrefab.prefab");
-        Object.DestroyImmediate(bld);
-
-        // 矿点
+        // 矿点（非单位，保持单层）
         var ore = new GameObject("OreNodePrefab");
-        var os = ore.AddComponent<SpriteRenderer>();
-        os.sprite = circleSprite; os.color = new Color(0.77f, 0.66f, 0.42f);
+        var osr = ore.AddComponent<SpriteRenderer>();
+        osr.sprite = circleSprite; osr.color = new Color(0.77f, 0.66f, 0.42f);
         ore.AddComponent<OreNode>();
         PrefabUtility.SaveAsPrefabAsset(ore, PrefabDir + "/OreNodePrefab.prefab");
         Object.DestroyImmediate(ore);
@@ -123,6 +279,34 @@ public static class PhaseBBootstrap
         MakeFxPrefab("MuzzleFlashPrefab", circleSprite, new Color(1f, 0.85f, 0.4f), 0.5f);
         MakeFxPrefab("MoveIndicatorPrefab", circleSprite, new Color(0.3f, 1f, 0.4f, 0.6f), 0.8f);
         MakeFxPrefab("AttackIndicatorPrefab", circleSprite, new Color(1f, 0.3f, 0.2f, 0.7f), 0.8f);
+    }
+
+    static void MakeUnitPrefab(string name, Sprite placeholder, Color tint)
+    {
+        var root = new GameObject(name);
+        var entity = root.AddComponent<UnitEntity>();
+
+        var recoilPivot = new GameObject("RecoilPivot");
+        recoilPivot.transform.SetParent(root.transform, false);
+        recoilPivot.transform.localPosition = Vector3.zero;
+
+        var artRoot = new GameObject("ArtRoot");
+        artRoot.transform.SetParent(recoilPivot.transform, false);
+        artRoot.transform.localPosition = Vector3.zero;
+        artRoot.transform.localScale = Vector3.one;   // 恒为 1，尺寸全交给 PPU
+
+        var sr = artRoot.AddComponent<SpriteRenderer>();
+        sr.sprite = placeholder;
+        sr.color = tint;
+        if (flashMaterial != null) sr.sharedMaterial = flashMaterial;
+
+        var view = artRoot.AddComponent<UnitView>();
+        view.recoilPivot = recoilPivot.transform;
+
+        entity.spriteRenderer = sr;
+
+        PrefabUtility.SaveAsPrefabAsset(root, PrefabDir + "/" + name + ".prefab");
+        Object.DestroyImmediate(root);
     }
 
     static void MakeFxPrefab(string name, Sprite sprite, Color color, float scale)
@@ -209,7 +393,77 @@ public static class PhaseBBootstrap
         // 生产链
         bar.producibleUnits = new[] { map["rifleman"], map["bazooka"], map["sniper"] };
         war.producibleUnits = new[] { map["tank"], map["heavytank"], map["artillery"], map["harvester"] };
+
+        // P0-4 spriteForwardDeg 逐张标定（动画规格 §2.3）
+        // 含义：素材里"车头/炮管指向"相对图片 +X 轴的逆时针角（度）。
+        // 只对载具有意义；步兵走镜像、建筑不旋转，填了也不读。
+        map["tank"].spriteForwardDeg      = 0f;    // 高置信：主轴 177°≈水平
+        map["heavytank"].spriteForwardDeg = -15f;  // 中：素材本身被生成歪了 15°
+        map["artillery"].spriteForwardDeg = 0f;    // 低：TODO 缺独立素材，复用 tank 贴图
+        // TODO: harvester 剪影近方形（长宽比 1.02），测量不可靠 —— 必须目视复核（§2.3）
+        map["harvester"].spriteForwardDeg = -45f;
+
+        // P0-5 def.sprite 接线（全工程原本的空白点：UnitRegistry 只 Instantiate，从不读 sprite）
+        WireSprites(map);
+
         return map;
+    }
+
+    /// <summary>
+    /// 把 Art/Keyed/&lt;unitId&gt;.png 挂到对应 UnitDefinition.sprite 上。
+    ///
+    /// 这是"素材目录看着满了、进游戏还是一片方块"的根治点：
+    /// UnitRegistry.SpawnUnit 原先只 Instantiate(def.prefab)，从不读 def.sprite。
+    /// 现在 UnitEntity.Initialize → ApplyDefinitionSprite 会真正替换 SpriteRenderer.sprite。
+    ///
+    /// sniper / artillery 无独立素材（美术规格 §11）：artillery 复用 tank、sniper 复用
+    /// rifleman，在代码里标 TODO，不留空白方块。
+    /// </summary>
+    static void WireSprites(System.Collections.Generic.Dictionary<string, UnitDefinition> map)
+    {
+        // unitId → 实际使用的贴图文件（缺素材的复用同类）
+        var spriteOf = new System.Collections.Generic.Dictionary<string, string>();
+        string[] direct =
+        {
+            "hq", "powerplant", "refinery", "barracks", "warfactory", "radar",
+            "mgtower", "atcannon", "rifleman", "bazooka", "tank", "heavytank", "harvester"
+        };
+        foreach (var id in direct) spriteOf[id] = id;
+
+        // TODO: sniper 缺独立素材，复用 rifleman（美术规格 §11 明确不为其造素材）
+        spriteOf["sniper"] = "rifleman";
+        // TODO: artillery 缺独立素材，复用 tank（同上）
+        spriteOf["artillery"] = "tank";
+
+        int wired = 0;
+        var missing = new System.Text.StringBuilder();
+
+        foreach (var kv in map)
+        {
+            string unitId = kv.Key;
+            var def = kv.Value;
+            string file = spriteOf.ContainsKey(unitId) ? spriteOf[unitId] : null;
+            if (file == null)
+            {
+                missing.Append(unitId).Append("(无映射) ");
+                continue;
+            }
+
+            string path = KeyedDir + "/" + file + ".png";
+            Sprite sp = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            if (sp == null)
+            {
+                missing.Append(unitId).Append("→").Append(path).Append(' ');
+                continue;
+            }
+
+            def.sprite = sp;
+            EditorUtility.SetDirty(def);
+            wired++;
+        }
+
+        Debug.Log($"[PhaseC] def.sprite 接线完成 {wired}/{map.Count} 个 UnitDefinition。" +
+                  (missing.Length > 0 ? $" 未接线：{missing}（先跑 python3 tools/key_assets.py）" : " 全部命中。"));
     }
 
     // ---------------- 地图 ----------------

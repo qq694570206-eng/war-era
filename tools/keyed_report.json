@@ -1,0 +1,912 @@
+{
+  "assets": [
+    {
+      "name": "hq",
+      "src": "hq.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 3.2,
+      "no_fill": false,
+      "needs_manual_review": true,
+      "seed": [
+        227,
+        225,
+        221
+      ],
+      "tol": 23,
+      "morph": true,
+      "ring_sd": 14.21,
+      "despeck_dropped_px": 2128,
+      "fg_ratio": 0.4559,
+      "trim": "auto",
+      "bbox": [
+        1,
+        31,
+        254,
+        221
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/hq.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "powerplant",
+      "src": "powerplant.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 5.82,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 9.17,
+      "despeck_dropped_px": 9,
+      "fg_ratio": 0.539,
+      "trim": "auto",
+      "bbox": [
+        0,
+        0,
+        252,
+        247
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/powerplant.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "refinery",
+      "src": "refinery.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 4.57,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 19.74,
+      "despeck_dropped_px": 1,
+      "fg_ratio": 0.5816,
+      "trim": "auto",
+      "bbox": [
+        0,
+        1,
+        255,
+        247
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/refinery.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "barracks",
+      "src": "barracks.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 5.33,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        255,
+        255,
+        255
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 26.62,
+      "despeck_dropped_px": 4,
+      "fg_ratio": 0.52,
+      "trim": "auto",
+      "bbox": [
+        0,
+        2,
+        255,
+        250
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/barracks.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "warfactory",
+      "src": "warfactory.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 4.57,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 85.32,
+      "despeck_dropped_px": 1,
+      "fg_ratio": 0.7679,
+      "trim": "auto",
+      "bbox": [
+        0,
+        0,
+        255,
+        250
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/warfactory.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "radar",
+      "src": "radar.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 5.82,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        255,
+        255,
+        254
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 0.66,
+      "despeck_dropped_px": 125,
+      "fg_ratio": 0.5989,
+      "trim": "auto",
+      "bbox": [
+        7,
+        7,
+        246,
+        247
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/radar.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "mgtower",
+      "src": "mgtower.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 8.0,
+      "no_fill": false,
+      "needs_manual_review": true,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 18,
+      "morph": true,
+      "ring_sd": 27.0,
+      "despeck_dropped_px": 11044,
+      "fg_ratio": 0.5688,
+      "trim": "auto",
+      "bbox": [
+        1,
+        19,
+        254,
+        236
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/mgtower.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "atcannon",
+      "src": "atcannon.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "ppu": 7.11,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        255,
+        255,
+        255
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 0.76,
+      "despeck_dropped_px": 26,
+      "fg_ratio": 0.4747,
+      "trim": "auto",
+      "bbox": [
+        1,
+        14,
+        249,
+        224
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/atcannon.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rifleman",
+      "src": "rifleman.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.02
+      ],
+      "ppu": 17.07,
+      "no_fill": false,
+      "needs_manual_review": true,
+      "seed": [
+        227,
+        225,
+        219
+      ],
+      "tol": 24,
+      "morph": true,
+      "ring_sd": 27.61,
+      "despeck_dropped_px": 226,
+      "fg_ratio": 0.3183,
+      "trim": "auto",
+      "bbox": [
+        64,
+        1,
+        210,
+        254
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/rifleman.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "bazooka",
+      "src": "bazooka.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.02
+      ],
+      "ppu": 17.07,
+      "no_fill": false,
+      "needs_manual_review": true,
+      "seed": [
+        253,
+        253,
+        251
+      ],
+      "tol": 20,
+      "morph": true,
+      "ring_sd": 23.74,
+      "despeck_dropped_px": 4208,
+      "fg_ratio": 0.6305,
+      "trim": "auto",
+      "bbox": [
+        1,
+        1,
+        254,
+        254
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/bazooka.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "tank",
+      "src": "tank.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 9.14,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 19.84,
+      "despeck_dropped_px": 12,
+      "fg_ratio": 0.368,
+      "trim": "auto",
+      "bbox": [
+        0,
+        55,
+        255,
+        200
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/tank.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "heavytank",
+      "src": "heavytank.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 8.0,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        255,
+        255,
+        255
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 40.55,
+      "despeck_dropped_px": 5,
+      "fg_ratio": 0.46,
+      "trim": "auto",
+      "bbox": [
+        0,
+        21,
+        255,
+        223
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/heavytank.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "harvester",
+      "src": "harvester.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 9.14,
+      "no_fill": true,
+      "needs_manual_review": false,
+      "seed": [
+        249,
+        249,
+        245
+      ],
+      "tol": 18,
+      "morph": false,
+      "ring_sd": 32.89,
+      "despeck_dropped_px": 735,
+      "fg_ratio": 0.9385,
+      "trim": "auto",
+      "bbox": [
+        0,
+        0,
+        255,
+        255
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/harvester.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "explosion",
+      "src": "effects/explosion.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "ppu": 10.67,
+      "no_fill": true,
+      "needs_manual_review": false,
+      "frames": [
+        {
+          "index": 0,
+          "seed": [
+            247,
+            247,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.2786
+        },
+        {
+          "index": 1,
+          "seed": [
+            247,
+            249,
+            251
+          ],
+          "tol": 12,
+          "fg": 0.3535
+        },
+        {
+          "index": 2,
+          "seed": [
+            249,
+            249,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.635
+        },
+        {
+          "index": 3,
+          "seed": [
+            255,
+            255,
+            255
+          ],
+          "tol": 12,
+          "fg": 0.7764
+        },
+        {
+          "index": 4,
+          "seed": [
+            249,
+            249,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.512
+        },
+        {
+          "index": 5,
+          "seed": [
+            255,
+            255,
+            255
+          ],
+          "tol": 12,
+          "fg": 0.6604
+        },
+        {
+          "index": 6,
+          "seed": [
+            255,
+            255,
+            255
+          ],
+          "tol": 12,
+          "fg": 0.675
+        },
+        {
+          "index": 7,
+          "seed": [
+            255,
+            255,
+            255
+          ],
+          "tol": 12,
+          "fg": 0.7063
+        },
+        {
+          "index": 8,
+          "seed": [
+            249,
+            249,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.6318
+        },
+        {
+          "index": 9,
+          "seed": [
+            251,
+            251,
+            251
+          ],
+          "tol": 12,
+          "fg": 0.668
+        },
+        {
+          "index": 10,
+          "seed": [
+            251,
+            251,
+            251
+          ],
+          "tol": 12,
+          "fg": 0.7275
+        },
+        {
+          "index": 11,
+          "seed": [
+            249,
+            249,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.509
+        },
+        {
+          "index": 12,
+          "seed": [
+            247,
+            247,
+            247
+          ],
+          "tol": 12,
+          "fg": 0.5144
+        },
+        {
+          "index": 13,
+          "seed": [
+            247,
+            247,
+            247
+          ],
+          "tol": 12,
+          "fg": 0.4758
+        },
+        {
+          "index": 14,
+          "seed": [
+            249,
+            249,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.5488
+        },
+        {
+          "index": 15,
+          "seed": [
+            249,
+            249,
+            249
+          ],
+          "tol": 12,
+          "fg": 0.46
+        }
+      ],
+      "cell": [
+        64,
+        64
+      ],
+      "seed": [
+        247,
+        247,
+        249
+      ],
+      "tol": 12,
+      "fg_ratio": 0.5708,
+      "trim": "off",
+      "out": "unity-project/Assets/_Project/Art/Keyed/explosion.png"
+    },
+    {
+      "name": "muzzle_flash",
+      "src": "effects/muzzle_flash.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "ppu": 25.6,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 7.48,
+      "despeck_dropped_px": 81,
+      "fg_ratio": 0.7418,
+      "trim": "auto",
+      "bbox": [
+        0,
+        0,
+        255,
+        250
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/muzzle_flash.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "nuke_cloud",
+      "src": "effects/nuke_cloud.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 4.27,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        255,
+        255,
+        255
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 53.74,
+      "despeck_dropped_px": 960,
+      "fg_ratio": 0.533,
+      "trim": "auto",
+      "bbox": [
+        4,
+        0,
+        252,
+        255
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/nuke_cloud.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "smoke_column",
+      "src": "effects/smoke_column.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 18.3,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": "luma-keyed",
+      "tol": null,
+      "morph": false,
+      "bg_lum": 203.0,
+      "fg_ratio": 0.456,
+      "trim": "manual",
+      "bbox": [
+        25,
+        0,
+        227,
+        255
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/smoke_column.png"
+    },
+    {
+      "name": "build_panel_bg",
+      "src": "ui/build_panel_bg.png",
+      "size": [
+        256,
+        176
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "ppu": 1.0,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": "opaque(no-key)",
+      "tol": null,
+      "morph": false,
+      "trim": "off",
+      "fg_ratio": 1.0,
+      "note": "Crop 后全幅不透明，不参与抠图",
+      "out": "unity-project/Assets/_Project/Art/Keyed/build_panel_bg.png"
+    },
+    {
+      "name": "minimap_frame",
+      "src": "ui/minimap_frame.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "ppu": 1.0,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        253,
+        253,
+        253
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 10.84,
+      "despeck_dropped_px": 31,
+      "fg_ratio": 0.7423,
+      "trim": "auto",
+      "bbox": [
+        0,
+        2,
+        255,
+        250
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/minimap_frame.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "resource_icons",
+      "src": "ui/resource_icons.png",
+      "size": [
+        256,
+        256
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "ppu": 1.0,
+      "no_fill": false,
+      "needs_manual_review": false,
+      "seed": [
+        254,
+        253,
+        251
+      ],
+      "tol": 12,
+      "morph": false,
+      "ring_sd": 0.92,
+      "despeck_dropped_px": 56,
+      "fg_ratio": 0.3967,
+      "trim": "auto",
+      "bbox": [
+        16,
+        9,
+        230,
+        242
+      ],
+      "out": "unity-project/Assets/_Project/Art/Keyed/resource_icons.png",
+      "corner_alpha": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "no_fill": [
+    "explosion",
+    "harvester"
+  ],
+  "output_dir": "unity-project/Assets/_Project/Art/Keyed"
+}

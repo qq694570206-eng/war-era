@@ -1,0 +1,204 @@
+{
+  "items": [
+    {
+      "name": "hq",
+      "file": "unity-project/Assets/_Project/Art/Keyed/hq.png",
+      "spritePixelsPerUnit": 3.2,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "powerplant",
+      "file": "unity-project/Assets/_Project/Art/Keyed/powerplant.png",
+      "spritePixelsPerUnit": 5.82,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "refinery",
+      "file": "unity-project/Assets/_Project/Art/Keyed/refinery.png",
+      "spritePixelsPerUnit": 4.57,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "barracks",
+      "file": "unity-project/Assets/_Project/Art/Keyed/barracks.png",
+      "spritePixelsPerUnit": 5.33,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "warfactory",
+      "file": "unity-project/Assets/_Project/Art/Keyed/warfactory.png",
+      "spritePixelsPerUnit": 4.57,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "radar",
+      "file": "unity-project/Assets/_Project/Art/Keyed/radar.png",
+      "spritePixelsPerUnit": 5.82,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "mgtower",
+      "file": "unity-project/Assets/_Project/Art/Keyed/mgtower.png",
+      "spritePixelsPerUnit": 8.0,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "atcannon",
+      "file": "unity-project/Assets/_Project/Art/Keyed/atcannon.png",
+      "spritePixelsPerUnit": 7.11,
+      "pivot": [
+        0.5,
+        0.1
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "rifleman",
+      "file": "unity-project/Assets/_Project/Art/Keyed/rifleman.png",
+      "spritePixelsPerUnit": 17.07,
+      "pivot": [
+        0.5,
+        0.02
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "bazooka",
+      "file": "unity-project/Assets/_Project/Art/Keyed/bazooka.png",
+      "spritePixelsPerUnit": 17.07,
+      "pivot": [
+        0.5,
+        0.02
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "tank",
+      "file": "unity-project/Assets/_Project/Art/Keyed/tank.png",
+      "spritePixelsPerUnit": 9.14,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "heavytank",
+      "file": "unity-project/Assets/_Project/Art/Keyed/heavytank.png",
+      "spritePixelsPerUnit": 8.0,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "harvester",
+      "file": "unity-project/Assets/_Project/Art/Keyed/harvester.png",
+      "spritePixelsPerUnit": 9.14,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "explosion",
+      "file": "unity-project/Assets/_Project/Art/Keyed/explosion.png",
+      "spritePixelsPerUnit": 10.67,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "spriteMode": "Multiple"
+    },
+    {
+      "name": "muzzle_flash",
+      "file": "unity-project/Assets/_Project/Art/Keyed/muzzle_flash.png",
+      "spritePixelsPerUnit": 25.6,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "nuke_cloud",
+      "file": "unity-project/Assets/_Project/Art/Keyed/nuke_cloud.png",
+      "spritePixelsPerUnit": 4.27,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "smoke_column",
+      "file": "unity-project/Assets/_Project/Art/Keyed/smoke_column.png",
+      "spritePixelsPerUnit": 18.3,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "build_panel_bg",
+      "file": "unity-project/Assets/_Project/Art/Keyed/build_panel_bg.png",
+      "spritePixelsPerUnit": 1.0,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "minimap_frame",
+      "file": "unity-project/Assets/_Project/Art/Keyed/minimap_frame.png",
+      "spritePixelsPerUnit": 1.0,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "spriteMode": "Single"
+    },
+    {
+      "name": "resource_icons",
+      "file": "unity-project/Assets/_Project/Art/Keyed/resource_icons.png",
+      "spritePixelsPerUnit": 1.0,
+      "pivot": [
+        0.5,
+        0.5
+      ],
+      "spriteMode": "Single"
+    }
+  ]
+}

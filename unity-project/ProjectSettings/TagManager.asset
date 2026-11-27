@@ -41,3 +41,24 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Ground
+    uniqueID: 1280000001
+    locked: 0
+  - name: GroundDeco
+    uniqueID: 1280000002
+    locked: 0
+  - name: Ore
+    uniqueID: 1280000003
+    locked: 0
+  - name: Shadow
+    uniqueID: 1280000004
+    locked: 0
+  - name: WorldSprite
+    uniqueID: 1280000005
+    locked: 0
+  - name: FX
+    uniqueID: 1280000006
+    locked: 0
+  - name: FXAir
+    uniqueID: 1280000007
+    locked: 0

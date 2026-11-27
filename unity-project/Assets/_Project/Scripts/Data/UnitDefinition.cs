@@ -32,6 +32,11 @@ public class UnitDefinition : ScriptableObject
     public GameObject prefab;
     public float selectionRadius = 8f;
 
+    [Tooltip("素材的『车头/炮管指向』相对图片 +X 轴的逆时针角度（度）。\n" +
+             "朝向公式：zDeg = facing*Rad2Deg - spriteForwardDeg。\n" +
+             "只对载具有效（步兵走镜像、建筑不旋转）。标定表见 docs/animation-facing-spec-v1.md §2.3。")]
+    public float spriteForwardDeg = 0f;
+
     [Header("Building Specific")]
     public bool isBuilding = false;
     public Vector2 buildingSize = new Vector2(44, 44);

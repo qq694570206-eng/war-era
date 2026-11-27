@@ -39,6 +39,9 @@ public class UnitRegistry : MonoBehaviour
             entity = go.AddComponent<UnitEntity>();
         }
 
+        // 【修复点】原来这里只 Instantiate，从不读 def.sprite —— 素材接进工程后
+        // 屏幕上的单位仍是占位方块。Initialize 内部会调 ApplyDefinitionSprite()
+        // 把 def.sprite 真正挂到 ArtRoot 上的 SpriteRenderer。
         entity.Initialize(def, faction, isEnemy);
 
         Register(entity);

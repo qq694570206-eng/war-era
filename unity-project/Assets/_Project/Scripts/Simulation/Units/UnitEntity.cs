@@ -25,7 +25,10 @@ public class UnitEntity : MonoBehaviour
     [Header("Combat")]
     public UnitEntity target;
     public float fireTimer = 0f;
-    public float recoil = 0f; // 后坐偏移
+    [Tooltip("后坐强度 0..1（1 = 刚开火）。由 UnitView 读取换算位移")]
+    public float recoil = 0f;
+    [Tooltip("后坐衰减速率 = 1 / 持续时间。按『动作时长』配置，不按『衰减速率』配")]
+    public float recoilDecay = 1f / 0.18f;   // 默认 0.18s（坦克炮，§5.3）
 
     [Header("Building")]
     public bool constructing = false;
@@ -41,11 +44,41 @@ public class UnitEntity : MonoBehaviour
     public float animTime = 0f;
     public float flashTime = 0f;
 
+    // 受击闪白：走 MaterialPropertyBlock，不走 spriteRenderer.material。
+    // material 会实例化材质副本（每单位一份），既破合批又漏内存；
+    // propBlock 是 per-renderer 数据，不产生材质变体。
+    private MaterialPropertyBlock flashBlock;
     private static readonly int FlashShaderParam = Shader.PropertyToID("_FlashAmount");
+    private bool flashApplied = false;
 
     void Awake()
     {
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        flashBlock = new MaterialPropertyBlock();
+    }
+
+    /// <summary>
+    /// 由 UnitRegistry 在生成后调用：把 def.sprite 真正挂到 SpriteRenderer 上。
+    /// 修复"素材目录满了、进游戏还是一片方块"这个假完成点。
+    /// </summary>
+    public void ApplyDefinitionSprite()
+    {
+        if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (spriteRenderer == null) return;
+        if (def == null) return;
+
+        if (def.sprite != null)
+        {
+            spriteRenderer.sprite = def.sprite;
+            spriteRenderer.color = Color.white;
+        }
+        else
+        {
+            // 回退占位 sprite（不换 sprite，只保留 prefab 自带的占位），并明确告警
+            Debug.LogWarning($"[UnitEntity] UnitDefinition '{def.unitId}' 没有配置 sprite，" +
+                             $"回退到占位图。检查 PhaseBBootstrap.CreateUnitDefinitions() 的 " +
+                             $"Art/Keyed/{def.unitId}.png 是否导入成功。");
+        }
     }
 
     public void Initialize(UnitDefinition definition, FactionDefinition factionDef, bool enemy)
@@ -58,6 +91,29 @@ public class UnitEntity : MonoBehaviour
         // 应用阵营修正
         maxHp = faction != null ? faction.GetModifiedHp(definition.maxHp) : definition.maxHp;
         currentHp = maxHp;
+
+        // 后坐时长按武器类型配置（§5.3），不是全局 3f 的固定衰减
+        recoilDecay = 1f / RecoilDurationOf(definition.unitId);
+
+        // 把 def.sprite 真正挂上去
+        ApplyDefinitionSprite();
+    }
+
+    /// <summary>后坐持续时间（秒）。0.05s = 3 帧，玩家根本看不见（§5.1）。</summary>
+    static float RecoilDurationOf(string unitId)
+    {
+        switch (unitId)
+        {
+            case "rifleman":  return 0.10f;
+            case "bazooka":   return 0.15f;
+            case "sniper":    return 0.10f;
+            case "mgtower":   return 0.08f;
+            case "tank":      return 0.18f;
+            case "heavytank": return 0.22f;
+            case "artillery": return 0.26f;
+            case "atcannon":  return 0.12f;
+            default:          return 0.15f;
+        }
     }
 
     void Update()
@@ -68,7 +124,9 @@ public class UnitEntity : MonoBehaviour
         animTime += dt;
 
         if (flashTime > 0) flashTime -= dt;
-        if (recoil > 0) recoil -= dt * 3f;
+        if (recoil > 0f) recoil = Mathf.Max(0f, recoil - dt * recoilDecay);
+
+        UpdateFlash();
 
         if (def.isBuilding)
         {
@@ -192,15 +250,39 @@ public class UnitEntity : MonoBehaviour
         currentHp -= damage;
         flashTime = 0.08f;
 
-        // 闪烁效果
-        if (spriteRenderer != null && spriteRenderer.material.HasProperty(FlashShaderParam))
-        {
-            spriteRenderer.material.SetFloat(FlashShaderParam, 1f);
-        }
-
         if (currentHp <= 0)
         {
             Die();
+        }
+    }
+
+    /// <summary>
+    /// 受击闪白。原实现在 Sprites/Default 上找 _FlashAmount —— 该属性不存在，
+    /// 于是整段静默失效（不报错、没效果）。现改为：
+    ///   1) 材质换成 WarEra/SpriteFlash（自带 _FlashAmount 并标了 [PerRendererData]）
+    ///   2) 值走 MaterialPropertyBlock，不产生材质实例
+    /// 若材质不是该 shader（例如仍用占位图），退回 sr.color 直接把颜色提亮，
+    /// 保证任何情况下"受击有反馈"这条不会静默丢失。
+    /// </summary>
+    void UpdateFlash()
+    {
+        if (spriteRenderer == null) return;
+
+        bool wantFlash = flashTime > 0f;
+        if (wantFlash == flashApplied) return;   // 只在状态切换时写，避免每帧 SetPropertyBlock
+        flashApplied = wantFlash;
+
+        Material mat = spriteRenderer.sharedMaterial;
+        bool hasProp = mat != null && mat.HasProperty(FlashShaderParam);
+        if (hasProp)
+        {
+            spriteRenderer.GetPropertyBlock(flashBlock);
+            flashBlock.SetFloat(FlashShaderParam, wantFlash ? 1f : 0f);
+            spriteRenderer.SetPropertyBlock(flashBlock);
+        }
+        else
+        {
+            spriteRenderer.color = wantFlash ? new Color(1f, 0.72f, 0.72f) : Color.white;
         }
     }
 
